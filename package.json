@@ -5,6 +5,9 @@
   "main": "electron/main.js",
   "author": "FreakItOut",
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut.git"

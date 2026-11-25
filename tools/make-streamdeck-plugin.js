@@ -6,18 +6,30 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const archiver = require('archiver');
 
 const ROOT = path.resolve(__dirname, '..');
 const PLUGIN_DIR = path.join(ROOT, 'streamdeck', 'com.freakitout.d2tool.sdPlugin');
 const DIST = path.join(ROOT, 'dist');
 const TARGET = path.join(DIST, 'com.freakitout.d2tool.streamDeckPlugin');
 
-function main() {
+// archiver 8 ist ESM-only ("type": "module"), ältere Versionen sind CommonJS.
+// Dynamischer Import funktioniert für beide; require() würde ab archiver 8
+// auf Node < 22.12 mit ERR_REQUIRE_ESM scheitern.
+async function loadArchiver() {
+  const loaded = await import('archiver');
+  const archiver = loaded.default || loaded;
+  if (typeof archiver !== 'function') {
+    throw new Error('archiver konnte nicht geladen werden.');
+  }
+  return archiver;
+}
+
+async function main() {
   if (!fs.existsSync(path.join(PLUGIN_DIR, 'manifest.json'))) {
     throw new Error('Plugin-Ordner fehlt.');
   }
   fs.mkdirSync(DIST, { recursive: true });
+  const archiver = await loadArchiver();
   return new Promise((resolve, reject) => {
     const output = fs.createWriteStream(TARGET);
     const archive = archiver('zip', { zlib: { level: 9 } });

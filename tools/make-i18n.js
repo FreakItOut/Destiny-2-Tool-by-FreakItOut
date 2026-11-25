@@ -15,6 +15,11 @@ const path = require('node:path');
 const vm = require('node:vm');
 let ts = null;
 try { ts = require('typescript'); } catch (error) { ts = null; }
+// TypeScript 7 (nativ) exportiert am Paket-Root keine Compiler-API mehr.
+// require() wirft dort nicht, liefert aber nur Versionsinfos – dann greift
+// unten der Regex-Fallback statt mit "ts.createSourceFile is not a function"
+// abzubrechen.
+if (ts && typeof ts.createSourceFile !== 'function') ts = null;
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'renderer', 'js', 'i18n-en.js');
