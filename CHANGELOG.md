@@ -1,0 +1,78 @@
+# Changelog
+
+[English version](CHANGELOG.en.md)
+
+Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
+[Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
+[Semantic Versioning](https://semver.org/lang/de/).
+
+## [1.0.0] – 2026-11-25
+
+Erste öffentliche Version.
+
+### Hinzugefügt
+
+- **Werkzeugzentrale** mit Übersicht, Builds, Sammlung und Aufräumen, Woche
+  sowie Händlern.
+- **Inventar & Loadout-Editor** im DIM-Stil: Kacheln, Suche mit Operatoren,
+  Filter-Chips, Mehrfachauswahl, Duplikate in den Tresor, Loadout-Import/-Export
+  (JSON, DIM, d2armorpicker, guardian.report), Optimierer und Rückgängig.
+- **Armor 3.0** mit Stat-Skala 0–200, Gear-Tier, Archetyp, Tertiär-/Tuning-Stat,
+  Set-Boni, Masterwork-Planer und Rüstungs-Wunschliste.
+- **Build-Werkzeuge**: Champion-Planer, Build-Lückenanalyse,
+  Breakpoint-Solver, Build-Karte als PNG/Text, Stat-HUD.
+- **Crafting- und Sammlungs-Werkzeuge**: offene Muster, Red-Border-Fortschritt,
+  Materialplan, Triumph- und Sammlungsübersicht, Snapshot-Diff.
+- **Händler & Xûr**: Angebote und Rolls, Kategorien, Unterhändler,
+  Einkaufs-Optimierer, Preisverlauf, Beobachtungsliste und Deep-Links.
+- **Dashboard** mit Hüterübersicht, Power/Infusion, Champion-Check, Triumphs,
+  Sammlung/Vorrat, Bungie- und Datenstatus, Saisonzielen und letzten
+  Aktivitäten.
+- **Overlay** über dem Spiel inkl. Poststellen-Zähler, Overlay-Layouts,
+  Stat-HUD, Post-Game-Karte und Auto-Recap.
+- **Controller-Steuerung** über XInput (auch ohne Fensterfokus), virtueller
+  Cursor, Schnellmenü, Bildschirmtastatur, Kalibrierung, Rauschfilter und
+  frei belegbare Tasten.
+- **Stream Deck & lokale API** mit Tokens, Kurz-URLs, Live-Keys, SVG-Badges,
+  SSE, Jobs und optionalem Plugin.
+- **Sicherheit**: verschlüsselte Zugangsdaten (Windows DPAPI), verschlüsselte
+  Config-Backups (AES-256-GCM), Read-only-Modus, PIN-Sperre,
+  Secret-Redaction in Diagnose-Exporten.
+- **Barrierefreiheit**: Farbmodi, hoher Kontrast, Fokusringe, UI-Zoom und
+  reduzierte Bewegung.
+
+### Behoben
+
+- **Scrollen**: Die Ansicht springt nicht mehr nach oben. Such- und
+  Filterfelder, Hintergrund-Renders und verschachtelte Renders halten die
+  Position zuverlässig.
+- **Scroll-Glitchen**: Falsche Lazy-Paint-Höhen (`content-visibility`) und
+  eine geblurrte Sticky-Leiste sorgten für springendes Layout; beides wurde
+  entfernt.
+- **Kleine Sprünge nach dem Scrollen**: Offene Aufklapp-Bereiche
+  („Springe zu …“, Bereichsauswahl) bleiben nach einem Render offen.
+- **Controller-Scrollen** funktioniert jetzt auch in der Werkzeugzentrale.
+- **Händlerbilder**: Interne Unter-Regale ohne Icon/Namen werden ausgeblendet;
+  fehlende Icons erhalten einen Platzhalter statt eines kaputten Bildes.
+- **Letzte Aktivitäten im Dashboard**: Der Bungie-Endpunkt wird korrekt über
+  `/Account/` aufgerufen; Instanz-ID, K/D/A und Modusnamen werden gelesen.
+  Die Aktivitätsdefinitionen werden pro Manifest-Version auf Platte gecacht.
+- **Xûr/Händlerdaten** werden robuster geladen; nicht verfügbare Händler
+  erzeugen keine leeren Karten mehr.
+- **Stream-Deck-API**: Aktionspfade, Jobs und Token-Verwaltung wurden
+  vereinheitlicht.
+
+### Entfernt
+
+- **„Destiny 2 beenden“** aus Hauptfenster, Overlay, Einstellungen,
+  Befehlspalette und IPC. Windows verweigert das Beenden des geschützten
+  Spielprozesses; die Funktion war daher unbrauchbar. „Destiny 2 starten“
+  bleibt erhalten.
+
+### Sicherheit
+
+- Im Repository sind **keine** API-Keys, OAuth-Tokens, Client-Secrets,
+  Passwörter oder Konfigurationsdateien enthalten.
+- Zugangsdaten werden ausschließlich lokal und verschlüsselt gespeichert.
+- `.gitignore` schließt `config.json`, `Daten/`, `dist/`, Logs und lokale
+  Backups aus.

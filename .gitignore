@@ -1,0 +1,49 @@
+# Abhängigkeiten und Builds
+node_modules/
+dist/
+dist-*/
+build/*
+!build/icon.ico
+!build/icon-source.jpg
+
+# Persönliche Daten / Zugangsdaten
+config.json
+config.*.json
+**/Daten/
+Daten/
+.env
+.env.*
+*.pem
+*.key
+*.enc
+secrets*.json
+
+# Logs und generierte Berichte (enthalten lokale Pfade)
+*.log
+build-run.log
+verify-run.log
+release-report.md
+verify-report.md
+
+# Test-Artefakte
+tools/e2e/result.json
+tools/e2e/run.log
+tools/e2e/fail-shot.png
+tools/e2e/failures/
+tools/e2e/visual/*-shot.png
+tools/e2e/visual/*-diff.txt
+tools/e2e/visual/baselines.json
+
+# Betriebssystem / Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Lenastheo Limited Edition ist privat und von Veröffentlichungen ausgeschlossen.
+*Lenastheo*/
+*Lenastheo*-Setup*.exe
+
+# Private Limited-Edition-Screenshots gehören nicht ins öffentliche Repo.
+tools/e2e/visual/LE-*.png
+tools/e2e/visual/dialogs/LE-*.png
+tools/e2e/visual/pages/LE/

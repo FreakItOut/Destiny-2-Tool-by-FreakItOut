@@ -1,0 +1,459 @@
+{
+  "SDKVersion": 2,
+  "UUID": "com.freakitout.d2tool",
+  "Name": "Destiny 2 Tool",
+  "Version": "1.0.0",
+  "Author": "FreakItOut",
+  "Description": "Stream-Deck-Steuerung für Destiny 2 Tool by FreakItOut",
+  "Category": "Destiny 2 Tool",
+  "CategoryIcon": "imgs/plugin",
+  "Icon": "imgs/plugin",
+  "CodePath": "bin/plugin.js",
+  "PropertyInspectorPath": "ui/propertyinspector.html",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "6.0"
+  },
+  "Actions": [
+    {
+      "UUID": "com.freakitout.d2tool.status",
+      "Name": "Status",
+      "Icon": "imgs/action",
+      "Tooltip": "Zeigt Postfach, Tresor oder Fokus",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.view",
+      "Name": "Werkzeugseite",
+      "Icon": "imgs/action",
+      "Tooltip": "Öffnet Übersicht, Builds, Woche, Sammlung oder Händler",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.loadout",
+      "Name": "Loadout",
+      "Icon": "imgs/action",
+      "Tooltip": "Wendet ein gespeichertes Loadout an",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.overlay",
+      "Name": "Overlay",
+      "Icon": "imgs/action",
+      "Tooltip": "Overlay ein- oder ausblenden",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.focus",
+      "Name": "Fokus",
+      "Icon": "imgs/action",
+      "Tooltip": "Overlay fokussieren",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.postmaster",
+      "Name": "Postfach",
+      "Icon": "imgs/action",
+      "Tooltip": "Postfach im Inventar öffnen",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.xur",
+      "Name": "Xûr",
+      "Icon": "imgs/action",
+      "Tooltip": "Xûr-Fenster öffnen",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.command",
+      "Name": "Befehl",
+      "Icon": "imgs/action",
+      "Tooltip": "Beliebigen API-Pfad aufrufen",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.loadout.next",
+      "Name": "Loadout weiter",
+      "Icon": "imgs/action",
+      "Tooltip": "Nächstes Loadout anwenden",
+      "Controllers": [
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "UUID": "com.freakitout.d2tool.view.next",
+      "Name": "Seite weiter",
+      "Icon": "imgs/action",
+      "Tooltip": "Nächste Werkzeugseite öffnen",
+      "Controllers": [
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "UUID": "com.freakitout.d2tool.status.encoder",
+      "Name": "Status wählen",
+      "Icon": "imgs/action",
+      "Tooltip": "Status-Key per Drehregler wechseln",
+      "Controllers": [
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Status-Key wechseln",
+          "Push": "Status aktualisieren"
+        }
+      },
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.champion",
+      "Name": "Champion-Deckung",
+      "Icon": "imgs/action",
+      "Tooltip": "Zeigt die Champion-Abdeckung des aktiven H?ters",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.data",
+      "Name": "Datenstatus",
+      "Icon": "imgs/action",
+      "Tooltip": "Zeigt Snapshot-Alter und aktualisiert das Inventar",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.postmaster.safe",
+      "Name": "Postfach sicher",
+      "Icon": "imgs/action",
+      "Tooltip": "Sammelt die Poststelle sicher ein",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.vendor.watch",
+      "Name": "H?ndler-Beobachtung",
+      "Icon": "imgs/action",
+      "Tooltip": "?ffnet die H?ndler-Beobachtung",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.routine",
+      "Name": "Wochen-Routine",
+      "Icon": "imgs/action",
+      "Tooltip": "Postfach, H?ndler und Wochenseite nacheinander",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.session.goal",
+      "Name": "Session-Ziel",
+      "Icon": "imgs/action",
+      "Tooltip": "Zeigt und erh?ht ein Session-Ziel",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.reset.dial",
+      "Name": "Reset/X?r-Dial",
+      "Icon": "imgs/action",
+      "Tooltip": "Reset- und X?r-Countdown per Drehregler",
+      "Controllers": [
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Status wechseln",
+          "Push": "Wochenseite ?ffnen"
+        }
+      }
+    },
+    {
+      "UUID": "com.freakitout.d2tool.activity",
+      "Name": "Aktivit?t",
+      "Icon": "imgs/action",
+      "Tooltip": "Aktuelle Aktivit?t und fehlende Champions",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.security",
+      "Name": "Sicherheit",
+      "Icon": "imgs/action",
+      "Tooltip": "PIN-, Read-only- und Auto-Lock-Status",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.notifications",
+      "Name": "Benachrichtigungen",
+      "Icon": "imgs/action",
+      "Tooltip": "?ffnet Dashboard und Benachrichtigungen",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.backup",
+      "Name": "Backup",
+      "Icon": "imgs/action",
+      "Tooltip": "Erstellt eine Konfigurationssicherung",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.modes",
+      "Name": "Modi",
+      "Icon": "imgs/action",
+      "Tooltip": "Streamer-, TV- oder Controller-Modus umschalten",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.emergency",
+      "Name": "Notfall-Stopp",
+      "Icon": "imgs/action",
+      "Tooltip": "Schlie?t Overlay und bricht Aktionen ab",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.loadout.slot",
+      "Name": "Loadout-Slot",
+      "Icon": "imgs/action",
+      "Tooltip": "Wendet das Loadout im konfigurierten Slot an",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.cockpit",
+      "Name": "Cockpit",
+      "Icon": "imgs/action",
+      "Tooltip": "Stream-Deck+-Cockpit f?r Status und Aktionen",
+      "Controllers": [
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Status wechseln",
+          "Push": "Aktion ausf?hren"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; frame-src https:; script-src 'self'; style-src 'unsafe-inline' 'self'; img-src 'self' data: https:;">
+  <title>Bild-in-Bild</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #120507; overflow: hidden; }
+    webview { width: 100%; height: 100%; border: 0; display: block; }
+    #pipHint {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      color: #8d9ab2; font: 13px "Segoe UI", sans-serif; text-align: center; padding: 24px;
+    }
+    #pipHint.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="pipHint">Adresse wird geladen …</div>
+  <webview id="pipWebview" partition="persist:destiny2tool" allowpopups></webview>
+  <script src="js/i18n-en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="pip.js"></script>
+</body>
+</html>

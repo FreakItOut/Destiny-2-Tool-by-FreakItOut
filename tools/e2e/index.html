@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Inventar-Drawer-Test</title>
+  <link rel="stylesheet" href="/renderer/tools.css">
+  <style>
+    body { background: #0b1018; color: #e8ecf2; font-family: "Segoe UI", sans-serif; margin: 0; }
+    #inventoryView { position: absolute; inset: 0; display: flex; flex-direction: column; }
+    #inventoryView.hidden { display: none; }
+    .inventory-view-head { padding: 10px 14px; display: flex; gap: 8px; align-items: center; }
+    #inventoryBody { flex: 1; overflow: auto; padding: 8px 14px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="dashboardPanel" class="dashboard hidden">
+    <div class="dash-shell">
+      <section class="dash-hero-card" id="dashHero">
+        <div class="dash-hero-bg" id="dashHeroBg"></div>
+        <div class="dash-hero-top">
+          <div class="dash-hero-identity">
+            <span class="dash-emblem-large" id="dashHeroEmblem">✦</span>
+            <div class="dash-hero-copy">
+              <span class="dash-kicker" id="dashHeroKicker">Hüter</span>
+              <strong id="dashHeroName">—</strong>
+              <small id="dashHeroSub">Inventar wird geladen …</small>
+            </div>
+          </div>
+          <div class="dash-hero-timers">
+            <div class="dash-timer"><span>Reset</span><b id="dashResetTime">—</b><small id="dashResetDate"></small></div>
+            <div class="dash-timer"><span>Xûr</span><b id="dashXurState">—</b><small id="dashXurDate"></small></div>
+            <button id="dashApiChip" class="api-chip dash-api" data-state="none" title="Bungie-Datenquelle">⚪</button>
+          </div>
+        </div>
+        <div class="dash-hero-bottom">
+          <div class="dash-power"><b id="dashHeroPower">—</b><span>Power</span><small id="dashHeroDelta"></small></div>
+          <div class="dash-hero-actions">
+            <button type="button" class="btn primary small" data-dash-action="inventory">🎒 Inventar</button>
+            <button type="button" class="btn ghost small" data-dash-action="godrolls">✓ Godrolls</button>
+            <button type="button" class="btn ghost small" data-dash-action="postmaster">📬 Poststelle</button>
+            <button type="button" class="btn ghost small" data-dash-action="tools">🧭 Werkzeuge</button>
+            <button type="button" class="btn ghost small" data-dash-action="refresh">↻ Daten neu laden</button>
+          </div>
+        </div>
+      </section>
+      <section class="dash-card dash-wide" id="dashPriorities">
+        <h4>Jetzt erledigen <span id="dashPriorityMeta" class="dash-h4-meta"></span></h4>
+        <div id="dashPriorityBody" class="dash-priority-list"></div>
+      </section>
+      <section class="dash-card dash-wide" id="dashCharacters">
+        <h4>Hüter <span id="dashCharacterMeta" class="dash-h4-meta"></span></h4>
+        <div id="dashCharactersBody" class="dash-char-grid"></div>
+      </section>
+      <section class="dash-card dash-wide" id="dashChampions">
+        <h4>Champion-Check <span id="dashChampionMeta" class="dash-h4-meta"></span></h4>
+        <div id="dashChampionBody" class="dash-body"></div>
+      </section>
+      <section class="dash-card dash-wide" id="dashPower">
+        <h4>Power &amp; Infusion <span id="dashPowerMeta" class="dash-h4-meta"></span></h4>
+        <div id="dashPowerBody" class="dash-body"></div>
+      </section>
+      <section class="dash-card dash-wide" id="dashSince">
+        <h4>Seit gestern <span id="dashSinceMeta" class="dash-h4-meta"></span></h4>
+        <div id="dashSinceBody" class="dash-body"></div>
+      </section>
+      <section class="dash-card dash-wide" id="dashSeason">
+        <h4>Saison-Ziele <span id="dashSeasonMeta" class="dash-h4-meta"></span></h4>
+        <div id="dashSeasonBody" class="dash-body"></div>
+      </section>
+      <section class="dash-card dash-wide" id="dashPostGame">
+        <h4>Letzte Aktivitäten <span id="dashPostGameMeta" class="dash-h4-meta"></span>
+          <button type="button" class="btn ghost small" data-dash-postgame-refresh>Neu laden</button>
+        </h4>
+        <div id="dashPostGameBody" class="dash-body"></div>
+      </section>
+      <section class="dash-card dash-wide" id="dashTriumph">
+        <h4>Triumph-Fortschritt <span id="dashTriumphMeta" class="dash-h4-meta"></span></h4>
+        <div id="dashTriumphBody" class="dash-body"></div>
+      </section>
+      <div class="dash-columns">
+        <section class="dash-card" id="dashWeek">
+          <h4>Woche <button id="dashChecklistEdit" class="btn ghost small">Checkliste</button></h4>
+          <div id="dashWeekProgress" class="dash-progress-wrap"></div>
+          <div id="dashChecklistBody" class="dash-body dash-list"></div>
+        </section>
+        <section class="dash-card" id="dashCollection">
+          <h4>Sammlung &amp; Vorrat</h4>
+          <div id="dashCollectionBody" class="dash-body"></div>
+          <div class="dash-subhead">Heutige Erinnerungen</div>
+          <div id="dashReminderBody" class="dash-body dash-list dash-reminders"></div>
+        </section>
+      </div>
+      <div class="dash-columns">
+        <section class="dash-card" id="dashNews">
+          <h4>Bungie-News <button id="dashNewsRefresh" class="btn ghost small">↻</button></h4>
+          <div id="dashNewsBody" class="dash-body dash-list"></div>
+        </section>
+      </div>
+      <div class="dash-columns">
+        <section class="dash-card" id="dashBungieStatus">
+          <h4>Bungie-Status
+            <span class="dash-h4-actions">
+              <button type="button" class="btn ghost small" data-dash-status="check">Prüfen</button>
+              <button type="button" class="btn ghost small" data-dash-status="reload">Status</button>
+            </span>
+          </h4>
+          <div id="dashBungieStatusBody" class="dash-body"></div>
+        </section>
+        <section class="dash-card" id="dashDataStatus">
+          <h4>Datenstatus <button type="button" class="btn ghost small" data-dash-status="refresh">Jetzt aktualisieren</button></h4>
+          <div id="dashDataStatusBody" class="dash-body"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div id="inventoryView" class="hidden">
+    <div class="inventory-view-head">
+      <h2>Inventar</h2>
+      <div class="inventory-head-controls">
+        <button id="inventoryGodrollFilter" type="button">Godrolls</button>
+        <input id="inventorySearch" type="search" placeholder="Suchen">
+          <button id="inventoryFilterBtn" class="btn ghost small">Filter ▾</button>
+        <input id="" type="search" placeholder="Suchen">        <select id="inventoryLoadoutChar"></select>
+        <input id="inventoryLoadoutName" type="text" placeholder="Loadout-Name">
+        <button id="inventoryLoadoutSave" type="button">Sichern</button>
+        <button id="inventoryRefresh" type="button">Aktualisieren</button>
+        <button id="inventoryCloseBtn" type="button">Schließen</button>
+      </div>
+    </div>
+    <div id="inventoryStatus" class="inventory-status"></div>
+    <div class="inventory-toolbar"></div>
+    <div id="inventoryResult" class="inventory-result hidden"></div>
+    <div id="inventoryDetail" class="inventory-detail hidden"></div>
+    <div id="inventoryLoadoutList" class="inventory-loadout-list"></div>
+    <div id="inventoryBody" class="inventory-body"></div>
+    <div class="inventory-pad-hint" aria-hidden="true"><span><kbd>A</kbd> Öffnen</span><span><kbd>D-Pad</kbd> Navigieren</span></div>
+    <span id="inventorySearchCount" class="inventory-search-count" aria-live="polite"></span>
+    <div id="inventoryTooltip" class="hidden"></div>
+  </div>
+  <button id="inventoryBtn" type="button">Inventar</button>
+  <div id="toasts"></div>
+  <script>window.__D2_E2E = true;</script>
+  <script src="/renderer/js/i18n-en.js"></script>
+  <script src="/renderer/js/i18n.js"></script>
+  <script type="module" src="./test.js"></script>
+</body>
+</html>

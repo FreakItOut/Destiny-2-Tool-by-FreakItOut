@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [],
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "types/globals.d.ts",
+    "renderer/js/armor-math.js",
+    "renderer/js/clock.js",
+    "renderer/js/build-card.js",
+    "renderer/js/picker-worker.js",
+    "renderer/js/encounter-data.js"
+  ]
+}

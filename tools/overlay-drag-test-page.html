@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<body style="margin:0;background:#222;color:#fff;font:14px monospace">
+  <div id="target" style="width:200px;height:100px;background:#4a6;margin:50px;display:flex;align-items:center;justify-content:center">Klick mich</div>
+  <div id="out" style="margin:20px">warte...</div>
+  <div id="drag" draggable="true" style="width:120px;height:60px;background:#c65;margin:20px;display:flex;align-items:center;justify-content:center">Drag mich</div>
+  <div id="drop" style="width:200px;height:100px;border:2px dashed #fff;margin:20px;display:flex;align-items:center;justify-content:center">Drop hier</div>
+  <script>
+    let clicks = 0;
+    document.getElementById('target').addEventListener('click', (e) => {
+      clicks++;
+      document.getElementById('out').textContent = 'Klicks: ' + clicks + ' (trusted=' + e.isTrusted + ')';
+    });
+    let dragState = 'noch nichts';
+    document.getElementById('drag').addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', 'drag-item');
+      dragState = 'dragstart isTrusted=' + e.isTrusted;
+      document.getElementById('out').textContent = dragState;
+    });
+    document.getElementById('drop').addEventListener('dragover', (e) => {
+      e.preventDefault();
+      document.getElementById('out').textContent = 'dragover! ' + dragState;
+    });
+    document.getElementById('drop').addEventListener('drop', (e) => {
+      e.preventDefault();
+      const data = e.dataTransfer.getData('text/plain');
+      document.getElementById('out').textContent = 'DROP! data="' + data + '" ' + dragState;
+    });
+  </script>
+</body>
+</html>

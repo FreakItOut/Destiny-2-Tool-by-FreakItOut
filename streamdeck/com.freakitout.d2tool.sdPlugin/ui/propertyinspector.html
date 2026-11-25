@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Destiny 2 Tool</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; font-size: 12px; margin: 10px; color: #e8ecf2; background: #1f2430; }
+    h3 { margin: 0 0 8px; font-size: 13px; color: #f3c66a; }
+    label { display: block; margin: 8px 0 2px; color: #b9c6d8; }
+    input, select { width: 100%; box-sizing: border-box; padding: 5px; border: 1px solid #3a4a60; border-radius: 4px; background: #111722; color: #e8ecf2; }
+    button { padding: 6px 10px; border-radius: 4px; border: 1px solid #3a4a60; background: #223047; color: #e8ecf2; cursor: pointer; }
+    button:hover { background: #2b3c57; }
+    .hint { color: #8c9ab0; font-size: 10px; margin-top: 2px; }
+    .row { display: flex; gap: 6px; align-items: center; }
+    .row > * { flex: 1; }
+    .status-ok { color: #5fe0a0; }
+    .status-error { color: #ff6b7d; }
+    .check { display: flex; gap: 6px; align-items: center; margin-top: 8px; color: #b9c6d8; }
+    .check input { width: auto; }
+    hr { border: 0; border-top: 1px solid #334158; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <h3>Verbindung</h3>
+  <label>API-URL</label>
+  <input id="apiUrl" value="http://127.0.0.1:7331" autocomplete="off">
+  <label>Token</label>
+  <input id="token" type="password" autocomplete="off">
+  <div class="row">
+    <div>
+      <label>Sprache</label>
+      <select id="lang"><option value="de">Deutsch</option><option value="en">English</option></select>
+    </div>
+    <div>
+      <label>Theme</label>
+      <select id="theme"><option value="dark">Dunkel</option><option value="light">Hell</option></select>
+    </div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button id="saveGlobal">Speichern</button>
+    <button id="testConnection">Testen</button>
+  </div>
+  <label class="check" style="margin-top:8px"><input id="autoProfile" type="checkbox"><span>Profil automatisch nach Aktivität wechseln</span></label>
+  <label>Profil-Präfix</label>
+  <input id="profilePrefix" placeholder="z. B. D2 " autocomplete="off">
+  <p id="globalStatus" class="hint">Nicht verbunden.</p>
+  <div class="hint">Der Token bleibt lokal in den Stream-Deck-Einstellungen und wird nur als Header gesendet.</div>
+
+  <hr>
+  <div id="viewRow">
+    <label>Werkzeugseite</label>
+    <select id="view">
+      <option value="overview">Übersicht</option>
+      <option value="builds">Builds</option>
+      <option value="week">Woche</option>
+      <option value="collection">Sammlung</option>
+      <option value="vendor">Händler</option>
+    </select>
+  </div>
+  <div id="loadoutRow">
+    <label>Loadout (ID oder Name)</label>
+    <input id="loadout" list="loadoutOptions" placeholder="z. B. PvE oder lo-123">
+    <datalist id="loadoutOptions"></datalist>
+  </div>
+  <div id="keyRow">
+    <label>Status-Key</label>
+    <select id="key">
+      <option value="postmaster">Postfach</option>
+      <option value="vault">Tresor</option>
+      <option value="checklist">Checkliste</option>
+      <option value="week">Woche</option>
+      <option value="reset">Reset</option>
+      <option value="xur">Xûr</option>
+      <option value="focus">Fokus</option>
+      <option value="controller">Controller</option>
+      <option value="activity">Aktivität</option>
+      <option value="game">Spiel</option>
+      <option value="godrolls">Godrolls</option>
+      <option value="loadouts">Loadouts</option>
+      <option value="loadout">Loadout</option>
+      <option value="nightfall">Nightfall</option>
+      <option value="season">Saison</option>
+      <option value="crafting">Crafting</option>
+      <option value="xur-wishlist">Xûr-Wunschliste</option>
+      <option value="champion">Champion-Deckung</option>
+      <option value="data">Datenstatus</option>
+      <option value="security">Sicherheit</option>
+      <option value="backup">Backup</option>
+      <option value="session">Session-Ziel</option>
+      <option value="watch">Händler-Beobachtung</option>
+    </select>
+  </div>
+  <div id="goalRow">
+    <label>Session-Ziel (ID oder Text, optional)</label>
+    <input id="goal" placeholder="z. B. 3 GMs" autocomplete="off">
+  </div>
+  <div id="slotRow">
+    <label>Loadout-Slot</label>
+    <select id="slot">
+      <option value="0">1</option><option value="1">2</option><option value="2">3</option>
+      <option value="3">4</option><option value="4">5</option><option value="5">6</option>
+    </select>
+  </div>
+  <div id="modeRow">
+    <label>Modus</label>
+    <select id="mode">
+      <option value="streamer">Streamer</option>
+      <option value="tv">TV</option>
+      <option value="controller">Controller</option>
+    </select>
+  </div>
+  <div id="badgeRow" class="check">
+    <input id="showBadge" type="checkbox">
+    <label for="showBadge" style="margin:0">Badge-Bild verwenden</label>
+    <button id="testBadgeBtn" type="button" style="margin-left:auto">Testen</button>
+  </div>
+  <div id="pathRow">
+    <label>API-Pfad</label>
+    <input id="path" placeholder="/action/toast?message=Hallo">
+  </div>
+  <div id="longPathRow">
+    <label>Langdruck-Pfad (optional)</label>
+    <input id="longPath" placeholder="/action/loadout/missing?name=PvE">
+  </div>
+
+  <script>
+    let websocket = null;
+    let context = '';
+    let actionUuid = '';
+    let piUuid = '';
+    let optionsLoaded = false;
+    const keyFields = ['view', 'loadout', 'key', 'path', 'longPath', 'showBadge', 'goal', 'slot', 'mode'];
+    const globalFields = ['apiUrl', 'token', 'lang', 'theme', 'autoProfile', 'profilePrefix'];
+
+    function qs(id) { return document.getElementById(id); }
+
+    function currentGlobal() {
+      return {
+        apiUrl: qs('apiUrl').value.trim(),
+        token: qs('token').value.trim(),
+        lang: qs('lang').value,
+        theme: qs('theme').value,
+        autoProfile: qs('autoProfile').checked === true,
+        profilePrefix: qs('profilePrefix').value.trim()
+      };
+    }
+
+    function currentKeySettings() {
+      const settings = {};
+      for (const id of keyFields) {
+        const el = qs(id);
+        if (!el) continue;
+        settings[id] = id === 'showBadge' ? el.checked === true : el.value.trim();
+      }
+      return settings;
+    }
+
+    function applyGlobal(settings) {
+      if (!settings) return;
+      if (settings.apiUrl != null) qs('apiUrl').value = settings.apiUrl;
+      if (settings.token != null) qs('token').value = settings.token;
+      if (settings.lang != null) qs('lang').value = settings.lang === 'en' ? 'en' : 'de';
+      if (settings.theme != null) qs('theme').value = settings.theme === 'light' ? 'light' : 'dark';
+      if (settings.autoProfile != null) qs('autoProfile').checked = settings.autoProfile === true;
+      if (settings.profilePrefix != null) qs('profilePrefix').value = settings.profilePrefix || '';
+    }
+
+    function applyKeySettings(settings) {
+      if (!settings) return;
+      for (const id of keyFields) {
+        const el = qs(id);
+        if (!el || settings[id] == null) continue;
+        if (id === 'showBadge') el.checked = settings[id] === true;
+        else el.value = settings[id];
+      }
+    }
+
+    function visibleForAction(uuid) {
+      const value = String(uuid || '');
+      qs('viewRow').hidden = !value.endsWith('.view');
+      qs('loadoutRow').hidden = !(value.endsWith('.loadout') || value.endsWith('.loadout.slot'));
+      qs('keyRow').hidden = !(value.endsWith('.status') || value.endsWith('.status.encoder') || value.endsWith('.reset.dial') || value.endsWith('.cockpit'));
+      qs('badgeRow').hidden = !(value.endsWith('.status') || value.endsWith('.status.encoder') || value.endsWith('.reset.dial') || value.endsWith('.cockpit'));
+      qs('pathRow').hidden = !value.endsWith('.command');
+      qs('longPathRow').hidden = !value;
+      qs('goalRow').hidden = !(value.endsWith('.session.goal') || value.endsWith('.status'));
+      qs('slotRow').hidden = !value.endsWith('.loadout.slot');
+      qs('modeRow').hidden = !value.endsWith('.modes');
+    }
+
+    function postPerKey() {
+      if (!websocket || !context) return;
+      const settings = currentKeySettings();
+      websocket.send(JSON.stringify({ event: 'setSettings', context, payload: settings }));
+    }
+
+    function postGlobal(save) {
+      if (!websocket) return;
+      const settings = currentGlobal();
+      if (save) websocket.send(JSON.stringify({ event: 'setGlobalSettings', context: piUuid, payload: settings }));
+      websocket.send(JSON.stringify({ event: 'sendToPlugin', action: actionUuid, context, payload: { type: 'save-global', settings } }));
+    }
+
+    function requestOptions() {
+      if (!websocket || !context || optionsLoaded) return;
+      optionsLoaded = true;
+      websocket.send(JSON.stringify({ event: 'sendToPlugin', action: actionUuid, context, payload: { type: 'get-options' } }));
+    }
+
+    function testConnection() {
+      if (!websocket || !context) return;
+      const result = qs('globalStatus');
+      result.textContent = 'Teste …';
+      result.className = 'hint';
+      websocket.send(JSON.stringify({ event: 'sendToPlugin', action: actionUuid, context, payload: { type: 'test-connection', settings: currentGlobal() } }));
+    }
+
+    function fillOptions(payload) {
+      if (!payload) return;
+      if (Array.isArray(payload.loadouts)) {
+        const list = qs('loadoutOptions');
+        list.innerHTML = '';
+        for (const entry of payload.loadouts) {
+          const option = document.createElement('option');
+          option.value = entry.name || entry.id;
+          option.label = `${entry.name || entry.id} (${entry.classType === 0 ? 'Titan' : entry.classType === 1 ? 'Jäger' : entry.classType === 2 ? 'Warlock' : 'Alle'})`;
+          list.appendChild(option);
+        }
+      }
+      if (payload.connected === false && payload.error) {
+        const status = qs('globalStatus');
+        status.textContent = payload.error;
+        status.className = 'hint status-error';
+      }
+    }
+
+    window.connectElgatoStreamDeckSocket = function (port, uuid, registerEvent, info, actionInfo) {
+      let infoObject = {};
+      try { infoObject = JSON.parse(actionInfo || '{}'); } catch (error) { infoObject = {}; }
+      piUuid = uuid;
+      context = infoObject.context || uuid;
+      actionUuid = infoObject.action || '';
+      applyKeySettings(infoObject.payload && infoObject.payload.settings);
+      visibleForAction(actionUuid);
+      websocket = new WebSocket('ws://127.0.0.1:' + port);
+      websocket.onopen = () => {
+        websocket.send(JSON.stringify({ event: registerEvent, uuid }));
+        websocket.send(JSON.stringify({ event: 'getGlobalSettings', context: uuid }));
+        websocket.send(JSON.stringify({ event: 'getSettings', context }));
+        requestOptions();
+      };
+      websocket.onmessage = (event) => {
+        let message = {};
+        try { message = JSON.parse(event.data); } catch (error) { return; }
+        if (message.event === 'didReceiveGlobalSettings') {
+          applyGlobal(message.payload && message.payload.settings);
+          optionsLoaded = false;
+          requestOptions();
+        }
+        if (message.event === 'didReceiveSettings') applyKeySettings(message.payload && message.payload.settings);
+        if (message.event === 'sendToPropertyInspector') {
+          const payload = message.payload || {};
+          if (payload.type === 'options') fillOptions(payload);
+          if (payload.type === 'test-result') {
+            const status = qs('globalStatus');
+            status.textContent = payload.ok ? `Verbunden · HTTP ${payload.status}` : `Nicht verbunden · ${(payload.body && payload.body.error) || payload.status || 'Fehler'}`;
+            status.className = payload.ok ? 'hint status-ok' : 'hint status-error';
+          }
+          if (payload.type === 'global-saved') {
+            const status = qs('globalStatus');
+            status.textContent = 'Verbindung gespeichert.';
+            status.className = 'hint status-ok';
+            optionsLoaded = false;
+            requestOptions();
+          }
+          if (payload.type === 'badge-result') {
+            const status = qs('globalStatus');
+            status.textContent = payload.ok ? 'Badge-Test gesendet.' : `Badge-Test fehlgeschlagen (${payload.status || 'Fehler'}).`;
+            status.className = payload.ok ? 'hint status-ok' : 'hint status-error';
+          }
+        }
+      };
+      websocket.onerror = () => {
+        const status = qs('globalStatus');
+        status.textContent = 'Stream Deck nicht erreichbar.';
+        status.className = 'hint status-error';
+      };
+    };
+
+    qs('saveGlobal').addEventListener('click', () => postGlobal(true));
+    qs('testConnection').addEventListener('click', testConnection);
+    qs('testBadgeBtn').addEventListener('click', () => {
+      if (!websocket || !context) return;
+      websocket.send(JSON.stringify({ event: 'sendToPlugin', action: actionUuid, context, payload: { type: 'test-badge', key: qs('key').value } }));
+    });
+    for (const id of keyFields) {
+      const el = qs(id);
+      if (el) el.addEventListener('change', postPerKey);
+    }
+    for (const id of globalFields) {
+      const el = qs(id);
+      if (el) el.addEventListener('change', () => postGlobal(false));
+    }
+    visibleForAction('');
+  </script>
+</body>
+</html>

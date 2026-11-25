@@ -1,0 +1,45 @@
+{
+  "Name": "Destiny 2 Tool",
+  "Author": "FreakItOut",
+  "Version": "1.1.0",
+  "Category": "Destiny 2 Tool",
+  "Icon": "icon",
+  "URL": "https://127.0.0.1:7331/",
+  "Actions": [
+    {
+      "Name": "Status",
+      "UUID": "com.freakitout.d2tool.status",
+      "Tooltip": "Poststelle, Godrolls und Reset anzeigen",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "key-default", "TitleAlignment": "bottom" }]
+    },
+    {
+      "Name": "Prioritäten",
+      "UUID": "com.freakitout.d2tool.priorities",
+      "Tooltip": "Aktuelle Aufgaben anzeigen",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "key-default", "TitleAlignment": "bottom" }]
+    },
+    {
+      "Name": "Loadout anwenden",
+      "UUID": "com.freakitout.d2tool.loadout",
+      "Tooltip": "Wendet ein gespeichertes Loadout an (Aktion /action/loadout)",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "key-default", "TitleAlignment": "bottom" }]
+    },
+    {
+      "Name": "Werkzeugseite öffnen",
+      "UUID": "com.freakitout.d2tool.view",
+      "Tooltip": "Öffnet Übersicht, Builds, Woche, Sammlung oder Händler (Aktion /action/view)",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "key-default", "TitleAlignment": "bottom" }]
+    },
+    {
+      "Name": "Overlay umschalten",
+      "UUID": "com.freakitout.d2tool.overlay",
+      "Tooltip": "Blendet das Overlay ein oder aus (Aktion /action/overlay)",
+      "Controllers": ["Keypad"],
+      "States": [{ "Image": "key-default", "TitleAlignment": "bottom" }]
+    }
+  ]
+}

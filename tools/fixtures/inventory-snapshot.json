@@ -1,0 +1,12 @@
+﻿{
+  "ok": true,
+  "fetchedAt": 1700000000000,
+  "characters": [{ "id": "c1", "classType": 0, "light": 2000, "stats": { "392767087": 100 } }],
+  "vault": [{ "hash": 1001, "instanceId": "v1", "name": "Vault Gun", "typeName": "Waffe", "bucket": 1498876634, "classType": 3, "power": 2000, "godRoll": true }],
+  "backpack": { "c1": [{ "hash": 1002, "instanceId": "b1", "name": "Backpack Armor", "typeName": "Rüstung", "bucket": 14239492, "classType": 0, "power": 1990 }] },
+  "equipped": { "c1": [] },
+  "postmaster": { "c1": [{ "hash": 1003, "instanceId": "p1", "name": "Postmaster Gun", "typeName": "Waffe", "bucket": 1498876634, "classType": 3, "power": 1980 }] },
+  "materials": [{ "hash": 2001, "name": "Legendäre Splitter", "quantity": 250 }],
+  "godrolls": 1,
+  "manifestVersion": "test"
+}

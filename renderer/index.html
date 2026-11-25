@@ -1,0 +1,2215 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' file: blob:; font-src 'self' data:; connect-src 'self' https:; frame-src https: http:; child-src https: http:; media-src 'self' data:;">
+  <title>Destiny 2 Tool by FreakItOut</title>
+  <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="brand.css">
+<link rel="stylesheet" href="tools.css">
+<link rel="modulepreload" href="js/app.js">
+</head>
+<body class="mode-window">
+  <div id="app">
+    <header class="titlebar" id="titlebar">
+      <div class="brand">
+        <img class="brand-icon" src="../assets/icon-32.png" alt="">
+        <div class="brand-text">
+          <span class="brand-name">Destiny 2 Tool by FreakItOut</span>
+          <span class="brand-sub">Overlay &amp; Webseiten</span>
+        </div>
+      </div>
+
+      <div class="titlebar-spacer"></div>
+
+      <div class="status-cluster">
+        <button id="gameLaunchBtn" class="chip chip-accent" data-icon="play" title="Destiny 2 über Steam starten">
+          <span>Spielen</span>
+        </button>
+        <button id="dashboardBtn" class="chip" data-icon="sun" title="Dashboard: Reset, Xûr, Checkliste, Erinnerungen">
+          <span>Dashboard</span>
+        </button>
+        <span id="gameStatus" class="chip game-status" title="Ob Destiny 2 gerade läuft">
+          <span class="dot"></span>
+          <span id="gameStatusText">Spiel: –</span>
+        </span>
+        <button id="resetChip" class="chip clock-chip" title="Nächster Daily-Reset"></button>
+        <button id="xurChip" class="chip clock-chip" title="Xûr-Status"></button>
+        <button id="dataStatusChip" class="chip clock-chip" title="Snapshot-, Manifest- und API-Status">Daten: –</button>
+      </div>
+
+      <div class="window-actions">
+        <button id="pinBtn" class="win-btn" data-icon="pin" title="Immer im Vordergrund" aria-label="Immer im Vordergrund"></button>
+        <button class="win-btn" data-win="minimize" data-icon="minimize" title="Minimieren" aria-label="Minimieren"></button>
+        <button class="win-btn" data-win="maximize" data-icon="maximize" title="Maximieren" aria-label="Maximieren"></button>
+        <button class="win-btn win-close" data-win="close" data-icon="close" title="In den Tray" aria-label="Schließen"></button>
+      </div>
+    </header>
+
+    <div class="overlay-bar" id="overlayBar">
+      <div class="overlay-brand">
+        <img src="../assets/icon-32.png" alt="">
+        <span>D2</span>
+      </div>
+      <div class="overlay-pickers">
+        <select id="overlayCategorySelect" class="control" aria-label="Kategorie"></select>
+        <select id="overlaySiteSelect" class="control" aria-label="Webseite"></select>
+      </div>
+      <div class="overlay-nav">
+        <button id="overlayBackBtn" class="icon-btn" data-icon="back" title="Zurück" aria-label="Zurück"></button>
+        <button id="overlayForwardBtn" class="icon-btn" data-icon="forward" title="Vorwärts" aria-label="Vorwärts"></button>
+        <button id="overlayReloadBtn" class="icon-btn" data-icon="reload" title="Neu laden" aria-label="Neu laden"></button>
+        <button id="overlayHomeBtn" class="icon-btn" data-icon="home" title="Startseite der Webseite" aria-label="Startseite"></button>
+      </div>
+      <div class="overlay-spacer"></div>
+    <div class="bungie-status" id="bungieStatus" title="Bungie-Server-Status" hidden>
+      <span class="bungie-dot"></span>
+      <span class="bungie-label">Bungie</span>
+    </div>
+      <button id="overlayLockBtn" class="overlay-action" data-icon="unlock" title="Maus durchlassen">
+        <span>Maus</span>
+      </button>
+      <button id="overlayNotesBtn" class="icon-btn" data-icon="note" title="Notizen / Raid-Callouts" aria-label="Notizen"></button>
+      <button id="overlayDashboardBtn" class="icon-btn" data-icon="sun" title="Dashboard (Reset, Xûr, Checkliste)" aria-label="Dashboard"></button>
+      <button id="overlayLoadoutsBtn" class="icon-btn" data-icon="layers" title="Loadouts (Schnellzugriff)" aria-label="Loadouts" aria-expanded="false" aria-controls="overlayLoadoutPanel"></button>
+      <button id="overlaySettingsBtn" class="icon-btn" data-icon="settings" title="Einstellungen" aria-label="Einstellungen"></button>
+      <button id="overlayMoreBtn" class="overlay-action" title="Weitere Overlay-Elemente ein-/ausblenden" aria-expanded="false">Mehr</button>
+      <button id="overlayHideBtn" class="overlay-action" data-icon="eye" title="Overlay ausblenden">
+        <span>Ausblenden</span>
+      </button>
+      <button id="overlayExitBtn" class="overlay-action" data-icon="maximize" title="Zurück ins Fenster">
+        <span>Fenster</span>
+      </button>
+      <div class="overlay-vault" id="overlayVault" title="Tresor fast voll – Aufräumen öffnen" hidden>
+        <span>Tresor</span>
+        <strong id="overlayVaultValue">—</strong>
+      </div>
+      <div class="overlay-clock" id="overlayClock" title="Nächster Reset">
+        <span class="overlay-clock-label">Reset</span>
+        <strong id="overlayReset">—</strong>
+      </div>
+      <div class="overlay-weekly" id="overlayWeekly" title="Wöchentlicher Reset" hidden>
+        <span class="overlay-clock-label">Weekly</span>
+        <strong id="overlayWeeklyReset">—</strong>
+      </div>
+      <div class="overlay-session" id="overlaySession" title="Spielzeit dieser Sitzung">
+        <span class="overlay-clock-label">Session</span>
+        <strong id="overlaySessionTime">0:00</strong>
+      </div>
+      <div class="overlay-clock overlay-stopwatch" id="overlayStopwatch" title="Stoppuhr – Klick: Start/Pause · Rechtsklick: Reset">
+        <span class="overlay-clock-label">Timer</span>
+        <strong id="overlayStopwatchTime">0:00</strong>
+      </div>
+      <div class="overlay-activity" id="overlayActivity" hidden>
+        <span class="overlay-clock-label">Status</span>
+        <strong id="overlayActivityText"></strong>
+      </div>
+      <div class="overlay-champion" id="overlayChampion" title="Champion-Abdeckung des aktiven Loadouts">
+        <span class="overlay-clock-label">Champ</span>
+        <strong id="overlayChampionValue">—</strong>
+      </div>
+      <button type="button" class="overlay-focus" id="overlayFocus" title="Fokus-Status – Klick holt das Overlay nach vorn" hidden>
+        <span class="overlay-focus-dot"></span>
+        <span class="overlay-clock-label">Fokus</span>
+        <strong id="overlayFocusText">—</strong>
+      </button>
+      <div class="overlay-minidash" id="overlayMiniDash">
+        <span><b id="miniReset">—</b> Reset</span>
+        <span><b id="miniChecklist">—</b> offen</span>
+        <span><b id="miniXur">—</b> Xûr</span>
+      </div>
+      <div class="overlay-battery" id="overlayBattery" title="Controller-Akku" hidden>
+        <span class="overlay-battery-label">Akku</span>
+        <strong id="overlayBatteryLevel">—</strong>
+      </div>
+    </div>
+    <div id="overlayLoadoutPanel" class="overlay-lo-panel hidden" role="dialog" aria-label="Loadout-Schnellzugriff">
+      <div class="overlay-lo-head">
+        <strong>Loadouts</strong>
+        <button id="overlayLoadoutClose" class="icon-btn" data-icon="close" title="Schließen" aria-label="Schließen"></button>
+      </div>
+      <div id="overlayLoadoutList" class="overlay-lo-list"></div>
+      <p id="overlayLoadoutHint" class="overlay-lo-hint"></p>
+    </div>
+    <div id="postGameOverlay" class="post-game-overlay hidden" role="dialog" aria-live="polite" aria-label="Nach dem Spiel">
+      <div class="post-game-overlay-head">
+        <strong>Nach dem Spiel</strong>
+        <button type="button" class="icon-btn" id="postGameClose" title="Schließen" aria-label="Schließen">✕</button>
+      </div>
+      <div id="postGameBody" class="post-game-overlay-body"></div>
+      <div class="post-game-overlay-actions">
+        <button type="button" class="btn ghost small" id="postGameWeek">Woche öffnen</button>
+        <button type="button" class="btn ghost small" id="postGameDismiss">Ausblenden</button>
+      </div>
+    </div>
+    <div id="notesPanel" class="notes-panel hidden">
+      <div id="notesTabs" class="notes-tabs"></div>
+      <div class="notes-search">
+        <input id="notesSearch" type="search" placeholder="Alle Blätter / Dateien durchsuchen …">
+        <div id="notesResults" class="notes-results"></div>
+      </div>
+      <textarea id="notesText" class="notes-textarea" placeholder="Raid-Callouts, Mechaniken, Schadensphasen...&#10;&#10;# Überschrift&#10;- Liste&#10;**fett** *kursiv*"></textarea>
+      <div id="notesPreview" class="notes-preview hidden"></div>
+      <div class="notes-actions">
+        <button id="notesPreviewBtn" class="btn ghost small">Vorschau</button>
+        <button id="notesExportBtn" class="btn ghost small" data-icon="external">Export</button>
+        <button id="notesSaveBtn" class="btn primary small">Speichern</button>
+        <button id="notesCloseBtn" class="icon-btn" data-icon="close" aria-label="Schließen"></button>
+      </div>
+    </div>
+
+    <button id="miniExitBtn" class="icon-btn" data-icon="maximize" title="Minimodus beenden (Strg+M)" aria-label="Minimodus beenden"></button>
+
+    <nav class="tabbar" id="tabbar" aria-label="Kategorien"></nav>
+
+    <div class="favorites-bar" id="favoritesBar" aria-label="Favoriten"></div>
+
+    <div class="toolbar" id="toolbar">
+      <div class="nav-group">
+        <button id="backBtn" class="icon-btn" data-icon="back" title="Zurück" aria-label="Zurück"></button>
+        <button id="backHistoryBtn" class="icon-btn" data-icon="clock" title="Verlauf dieses Tabs" aria-label="Verlauf"></button>
+        <button id="forwardBtn" class="icon-btn" data-icon="forward" title="Vorwärts" aria-label="Vorwärts"></button>
+        <button id="reloadBtn" class="icon-btn" data-icon="reload" title="Neu laden (F5)" aria-label="Neu laden"></button>
+        <button id="homeBtn" class="icon-btn" data-icon="home" title="Startseite der Webseite" aria-label="Startseite"></button>
+      </div>
+
+      <div class="site-picker">
+        <label for="siteSelect">Webseite</label>
+        <select id="siteSelect" class="control"></select>
+      </div>
+
+      <div class="site-search">
+        <label for="siteSearch">Suche</label>
+        <input id="siteSearch" class="control" type="search" list="siteList" placeholder="Seite suchen …" aria-label="Seite suchen">
+        <datalist id="siteList"></datalist>
+      </div>
+
+      <div class="toolbar-actions">
+        <button id="externalBtn" class="btn ghost" data-icon="external">Im Browser</button>
+        <button id="overlayBtn" class="btn primary" data-icon="layers">Overlay</button>
+        <button id="favoriteBtn" class="icon-btn" data-icon="star" title="Aktuelle Seite als Favorit" aria-label="Favorit umschalten"></button>
+        <button id="muteBtn" class="icon-btn" data-icon="volume" title="Webseiten-Ton umschalten (Klick: dieser Tab · Rechtsklick: alle Tabs)" aria-label="Webseiten-Ton umschalten"></button>
+        <button id="toolbarNotesBtn" class="icon-btn" data-icon="note" title="Notizen / Raid-Callouts" aria-label="Notizen"></button>
+        <button id="hudBtn" class="icon-btn" data-icon="gamepad" title="Tasten-Legende ein-/ausblenden" aria-label="Tasten-Legende"></button>
+        <button id="pipBtn" class="icon-btn" data-icon="monitor" title="Aktuelle Seite als Mini-Fenster (Bild-in-Bild)" aria-label="Bild-in-Bild"></button>
+        <button id="miniBtn" class="icon-btn" data-icon="minimize" title="Minimodus: nur die Webseite (Strg+M)" aria-label="Minimodus"></button>
+        <button id="splitBtn" class="icon-btn" data-icon="columns" title="Split-View: zweite Seite daneben (Strg+Alt+S)" aria-label="Split-View"></button>
+        <button id="inventoryBtn" class="icon-btn" data-icon="backpack" title="Inventar &amp; Loadouts (Bungie-Anmeldung nötig)" aria-label="Inventar"></button>
+        <button id="unloadOthersBtn" class="icon-btn" data-icon="trash" title="Andere Seiten entladen (RAM freimachen)" aria-label="Andere Seiten entladen"></button>
+        <button id="checklistBtn" class="icon-btn" data-icon="sort" title="Wöchentliche Challenge-Checkliste" aria-label="Checkliste"></button>
+        <button id="settingsBtn" class="icon-btn" data-icon="settings" title="Einstellungen" aria-label="Einstellungen"></button>
+        <button id="helpBtn" class="icon-btn" data-icon="help" title="Hilfe &amp; Steuerung" aria-label="Hilfe"></button>
+      </div>
+    </div>
+
+    <div class="site-line">
+      <span id="siteDesc" class="site-desc"></span>
+      <span id="loadState" class="load-state"></span>
+      <div class="url-bar">
+        <input id="urlInput" class="control" type="text" spellcheck="false" placeholder="Adresse öffnen (Strg+L)" title="Adresse im aktuellen Tab öffnen">
+        <button id="urlGoBtn" class="icon-btn" data-icon="forward" title="Adresse laden" aria-label="Adresse laden"></button>
+        <button id="urlCopyBtn" class="icon-btn" data-icon="note" title="Aktuelle Adresse kopieren" aria-label="Adresse kopieren"></button>
+        <button id="urlSaveBtn" class="icon-btn" data-icon="plus" title="Aktuelle Seite als eigene Webseite speichern" aria-label="Als eigene Seite speichern"></button>
+        <button id="urlShotBtn" class="icon-btn" data-icon="camera" title="Webseite als Bild speichern (Screenshot)" aria-label="Screenshot speichern"></button>
+      </div>
+    </div>
+
+    <div id="findBar" class="find-bar hidden">
+      <input id="findInput" type="text" spellcheck="false" placeholder="Seite durchsuchen (Strg+F)">
+      <span id="findCount" class="find-count">—</span>
+      <button id="findNextBtn" class="icon-btn" data-icon="forward" title="Weiter (Enter)" aria-label="Nächster Treffer"></button>
+      <button id="findCloseBtn" class="icon-btn" data-icon="close" title="Schließen (Esc)" aria-label="Suche schließen"></button>
+    </div>
+
+    <main id="webArea" class="web-area">
+      <div id="webviews" class="webviews"></div>
+
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">✦</div>
+        <h2>Noch keine eigene Webseite</h2>
+        <p>Füge unter Einstellungen eigene Seiten hinzu. Sie erscheinen hier und in der Kategorie deiner Wahl.</p>
+        <button id="emptyAddBtn" class="btn primary" data-icon="plus">Eigene Seite hinzufügen</button>
+      </div>
+
+      <div id="webError" class="web-error hidden">
+        <div class="error-card">
+          <div class="error-icon">!</div>
+          <h3 id="webErrorTitle">Seite nicht erreichbar</h3>
+          <p id="webErrorText"></p>
+          <div class="error-actions">
+            <button id="webErrorRetry" class="btn primary" data-icon="reload">Erneut versuchen</button>
+            <button id="webErrorExternal" class="btn ghost" data-icon="external">Im Browser öffnen</button>
+            <button id="webErrorCopy" class="btn ghost" data-icon="note">Details kopieren</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="loadingBar" class="loading-bar hidden"></div>
+
+      <div id="dashboardPanel" class="dashboard hidden">
+        <div class="dash-shell">
+          <section class="dash-hero-card" id="dashHero">
+            <div class="dash-hero-bg" id="dashHeroBg"></div>
+            <div class="dash-hero-top">
+              <div class="dash-hero-identity">
+                <span class="dash-emblem-large" id="dashHeroEmblem">✦</span>
+                <div class="dash-hero-copy">
+                  <span class="dash-kicker" id="dashHeroKicker">Hüter</span>
+                  <strong id="dashHeroName">—</strong>
+                  <small id="dashHeroSub">Inventar wird geladen …</small>
+                </div>
+              </div>
+              <div class="dash-hero-timers">
+                <div class="dash-timer"><span>Reset</span><b id="dashResetTime">—</b><small id="dashResetDate"></small></div>
+                <div class="dash-timer"><span>Xûr</span><b id="dashXurState">—</b><small id="dashXurDate"></small></div>
+                <button id="dashApiChip" class="api-chip dash-api" data-state="none" title="Bungie-Datenquelle">⚪</button>
+              </div>
+            </div>
+            <div class="dash-hero-bottom">
+              <div class="dash-power"><b id="dashHeroPower">—</b><span>Power</span><small id="dashHeroDelta"></small></div>
+              <div class="dash-hero-actions">
+                <button type="button" class="btn primary small" data-dash-action="inventory">🎒 Inventar</button>
+                <button type="button" class="btn ghost small" data-dash-action="godrolls">✓ Godrolls</button>
+                <button type="button" class="btn ghost small" data-dash-action="postmaster">📬 Poststelle</button>
+                <button type="button" class="btn ghost small" data-dash-action="tools">🧭 Werkzeuge</button>
+                <button type="button" class="btn ghost small" data-dash-action="refresh">↻ Daten neu laden</button>
+                <button type="button" class="btn ghost small" data-dash-more>Mehr anzeigen</button>
+                <select class="dash-profile-select" data-dash-profile aria-label="Schnellprofil">
+                  <option value="">Profil …</option>
+                  <option value="pvp">PvP</option>
+                  <option value="pve">PvE</option>
+                  <option value="raid">Raid</option>
+                  <option value="gambit">Gambit</option>
+                </select>
+                <select class="dash-profile-select" data-dash-preset aria-label="Dashboard-Layout">
+                  <option value="all">Layout: Alles</option>
+                  <option value="beginner">Layout: Anfänger</option>
+                  <option value="pro">Layout: Profi</option>
+                  <option value="pvp">Layout: PvP</option>
+                  <option value="raid">Layout: Raid</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashTour">
+            <h4>Erste Schritte <button type="button" class="btn ghost small" data-dash-tour-close>Verstanden</button></h4>
+            <div id="dashTourBody" class="dash-body">
+              <div class="dash-priority info"><span class="dash-priority-icon">🎒</span><div class="dash-priority-text"><strong>Inventar öffnen</strong><small>Tresor, Beutetaschen, Godrolls und Loadouts.</small></div><button type="button" class="btn ghost small" data-dash-action="inventory">Öffnen</button></div>
+              <div class="dash-priority info"><span class="dash-priority-icon">🧭</span><div class="dash-priority-text"><strong>Werkzeuge prüfen</strong><small>Builds, Sammlung, Woche und Händler.</small></div><button type="button" class="btn ghost small" data-dash-action="tools">Öffnen</button></div>
+              <div class="dash-priority info"><span class="dash-priority-icon">⚙</span><div class="dash-priority-text"><strong>Benachrichtigungen einstellen</strong><small>Poststelle, Xûr, Reset und Ruhezeit.</small></div><button type="button" class="btn ghost small" data-dash-action="settings-bungie">Einstellungen</button></div>
+            </div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashPriorities">
+            <h4>Jetzt erledigen <span id="dashPriorityMeta" class="dash-h4-meta"></span></h4>
+            <div id="dashPriorityBody" class="dash-priority-list"></div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashCharacters">
+            <h4>Hüter <span id="dashCharacterMeta" class="dash-h4-meta"></span></h4>
+            <div id="dashCharactersBody" class="dash-char-grid"></div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashChampions">
+            <h4>Champion-Check <span id="dashChampionMeta" class="dash-h4-meta"></span></h4>
+            <div id="dashChampionBody" class="dash-body"></div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashMatrix">
+            <h4>Charakter-Matrix <span id="dashMatrixMeta" class="dash-h4-meta"></span></h4>
+            <div id="dashMatrixBody" class="dash-body"></div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashSince">
+            <h4>Seit gestern <span id="dashSinceMeta" class="dash-h4-meta"></span></h4>
+            <div id="dashSinceBody" class="dash-body"></div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashPostGame">
+            <h4>Letzte Aktivitäten <span id="dashPostGameMeta" class="dash-h4-meta"></span>
+              <button type="button" class="btn ghost small" data-dash-postgame-refresh>Neu laden</button>
+            </h4>
+            <div id="dashPostGameBody" class="dash-body"></div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashSeason">
+            <h4>Saison-Ziele <span id="dashSeasonMeta" class="dash-h4-meta"></span></h4>
+            <div id="dashSeasonBody" class="dash-body"></div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashPower">
+            <h4>Power &amp; Infusion <span id="dashPowerMeta" class="dash-h4-meta"></span></h4>
+            <div id="dashPowerBody" class="dash-body"></div>
+          </section>
+
+          <section class="dash-card dash-wide" id="dashTriumph">
+            <h4>Triumph-Fortschritt <span id="dashTriumphMeta" class="dash-h4-meta"></span></h4>
+            <div id="dashTriumphBody" class="dash-body"></div>
+          </section>
+
+          <details class="dash-fold">
+            <summary>Woche, Sammlung & System</summary>
+            <div class="dash-fold-body">
+          <div class="dash-columns dash-columns-main">
+            <section class="dash-card" id="dashWeek">
+              <h4>Woche <button id="dashChecklistEdit" class="btn ghost small">Checkliste</button></h4>
+              <div id="dashWeekProgress" class="dash-progress-wrap"></div>
+              <div id="dashChecklistBody" class="dash-body dash-list"></div>
+            </section>
+            <section class="dash-card" id="dashCollection">
+              <h4>Sammlung &amp; Vorrat</h4>
+              <div id="dashCollectionBody" class="dash-body"></div>
+              <div class="dash-subhead">Heutige Erinnerungen</div>
+              <div id="dashReminderBody" class="dash-body dash-list dash-reminders"></div>
+            </section>
+          </div>
+
+          <div class="dash-columns">
+            <section class="dash-card" id="dashNews">
+              <h4>Bungie-News <button id="dashNewsRefresh" class="btn ghost small">↻</button></h4>
+              <div id="dashNewsBody" class="dash-body dash-list"></div>
+            </section>
+            <section class="dash-card" id="dashBungieStatus">
+              <h4>Bungie-Status
+                <span class="dash-h4-actions">
+                  <button type="button" class="btn ghost small" data-dash-status="check">Prüfen</button>
+                  <button type="button" class="btn ghost small" data-dash-status="reload">Status</button>
+                </span>
+              </h4>
+              <div id="dashBungieStatusBody" class="dash-body"></div>
+            </section>
+            <section class="dash-card" id="dashDataStatus">
+              <h4>Datenstatus <button type="button" class="btn ghost small" data-dash-status="ics">Kalender exportieren</button> <button type="button" class="btn ghost small" data-dash-status="refresh">Jetzt aktualisieren</button></h4>
+              <div id="dashDataStatusBody" class="dash-body"></div>
+            </section>
+          </div>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div id="inventoryView" class="inventory-view hidden">
+        <div class="inventory-view-head">
+          <div>
+            <h2>Inventar &amp; Loadouts</h2>
+            <p class="inventory-view-sub">Tresor, Beutetaschen und angelegte Items — Bungie-Anmeldung nötig. Transfer und Ausrüsten laufen direkt über die Bungie-API.</p>
+          </div>
+          <div class="inventory-head-controls">
+            <button id="inventoryGodrollFilter" class="btn ghost small" title="Godrolls hervorheben (andere Items werden gedimmt)">✓ Godrolls</button>
+            <button id="inventoryWishlistRefresh" class="btn ghost small" data-icon="reload" title="Wunschlisten-Cache verwerfen und neu laden">Wunschliste</button>
+            <button id="inventoryDuplicatesBtn" class="btn ghost small" title="Identische Items (gleicher Hash) aus Beutetaschen in den Tresor">Duplikate → Tresor</button>
+            <button id="inventoryRefresh" class="btn ghost small" data-icon="reload">Aktualisieren</button>
+            <button id="inventoryCloseBtn" class="icon-btn" data-icon="close" aria-label="Schließen"></button>
+          </div>
+        </div>
+        <div class="inventory-toolbar">
+          <input id="inventorySearch" type="search" data-pad-keyboard="1" class="inventory-search" list="inventorySearchHints" placeholder="Suchen: Name, is:godroll, -is:exotic, perk:&quot;…&quot;, stat:gesundheit&gt;=20">
+          <datalist id="inventorySearchHints">
+            <option value="is:godroll"></option>
+            <option value="is:dupe"></option>
+            <option value="is:equipped"></option>
+            <option value="is:locked"></option>
+            <option value="is:masterworked"></option>
+            <option value="is:tier5"></option>
+            <option value="is:exotic"></option>
+            <option value="perk:"></option>
+            <option value="stat:"></option>
+            <option value="slot:"></option>
+            <option value="class:"></option>
+            <option value="set:"></option>
+            <option value="tier:"></option>
+            <option value="note:"></option>
+          </datalist>
+          <button id="inventoryFilterBtn" class="btn ghost small" title="Suchfilter, zuletzt benutzte Suchen, Perk- und Stat-Suche">Filter ▾</button>
+          <button id="inventoryPadKeyboard" class="btn ghost small" title="Virtuelle Tastatur für die Suche (Controller)">⌨ Tastatur</button>
+          <span id="inventorySearchCount" class="inventory-search-count" aria-live="polite"></span>
+          <input id="inventoryLoadoutName" type="text" maxlength="30" placeholder="Loadout-Name">
+          <select id="inventoryLoadoutChar" class="control" aria-label="Charakter für Loadout"></select>
+          <button id="inventoryLoadoutSave" class="btn ghost small" data-icon="plus">Loadout sichern</button>
+        </div>
+        <div id="inventoryStatus" class="inventory-status" aria-live="polite"></div>
+        <div id="inventoryLoadoutList" class="inventory-loadout-list"></div>
+        <div id="inventoryResult" class="inventory-result hidden" aria-live="polite"></div>
+        <div id="inventoryDetail" class="inventory-detail hidden"></div>
+        <div id="inventoryBody" class="inventory-body"><div class="check-empty">Nicht geladen – „Aktualisieren“ drücken (setzt Anmeldung voraus).</div></div>
+        <div class="inventory-pad-hint" aria-hidden="true">
+          <span><kbd>A</kbd> Öffnen</span>
+          <span><kbd>B</kbd> Zurück</span>
+          <span><kbd>LB</kbd>/<kbd>RB</kbd> Tab</span>
+          <span><kbd>D-Pad</kbd> Navigieren</span>
+          <span><kbd>Stick</kbd> Zeiger</span>
+          <span><kbd>2. Stick</kbd> Scrollen</span>
+          <span><kbd>⌨</kbd> Tastatur</span>
+        </div>
+      </div>
+      <div id="inventoryTooltip" class="inventory-tooltip"></div>
+    </main>
+
+    <footer class="statusbar">
+      <div class="hints" id="hintBar"></div>
+      <div class="status-right">
+        <span id="pageTitle" class="page-title"></span>
+        <span id="controllerStatus" class="controller-status" title="Controller-Status">
+          <span class="pad-dot"></span>
+          <span id="controllerStatusText">Controller: –</span>
+        </span>
+      </div>
+    </footer>
+  </div>
+
+  <div id="padCursor" class="pad-cursor hidden" aria-hidden="true"></div>
+  <div id="bindingHud" class="binding-hud hidden" aria-hidden="true"></div>
+
+  <div id="offlineBanner" class="offline-banner hidden">Keine Internetverbindung – Seiten werden neu geladen, sobald du wieder online bist.</div>
+
+  <div id="historyPanel" class="checklist-panel hidden">
+    <div class="checklist-head">
+      <strong>Verlauf dieses Tabs</strong>
+      <button id="historyCloseBtn" class="icon-btn" data-icon="close" aria-label="Schließen"></button>
+    </div>
+    <div id="historyList" class="checklist-list"></div>
+  </div>
+
+  <div id="paletteModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Befehlspalette">
+    <div class="palette-card">
+      <input id="paletteInput" type="text" spellcheck="false" placeholder="Befehl suchen … (Strg+K)" autocomplete="off">
+      <div id="paletteResults" class="palette-results"></div>
+    </div>
+  </div>
+
+  <div id="tabContextMenu" class="palette-card tab-context hidden" role="menu">
+    <div id="tabContextBody" class="palette-results"></div>
+  </div>
+
+  <div id="checklistPanel" class="checklist-panel hidden">
+    <div class="checklist-head">
+      <strong>Wöchentliche Checkliste</strong>
+      <span class="checklist-week" id="checklistWeek"></span>
+      <button id="checklistToNoteBtn" class="btn ghost small" title="Offene Punkte in die aktive Notiz übertragen">→ Notiz</button>
+      <button id="checklistResetBtn" class="btn ghost small">Zurücksetzen</button>
+      <button id="checklistCloseBtn" class="icon-btn" data-icon="close" aria-label="Schließen"></button>
+    </div>
+    <div id="checklistList" class="checklist-list"></div>
+    <div class="checklist-add">
+      <input id="checklistInput" type="text" maxlength="80" placeholder="Neuer Eintrag, z. B. Wochenchallenges">
+      <select id="checklistAuto" title="Automatischer Punkt">
+        <option value="">Manuell</option>
+        <option value="postmaster-empty">Auto: Postfach leer</option>
+        <option value="vault-below-1100">Auto: Tresor unter 1100</option>
+        <option value="godrolls-zero">Auto: keine Godrolls offen</option>
+      </select>
+      <button id="checklistAddBtn" class="btn primary small" data-icon="plus">Hinzufügen</button>
+    </div>
+    <p class="small-note">Wird jeden Dienstag-Reset automatisch zurückgesetzt.</p>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <!-- ==================== Einstellungen ==================== -->
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-card settings-card">
+      <header class="modal-head">
+        <div>
+          <h2 id="settingsTitle">Einstellungen</h2>
+          <p class="modal-sub">Alles wird sofort gespeichert.</p>
+        </div>
+        <button class="icon-btn" data-close-settings data-icon="close" aria-label="Schließen"></button>
+      </header>
+      <div class="settings-search-row">
+        <input id="settingsSearch" type="search" placeholder="Einstellungen durchsuchen (z. B. „trigger“, „alarm“, „zoom“) …">
+      </div>
+
+      <div class="settings-body">
+        <nav class="settings-nav" aria-label="Einstellungsbereiche">
+          <button class="settings-tab active" data-settings-tab="overlay" data-icon="layers">Overlay</button>
+          <button class="settings-tab" data-settings-tab="overlaybar" data-icon="columns">Overlay-Leiste</button>
+          <button class="settings-tab" data-settings-tab="controller" data-icon="gamepad">Controller</button>
+          <button class="settings-tab" data-settings-tab="steam" data-icon="gamepad">Steam Input</button>
+          <button class="settings-tab" data-settings-tab="web" data-icon="monitor">Webseiten</button>
+          <button class="settings-tab" data-settings-tab="custom" data-icon="star">Eigene Seiten</button>
+          <button class="settings-tab" data-settings-tab="display" data-icon="eye">Darstellung</button>
+          <button class="settings-tab" data-settings-tab="behavior" data-icon="settings">Verhalten</button>
+          <button class="settings-tab" data-settings-tab="security" data-icon="lock">Sicherheit</button>
+          <button class="settings-tab" data-settings-tab="bungie" data-icon="target">Bungie</button>
+          <button class="settings-tab" data-settings-tab="diag" data-icon="chart">Diagnose</button>
+          <button class="settings-tab" data-settings-tab="about" data-icon="info">Über</button>
+        </nav>
+
+        <div class="settings-panels">
+          <section class="settings-panel active" data-settings-panel="overlay">
+            <h3>Overlay</h3>
+            <p class="panel-hint">Das Overlay liegt über Destiny 2. Das Spiel muss dafür im <strong>randlosen Fenstermodus</strong> laufen - der exklusive Vollbildmodus verdeckt jedes Overlay.</p>
+
+            <details class="settings-group" open>
+              <summary>Tastenkürzel</summary>
+            <div class="field-row">
+              <div class="field">
+                <label for="hotkeyInput">Tastenkürzel: Overlay ein-/ausblenden</label>
+                <div class="input-row">
+                  <input id="hotkeyInput" type="text" readonly value="">
+                  <button id="hotkeyRecordBtn" class="btn ghost">Aufnehmen</button>
+                  <button id="hotkeyResetBtn" class="btn ghost" title="Auf Alt+D zurücksetzen">Standard</button>
+                </div>
+                <span class="field-hint">Wirkt auch, wenn Destiny 2 im Vordergrund ist.</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="clickThroughHotkeyInput">Tastenkürzel: Maus durchlassen</label>
+                <div class="input-row">
+                  <input id="clickThroughHotkeyInput" type="text" readonly value="">
+                  <button id="clickThroughHotkeyRecordBtn" class="btn ghost">Aufnehmen</button>
+                  <button id="clickThroughHotkeyResetBtn" class="btn ghost">Standard</button>
+                </div>
+                <span class="field-hint">Im Overlay gehen Mausklicks dann an das Spiel durch, statt das Overlay zu bedienen.</span>
+              </div>
+            </div>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="postmasterHotkeyInput">Tastenkürzel: Poststellen-Zähler</label>
+                <div class="input-row">
+                  <input id="postmasterHotkeyInput" type="text" maxlength="60" spellcheck="false" placeholder="z. B. Alt+P (leer = aus)">
+                  <button id="postmasterHotkeyResetBtn" class="btn ghost">Standard</button>
+                </div>
+                <span class="field-hint">Global; schaltet den Zähler ein/aus.</span>
+              </div>
+              <div class="field">
+                <label for="inventoryHotkeyInput">Tastenkürzel: Inventar</label>
+                <div class="input-row">
+                  <input id="inventoryHotkeyInput" type="text" maxlength="60" spellcheck="false" placeholder="z. B. Alt+I (leer = aus)">
+                  <button id="inventoryHotkeyResetBtn" class="btn ghost">Standard</button>
+                </div>
+                <span class="field-hint">Global; öffnet das Inventar (Bungie).</span>
+              </div>
+            </div>
+
+            </details>
+
+            <details class="settings-group" open>
+              <summary>Größe, Position &amp; Deckkraft</summary>
+            <div class="field-row two">
+              <div class="field">
+                <label for="overlayOpacity">Deckkraft <span id="overlayOpacityValue" class="value-badge">96 %</span></label>
+                <input id="overlayOpacity" type="range" min="40" max="100" step="1" value="96">
+              </div>
+              <div class="field">
+                <label for="overlayAnchor">Position</label>
+                <select id="overlayAnchor" class="control">
+                  <option value="center">Mittig</option>
+                  <option value="top-left">Oben links</option>
+                  <option value="top-right">Oben rechts</option>
+                  <option value="bottom-left">Unten links</option>
+                  <option value="bottom-right">Unten rechts</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="overlayAutoHide">Auto-Ausblenden nach Inaktivität</label>
+                <select id="overlayAutoHide" class="control">
+                  <option value="0">Aus</option>
+                  <option value="15">15 Sekunden</option>
+                  <option value="30">30 Sekunden</option>
+                  <option value="60">1 Minute</option>
+                  <option value="120">2 Minuten</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="overlayActivityStatus">Aktivitäten-Status (im Overlay anzeigen)</label>
+                <input id="overlayActivityStatus" type="text" maxlength="40" placeholder="z. B. NF 2/3 · Raid ✓">
+              </div>
+            </div>
+
+            <details class="settings-group">
+              <summary>Wochenplan im Overlay</summary>
+              <div class="field">
+                <label>Wochenplan (heutige Aktivität wird im Overlay angezeigt)</label>
+                <div class="schedule-grid">
+                  <input id="scheduleMon" type="text" maxlength="30" placeholder="Mo: z. B. Raid 20:00">
+                  <input id="scheduleTue" type="text" maxlength="30" placeholder="Di: z. B. Nightfall">
+                  <input id="scheduleWed" type="text" maxlength="30" placeholder="Mi: z. B. Gambit">
+                  <input id="scheduleThu" type="text" maxlength="30" placeholder="Do: z. B. Pinnacle">
+                  <input id="scheduleFri" type="text" maxlength="30" placeholder="Fr: z. B. Xûr-Check">
+                  <input id="scheduleSat" type="text" maxlength="30" placeholder="Sa: z. B. Raid">
+                  <input id="scheduleSun" type="text" maxlength="30" placeholder="So: z. B. frei">
+                <div class="field-actions-row">
+                  <button type="button" id="scheduleImportBtn" class="btn ghost small">Aus Text/ICS übernehmen</button>
+                </div>
+                </div>
+              </div>
+            </details>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="overlayWidth">Breite <span id="overlayWidthValue" class="value-badge">88 %</span></label>
+                <input id="overlayWidth" type="range" min="30" max="100" step="1" value="88">
+              </div>
+              <div class="field">
+                <label for="overlayHeight">Höhe <span id="overlayHeightValue" class="value-badge">88 %</span></label>
+                <input id="overlayHeight" type="range" min="30" max="100" step="1" value="88">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="overlayScale">Overlay-Skalierung <span id="overlayScaleValue" class="value-badge">100 %</span></label>
+              <input id="overlayScale" type="range" min="80" max="140" step="5" value="100">
+              <span class="field-hint">Nur im Overlay-Modus – z. B. 120 % für 4K/HiDPI. Breite/Höhe und Position werden pro Monitor gemerkt.</span>
+            </div>
+            <div class="field">
+              <label>Kalibrierung</label>
+              <div class="input-row">
+                <button type="button" class="btn ghost small" data-overlay-calibrate="1080p">1080p</button>
+                <button type="button" class="btn ghost small" data-overlay-calibrate="1440p">1440p</button>
+                <button type="button" class="btn ghost small" data-overlay-calibrate="4k">4K</button>
+                <button type="button" class="btn ghost small" data-overlay-calibrate="ultrawide">21:9</button>
+              </div>
+              <span class="field-hint">Setzt Größe, Skalierung und Rand passend zur Auflösung. Danach feinjustieren.</span>
+            </div>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="overlayMonitor">Monitor</label>
+                <select id="overlayMonitor" class="control"></select>
+              </div>
+              <div class="field field-actions">
+                <label>&nbsp;</label>
+                <div class="input-row">
+                  <button id="overlayTestBtn" class="btn primary" data-icon="layers">Overlay testen</button>
+                  <button id="overlayHideTestBtn" class="btn ghost" data-icon="eye">Ausblenden</button>
+                </div>
+              </div>
+            </div>
+
+            </details>
+
+            <div class="note-box">
+              <strong>Tipp:</strong> Mit <kbd>Strg</kbd> + Mausrad lässt sich die Seite zoomen. Im Overlay kannst du mit dem Controller arbeiten oder das Overlay mit der Maus durchlassen, um weiterzuspielen.
+            </div>
+
+          </section>
+
+          <section class="settings-panel" data-settings-panel="overlaybar">
+            <h3>Overlay-Leiste</h3>
+            <p class="panel-hint">Welche Elemente die Leiste über dem Overlay zeigt – und wie sie aussehen.</p>
+            <details class="settings-group" open>
+              <summary>Elemente</summary>
+            <p class="panel-hint">Welche Bedienelemente die Overlay-Kopfzeile zeigt. „Einstellungen“ bleibt immer erreichbar.</p>
+            <div class="settings-checks"><label class="check-row"><input id="ovShowMinimal" type="checkbox"><span>Minimales Overlay (nur Uhr, Session, Champion, Fokus)</span></label>
+        <label class="check-row"><input id="ovShowNotes" type="checkbox"><span>Notizen</span></label>
+            <label class="check-row"><input id="ovShowDashboard" type="checkbox"><span>Dashboard</span></label>
+            <label class="check-row"><input id="ovShowLoadouts" type="checkbox"><span>Loadout-Schnellzugriff</span></label>
+            <label class="check-row"><input id="ovShowLock" type="checkbox"><span>Maus durchlassen</span></label>
+            <label class="check-row"><input id="ovShowHide" type="checkbox"><span>Overlay ausblenden</span></label>
+            <label class="check-row"><input id="ovShowExit" type="checkbox"><span>Zurück ins Fenster</span></label>
+            <label class="check-row"><input id="ovShowClock" type="checkbox"><span>Reset-Anzeigen (Daily/Weekly)</span></label>
+            <label class="check-row"><input id="ovShowSession" type="checkbox"><span>Session-Timer</span></label>
+            <label class="check-row"><input id="ovShowActivity" type="checkbox"><span>Aktivitäts-Status</span></label>
+            <label class="check-row"><input id="ovShowBattery" type="checkbox"><span>Controller-Akku</span></label>
+            <label class="check-row"><input id="ovShowFocus" type="checkbox"><span>Fokus-Status (Overlay/Spiel/Maus durch)</span></label>
+            <label class="check-row"><input id="ovShowBungie" type="checkbox"><span>Bungie-Server-Status</span></label></div>
+            <label class="check-row"><input id="ovCompact" type="checkbox"><span>Kompakt (nur Icons und Chips)</span></label>
+            </details>
+
+            <details class="settings-group">
+              <summary>Poststellen-Zähler</summary>
+            <p class="panel-hint">
+              Kleines, dauerhaft sichtbares Fenster mit der Anzahl der Gegenstände in der Poststelle
+              (Kapazität 21). Gelb ab 15, rot ab 19 – so siehst du rechtzeitig, wann es zum Turm geht.
+              Das Fenster lässt sich frei verschieben; die Position wird gespeichert.
+            </p>
+            <label class="check-row">
+              <input id="postmasterEnabled" type="checkbox">
+              <span>Poststellen-Zähler einblenden (immer im Vordergrund)</span>
+            </label>
+            <div class="input-row">
+              <button id="postmasterRefreshBtn" class="btn ghost small" data-icon="reload">Jetzt aktualisieren</button>
+              <button id="postmasterResetPosBtn" class="btn ghost small">Position zurücksetzen</button>
+            </div>
+            <span id="postmasterHint" class="field-hint">Der Zähler aktualisiert sich alle 90 Sekunden automatisch.</span>
+            <div class="field-row two">
+              <div class="field">
+                <label for="postmasterOpacity">Deckkraft <span id="postmasterOpacityValue" class="value-badge">95 %</span></label>
+                <input id="postmasterOpacity" type="range" min="40" max="100" step="5" value="95">
+              </div>
+            </div>
+            <label class="check-row"><input id="postmasterCompact" type="checkbox"><span>Kompakt (nur Zahl und Balken)</span></label>
+            <label class="check-row"><input id="postmasterLock" type="checkbox"><span>Position sperren</span></label>
+            <label class="check-row"><input id="postmasterAutoGame" type="checkbox"><span>Nur bei laufendem Destiny 2 anzeigen</span></label>
+            <label class="check-row"><input id="postmasterInventoryOnly" type="checkbox"><span>Nur bei geöffnetem Inventar anzeigen</span></label>
+            <div class="field-row two">
+              <div class="field">
+                <label for="postmasterTheme">Darstellung</label>
+                <select id="postmasterTheme" class="control">
+                  <option value="dark">Dunkel</option>
+                  <option value="light">Hell</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="postmasterRefreshSeconds">Aktualisierung</label>
+                <select id="postmasterRefreshSeconds" class="control">
+                  <option value="15">Alle 15 Sekunden</option>
+                  <option value="30">Alle 30 Sekunden</option>
+                  <option value="60">Jede Minute</option>
+                  <option value="90">Alle 90 Sekunden</option>
+                  <option value="180">Alle 3 Minuten</option>
+                  <option value="300">Alle 5 Minuten</option>
+                </select>
+              </div>
+            </div>
+            </details>
+
+            <details class="settings-group">
+              <summary>Chip-Reihenfolge</summary>
+            <p class="panel-hint">Reihenfolge der Anzeigen rechts in der Overlay-Leiste (Reset, Session, Status, Akku).</p>
+            <div id="overlayChipOrder" class="chip-order-list"></div>
+            </details>
+
+            <details class="settings-group">
+              <summary>Layout-Profile</summary>
+            <p class="panel-hint">Aktuelle Größe, Position, Deckkraft, Chip-Reihenfolge und sichtbare Elemente als Profil speichern (max. 8).</p>
+            <div class="input-row">
+              <input id="overlayProfileName" type="text" maxlength="30" placeholder="Profilname">
+              <button id="overlayProfileSave" class="btn primary small" data-icon="plus">Speichern</button>
+            </div>
+            <div id="overlayProfileList" class="chip-order-list"></div>
+            </details>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="controller">
+            <h3>Controller</h3>
+            <p class="panel-hint">Unterstützte Controller werden automatisch erkannt (Xbox, PlayStation, Steam Input). Die Steuerung funktioniert im Overlay und im normalen Fenster.</p>
+            <p class="panel-hint">D-Pad navigiert, <kbd>A</kbd> wählt, <kbd>B</kbd> geht zurück, <kbd>LB</kbd>/<kbd>RB</kbd> wechseln den Tab. Die vollständige Belegung steht unten unter „Steuerung im Overlay“.</p>
+            <div class="field-row">
+              <div class="field">
+                <label for="gamepadProfile">Controller-Profil</label>
+                <select id="gamepadProfile">
+                  <option value="standard">Standard</option>
+                  <option value="inventory">Inventar (langsamer, präziser)</option>
+                  <option value="accessible">Barrierefrei (langsam, starke Haptik)</option>
+                </select>
+                <span class="field-hint">Setzt Cursor-Geschwindigkeit, Deadzone, Scrolltempo und Schnellmenü-Taste.</span>
+                <label class="check-row"><input id="gamepadAutoArea" type="checkbox"> Profil automatisch je Bereich (Inventar = präzise)</label>
+              </div>
+              <div class="field">
+                <label for="gamepadHaptic">Vibration</label>
+                <select id="gamepadHaptic">
+                  <option value="off">Aus</option>
+                  <option value="soft">Sanft</option>
+                  <option value="standard">Standard</option>
+                  <option value="strong">Stark</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-actions-row">
+              <button id="exportControllerConfig" class="btn ghost small">Controller-Einstellungen kopieren</button>
+              <button id="importControllerConfig" class="btn ghost small">Aus Zwischenablage laden</button>
+              <button id="checkBindingsBtn" class="btn ghost small">Tastenbelegung prüfen</button>
+            </div>
+
+            <label class="check-row">
+              <input id="gamepadEnabled" type="checkbox">
+              <span>Controller-Steuerung aktivieren</span>
+            </label>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="gamepadControllerIndex">Overlay-Controller</label>
+                <select id="gamepadControllerIndex" class="control">
+                  <option value="-1">Automatisch (erster verbundener)</option>
+                  <option value="0">Controller 1 (XInput 0)</option>
+                  <option value="1">Controller 2 (XInput 1)</option>
+                  <option value="2">Controller 3 (XInput 2)</option>
+                  <option value="3">Controller 4 (XInput 3)</option>
+                </select>
+                <span class="field-hint">Für getrennte Steuerung: Das Spiel nutzt Controller 1, das Overlay Controller 2. Das Tool liest den Controller nur (XInput) und sendet keine Eingaben an das Spiel – anti-cheat-konform.</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="gamepadQuickMenuButton">Taste: Schnellmenü (Item-Aktionen)</label>
+                <select id="gamepadQuickMenuButton" class="control">
+                  <option value="0">Keine</option>
+                  <option value="11">R3</option>
+                  <option value="10">L3</option>
+                  <option value="8">View / Select</option>
+                  <option value="9">Menu / Start</option>
+                  <option value="4">LB</option>
+                  <option value="5">RB</option>
+                </select>
+                <span class="field-hint">Öffnet im Inventar ein Schnellmenü für Tresor/Lagern/Anlegen/Favorit – im Item-Popup direkt für das gewählte Item.</span>
+              </div>
+            </div>
+            <div id="quickMenuConfig"></div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Kombination: Overlay ein-/ausblenden</label>
+                <div class="input-row">
+                  <input id="gamepadCombo" type="text" readonly value="" aria-label="Controller-Tastenkombination">
+                  <button id="gamepadRecordBtn" class="btn primary">Aufnehmen</button>
+                  <button id="gamepadResetBtn" class="btn ghost">Standard</button>
+                </div>
+                <span class="field-hint">Drücke zwei bis drei Tasten gleichzeitig. Standard: L3 + R3.</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="gamepadToggleButton">Einzeltaste: Overlay ein-/ausblenden</label>
+                <select id="gamepadToggleButton" class="control">
+                  <option value="0">Keine (nur Kombination)</option>
+                  <option value="16">Guide / Xbox-Knopf</option>
+                  <option value="8">View / Select</option>
+                  <option value="9">Menu / Start</option>
+                  <option value="4">LB</option>
+                  <option value="5">RB</option>
+                  <option value="10">L3</option>
+                  <option value="11">R3</option>
+                </select>
+                <div id="gamepadGuideStatus" class="guide-status hidden"><span class="guide-dot"></span><span class="guide-text">Guide-Knopf…</span></div>
+                <span class="field-hint">Das Tool liest den Guide-Knopf über eine erweiterte XInput-Schnittstelle (wie Windows selbst für die Game Bar). Klappt das mit deinem Controller nicht, z.&nbsp;B. „Menu / Start“ wählen.</span>
+                <span id="gamepadToggleHint" class="field-hint hidden"></span>
+              </div>
+            </div>
+
+            <div class="controller-status-line">
+              <span class="pad-dot"></span>
+              <span id="gamepadStatus">Kein Controller verbunden.</span>
+            </div>
+
+            <div class="field-actions-row">
+              <button id="controllerTestOpenBtn" class="btn primary" data-icon="gamepad">Controller-Test starten</button>
+            </div>
+
+            <div class="pad-grid" id="padGrid" aria-label="Live-Test der Controller-Tasten"></div>
+
+            <details class="settings-group">
+              <summary>Analog-Sticks kalibrieren</summary>
+            <p class="panel-hint">Hier siehst du live, was der Controller meldet. Mit „Kalibrieren“ lernt das Tool die Ruheposition und die Endpunkte deines Sticks – so stimmt die Richtung und der Weg unabhängig vom Controller.</p>
+
+            <div class="axis-view" id="axisView">
+              <div class="axis-row" data-axis="0">
+                <span class="axis-name">Links X</span>
+                <div class="axis-bar"><div class="axis-fill" id="axisFill0"></div><span class="axis-zero"></span></div>
+                <span class="axis-value" id="axisValue0">0.00</span>
+              </div>
+              <div class="axis-row" data-axis="1">
+                <span class="axis-name">Links Y</span>
+                <div class="axis-bar"><div class="axis-fill" id="axisFill1"></div><span class="axis-zero"></span></div>
+                <span class="axis-value" id="axisValue1">0.00</span>
+              </div>
+              <div class="axis-row" data-axis="2">
+                <span class="axis-name">Rechts X</span>
+                <div class="axis-bar"><div class="axis-fill" id="axisFill2"></div><span class="axis-zero"></span></div>
+                <span class="axis-value" id="axisValue2">0.00</span>
+              </div>
+              <div class="axis-row" data-axis="3">
+                <span class="axis-name">Rechts Y</span>
+                <div class="axis-bar"><div class="axis-fill" id="axisFill3"></div><span class="axis-zero"></span></div>
+                <span class="axis-value" id="axisValue3">0.00</span>
+              </div>
+            </div>
+
+            <span class="field-hint">Richtung: nach oben = negativ, nach unten = positiv (Gamepad-Standard).</span>
+
+            <div class="field-actions-row">
+              <button id="gamepadCalibrateBtn" class="btn primary" data-icon="settings">Kalibrieren starten</button>
+              <button id="gamepadCalibrateResetBtn" class="btn ghost">Kalibrierung zurücksetzen</button>
+            </div>
+            <div id="gamepadCalibrateInfo" class="field-hint"></div>
+
+            <div class="field-row two">
+              <div class="field">
+                <label class="check-row">
+                  <input id="gamepadSwapAxes" type="checkbox">
+                  <span>Achsen vertauschen (X und Y)</span>
+                </label>
+                <label class="check-row">
+                  <input id="gamepadInvertX" type="checkbox">
+                  <span>X-Achse umkehren (links ↔ rechts, z. B. bei gespiegeltem Stick)</span>
+                </label>
+                <label class="check-row">
+                  <input id="gamepadInvertY" type="checkbox">
+                  <span>Y-Achse umkehren (nur nötig, wenn dein Stick gespiegelt ist)</span>
+                </label>
+              </div>
+            </div>
+
+            </details>
+            <details class="settings-group">
+              <summary>Tasten belegen</summary>
+            <p class="panel-hint">Ordne jeder Funktion eine Taste zu. „Nicht belegt“ deaktiviert die Funktion.</p>
+            <div class="binding-grid" id="bindingGrid"></div>
+
+            <label class="check-row">
+              <input id="bindingHudToggle" type="checkbox">
+              <span>Tasten-Legende (HUD) einblenden – kleine Tafel mit der aktuellen Belegung</span>
+            </label>
+
+            <label class="check-row">
+              <input id="gamepadCursorSnap" type="checkbox">
+              <span>Cursor-Magnet-Snap: Cursor wird in die Nähe klickbarer Oberflächenelemente gezogen</span>
+            </label>
+
+            <div class="field">
+              <label for="siteDeadzoneSelect">Feinsteuerung: Deadzone pro Webseite</label>
+              <div class="input-row">
+                <select id="siteDeadzoneSelect" class="control"></select>
+                <input id="siteDeadzoneValue" type="number" min="5" max="60" step="1" class="control" style="max-width: 90px" aria-label="Deadzone-Wert">
+                <button id="siteDeadzoneResetBtn" class="btn ghost">Global</button>
+              </div>
+              <span class="field-hint">Leer = globale Deadzone (siehe oben) nutzen. Kleiner Wert = präziser Cursor – ideal für DIM, größerer Wert für normale Seiten.</span>
+            </div>
+
+            </details>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="gamepadSpeed">Cursor-Geschwindigkeit <span id="gamepadSpeedValue" class="value-badge">900</span></label>
+                <input id="gamepadSpeed" type="range" min="150" max="3000" step="50" value="900">
+              </div>
+              <div class="field">
+                <label for="gamepadDeadzone">Deadzone <span id="gamepadDeadzoneValue" class="value-badge">20 %</span></label>
+                <input id="gamepadDeadzone" type="range" min="5" max="60" step="1" value="20">
+              </div>
+            </div>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="gamepadScrollSpeed">Scroll-Geschwindigkeit <span id="gamepadScrollSpeedValue" class="value-badge">980</span></label>
+                <input id="gamepadScrollSpeed" type="range" min="150" max="3000" step="50" value="980">
+              </div>
+              <div class="field">
+                <label for="gamepadScrollDeadzone">Scroll-Deadzone <span id="gamepadScrollDeadzoneValue" class="value-badge">global</span></label>
+                <input id="gamepadScrollDeadzone" type="range" min="0" max="60" step="1" value="0">
+              </div>
+            </div>
+            <label class="check-row"><input id="gamepadScrollInvert" type="checkbox"><span>Scrollrichtung umkehren</span></label>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="triggerLeftAction">Linker Trigger (LT)</label>
+                <select id="triggerLeftAction" class="control">
+                  <option value="scroll">Scrollen (Standard)</option>
+                  <option value="click">Klicken</option>
+                  <option value="back">Zurück</option>
+                  <option value="reload">Neu laden</option>
+                  <option value="precision">Präzisionsmodus</option>
+                  <option value="categoryPrev">Kategorie zurück</option>
+                  <option value="categoryNext">Kategorie weiter</option>
+                  <option value="sitePrev">Webseite zurück</option>
+                  <option value="siteNext">Webseite weiter</option>
+                  <option value="notes">Notizen öffnen</option>
+                  <option value="pip">Mini-Fenster (PiP)</option>
+                  <option value="settings">Einstellungen</option>
+                  <option value="hide">Overlay ausblenden</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="triggerRightAction">Rechter Trigger (RT)</label>
+                <select id="triggerRightAction" class="control">
+                  <option value="scroll">Scrollen (Standard)</option>
+                  <option value="click">Klicken</option>
+                  <option value="back">Zurück</option>
+                  <option value="reload">Neu laden</option>
+                  <option value="precision">Präzisionsmodus</option>
+                  <option value="categoryPrev">Kategorie zurück</option>
+                  <option value="categoryNext">Kategorie weiter</option>
+                  <option value="sitePrev">Webseite zurück</option>
+                  <option value="siteNext">Webseite weiter</option>
+                  <option value="notes">Notizen öffnen</option>
+                  <option value="pip">Mini-Fenster (PiP)</option>
+                  <option value="settings">Einstellungen</option>
+                  <option value="hide">Overlay ausblenden</option>
+                </select>
+              </div>
+            </div>
+
+            <label class="check-row">
+              <input id="hapticSwitch" type="checkbox">
+              <span>Kurze Vibration bei Kategorie-/Seitenwechsel</span>
+            </label>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="gamepadCurve">Cursor-Kurve</label>
+                <select id="gamepadCurve" class="control">
+                  <option value="expo">Exponentiell (feinfühlig)</option>
+                  <option value="linear">Linear</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="gamepadStickChoice">Steuer-Stick</label>
+                <select id="gamepadStickChoice" class="control">
+                  <option value="left">Linker Stick</option>
+                  <option value="right">Rechter Stick</option>
+                  <option value="auto">Automatisch (stärkerer Ausschlag)</option>
+                </select>
+                <span class="field-hint">Bei einem unruhigen oder defekten zweiten Stick: fest „Linker Stick“ wählen, sonst läuft der Cursor von allein davon.</span>
+              </div>
+            </div>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="gamepadTriggerThreshold">Trigger-Schwellwert <span id="gamepadTriggerThresholdValue" class="value-badge">35 %</span></label>
+                <input id="gamepadTriggerThreshold" type="range" min="5" max="90" step="5" value="35">
+                <span class="field-hint">Ab welchem Druck LT/RT schnell scrollen. Höher = weniger Empfindlichkeit (bei Losslass-Triggerern höher stellen).</span>
+              </div>
+            </div>
+
+            <label class="check-row">
+              <input id="gamepadLongPress" type="checkbox">
+              <span>Overlay-Taste halten (0,6 s) öffnet die Einstellungen – kurzer Druck schaltet das Overlay</span>
+            </label>
+              <div class="field">
+                <label class="check-row">
+                  <input id="gamepadLeftHanded" type="checkbox">
+                  <span>Linkshänder (Sticks tauschen)</span>
+                </label>
+              </div>
+
+            <label class="check-row">
+              <input id="gamepadRumble" type="checkbox">
+              <span>Vibration beim Ein-/Ausblenden des Overlays</span>
+            </label>
+            <label class="check-row">
+              <input id="gamepadGuideToggle" type="checkbox">
+              <span>Guide-Taste (Xbox/PS) allein zum Ein-/Ausblenden nutzen</span>
+            </label>
+            <label class="check-row">
+              <input id="gamepadInvertDpad" type="checkbox">
+              <span>D-Pad-Scrollrichtung auf Webseiten umkehren (↑ scrollt nach unten)</span>
+            </label>
+            <label class="check-row">
+              <input id="gamepadXinput" type="checkbox">
+              <span>Controller direkt unter Windows auslesen (XInput) – funktioniert im Overlay ohne Fensterfokus</span>
+            </label>
+            <div class="field-row">
+              <div class="field">
+                <label for="gamepadStickFilter">Rauschfilter für die Analog-Sticks</label>
+                <select id="gamepadStickFilter" class="control">
+                  <option value="0">Aus (rohe Werte)</option>
+                  <option value="1">Normal</option>
+                  <option value="2">Stark (für sehr unruhige Controller)</option>
+                </select>
+                <span class="field-hint">Manche Controller liefern springende Werte. „Stark“ glättet stärker, kann den Cursor aber etwas träger machen.</span>
+                <label class="check-row">
+                  <input id="gamepadDetectBroken" type="checkbox">
+                  <span>Defekte Achsen automatisch erkennen und abschalten</span>
+                </label>
+                <label class="check-row">
+                  <input id="gamepadDiagnostics" type="checkbox">
+                  <span>Diagnosemodus: Tastendrücke und Rohreports ins Log schreiben</span>
+                </label>
+                <span class="field-hint">Hilfreich bei Controller-Problemen. Das Log liegt unter %APPDATA%\…\logs\app.log.</span>
+                <span class="field-hint">Manche Controller melden im Leerlauf keine 0 bei den Triggern. Das Tool gleicht das automatisch aus, damit L2/R2 nicht von selbst auslösen.</span>
+              </div>
+            </div>
+            <label class="check-row">
+              <input id="gamepadStealFocus" type="checkbox">
+              <span>Overlay holt sich beim Öffnen den Fensterfokus (Mausklicks im Overlay)</span>
+            </label>
+
+            <details class="settings-group">
+              <summary>Steuerung im Overlay</summary>
+            <div class="key-table">
+              <div><kbd>A</kbd><span>Klicken (auch in Webseiten)</span></div>
+              <div><kbd>B</kbd><span>Zurück, sonst Overlay ausblenden</span></div>
+              <div><kbd>X</kbd><span>Seite neu laden</span></div>
+              <div><kbd>Y</kbd><span>Präzisionsmodus für den Cursor</span></div>
+              <div><kbd>LB</kbd><kbd>RB</kbd><span>Kategorie wechseln</span></div>
+              <div><kbd>D↑</kbd><kbd>D↓</kbd><span>Seite scrollen</span></div>
+              <div><kbd>D←</kbd><kbd>D→</kbd><span>Webseite wechseln</span></div>
+              <div><kbd>LT</kbd><kbd>RT</kbd><span>Schnell scrollen</span></div>
+              <div><kbd>View</kbd><span>Einstellungen öffnen</span></div>
+              <div><kbd>Menu</kbd><kbd>R3</kbd><span>Overlay ausblenden</span></div>
+              <div><kbd>L3</kbd><kbd>R3</kbd><span>Overlay ein-/ausblenden (anpassbar)</span></div>
+            </div>
+            <p class="small-note">PlayStation: A = ✕, B = ○, X = □, Y = △. Die Stick-Tasten heißen L3/R3.</p>
+            </details>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="steam">
+            <h3>Steam Input &amp; Fokus</h3>
+            <p class="panel-hint">Steam Input kann den Controller im Overlay auf Tastatur/Maus umschalten. So bekommt Destiny 2 keine Gamepad-Eingaben, während das Overlay fokussiert ist. Das Tool bleibt dabei vollständig extern – es wird nichts in das Spiel injiziert.</p>
+
+            <details class="settings-group" open>
+              <summary>Fokus &amp; Eingaben</summary>
+              <label class="check-row">
+                <input id="gamepadSteamInput" type="checkbox">
+                <span>Steam Input aktiv: Controller sendet im Overlay Tastatur/Maus</span>
+              </label>
+              <div class="field-row two">
+                <div class="field">
+                  <label for="gamepadFocusGuard">Fokus-Wächter</label>
+                  <select id="gamepadFocusGuard" class="control">
+                    <option value="always">Dauerhaft</option>
+                    <option value="open">Nur beim Öffnen</option>
+                    <option value="off">Aus</option>
+                  </select>
+                  <span class="field-hint">„Dauerhaft“ holt den Fokus zurück, wenn das Overlay ihn verliert. „Nur beim Öffnen“ schützt die ersten 10 Sekunden.</span>
+                </div>
+                <div class="field">
+                  <label for="gamepadFocusGrace">Karenzzeit <span id="gamepadFocusGraceValue" class="value-badge">1,5 s</span></label>
+                  <input id="gamepadFocusGrace" type="range" min="0" max="5000" step="250" value="1500">
+                  <span class="field-hint">Wie lange das Overlay wartet, bevor es den Fokus zurückholt.</span>
+                </div>
+              </div>
+              <div id="focusStateBox" class="focus-state-box">Fokus-Status wird geladen …</div>
+              <div class="field-actions-row">
+                <button id="focusRefreshBtn" class="btn ghost small" data-icon="reload">Status prüfen</button>
+                <button id="focusOverlayBtn" class="btn primary small" data-icon="layers">Overlay fokussieren</button>
+                <button id="focusClickThroughBtn" class="btn ghost small">Maus durchlassen</button>
+              </div>
+              <p id="focusAdminHint" class="field-hint">Die Administrator-Prüfung läuft im Hintergrund.</p>
+            </details>
+
+            <details class="settings-group" open>
+              <summary>Zweiter Controller fürs Overlay</summary>
+              <p class="panel-hint">Empfehlung: Destiny 2 nutzt Controller 1, das Overlay liest Controller 2. Beide Controller bleiben unabhängig.</p>
+              <div class="field-actions-row">
+                <button id="controllerScanBtn" class="btn ghost small" data-icon="reload">Controller suchen</button>
+                <button id="controllerAutoBtn" class="btn ghost small">Automatisch (erster)</button>
+                <button id="controllerControllerTabBtn" class="btn ghost small">Zum Controller-Tab</button>
+              </div>
+              <div id="controllerScanList" class="controller-scan-list"><span class="inv-tool-muted">Noch nicht gesucht.</span></div>
+              <p id="controllerScanHint" class="field-hint">XInput meldet bis zu vier Controller. Der aktive Overlay-Controller wird grün markiert.</p>
+            </details>
+
+            <details class="settings-group">
+              <summary>Steam-Input-Mapping</summary>
+              <div class="key-table" id="steamMappingTable">
+                <div><kbd>D-Pad</kbd><span>Pfeiltasten (Navigation)</span></div>
+                <div><kbd>A</kbd><span>Enter (auswählen)</span></div>
+                <div><kbd>B</kbd><span>Escape (zurück)</span></div>
+                <div><kbd>LB</kbd><kbd>RB</kbd><span>Tab / Shift+Tab</span></div>
+                <div><kbd>Linker Stick</kbd><span>Mauszeiger (optional)</span></div>
+                <div><kbd>RT</kbd><span>Linksklick (optional)</span></div>
+                <div><kbd>Guide + Back</kbd><span>Action Set „Spiel“ ↔ „Overlay“</span></div>
+              </div>
+              <div class="field-actions-row">
+                <button id="steamMappingCopy" class="btn ghost small" data-icon="note">Mapping kopieren</button>
+              </div>
+              <p class="small-note">Im Overlay-Set alle normalen Gamepad-Aktionen entfernen. Sticks dürfen nicht als „Joystick“ belegt sein, sonst steuert Destiny 2 weiter.</p>
+            </details>
+
+            <details class="settings-group">
+              <summary>Tastatur-Navigation im Overlay</summary>
+              <div class="key-table">
+                <div><kbd>Tab</kbd><kbd>Shift+Tab</kbd><span>Fokus vor/zurück</span></div>
+                <div><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><span>Navigieren / scrollen</span></div>
+                <div><kbd>Enter</kbd><kbd>Leertaste</kbd><span>Auswählen</span></div>
+                <div><kbd>Esc</kbd><span>Schließen / zurück</span></div>
+                <div><kbd>Bild↑</kbd><kbd>Bild↓</kbd><span>Seitenweise scrollen</span></div>
+                <div><kbd>Alt+D</kbd><span>Overlay ein-/ausblenden</span></div>
+                <div><kbd>Alt+I</kbd><span>Inventar öffnen</span></div>
+                <div><kbd>Alt+P</kbd><span>Postfach öffnen</span></div>
+              </div>
+            </details>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="web">
+            <h3>Webseiten</h3>
+            <p class="panel-hint">Alle Seiten teilen sich eine Sitzung. Anmeldungen bei Bungie, Reddit und Co. bleiben deshalb erhalten.</p>
+
+            <div class="field-row two">
+              <div class="field">
+                <label for="webKeepAlive">Gleichzeitig geladene Seiten</label>
+                <select id="webKeepAlive" class="control">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                </select>
+                <span class="field-hint">Mehr Seiten = schnellerer Wechsel, aber mehr Arbeitsspeicher.</span>
+              </div>
+              <div class="field">
+                <label for="webZoom">Seiten-Zoom <span id="webZoomValue" class="value-badge">100 %</span></label>
+                <input id="webZoom" type="range" min="50" max="200" step="5" value="100">
+              </div>
+            </div>
+
+            <label class="check-row">
+              <input id="webDark" type="checkbox">
+              <span>Webseiten bevorzugen dunkles Design</span>
+            </label>
+            <label class="check-row">
+              <input id="webReaderMode" type="checkbox">
+              <span>Lesemodus (vereinfachte Darstellung, blendet Seitenleisten/Werbung aus)</span>
+            </label>
+
+            <div class="field">
+              <label for="autoRefreshSelect">Auto-Refresh pro Webseite</label>
+              <div class="input-row">
+                <select id="autoRefreshSelect" class="control"></select>
+                <select id="autoRefreshMinutes" class="control">
+                  <option value="0">Aus</option>
+                  <option value="2">Alle 2 Min</option>
+                  <option value="5">Alle 5 Min</option>
+                  <option value="10">Alle 10 Min</option>
+                  <option value="15">Alle 15 Min</option>
+                  <option value="30">Alle 30 Min</option>
+                </select>
+              </div>
+              <span class="field-hint">Lädt die gewählte Seite im Hintergrund regelmäßig neu – z. B. Raid-Report offen lassen und es aktualisiert sich selbst.</span>
+            </div>
+
+            <div class="field">
+              <label for="siteZoomSelect">Zoom pro Webseite</label>
+              <div class="input-row">
+                <select id="siteZoomSelect" class="control"></select>
+                <input id="siteZoomValue" type="number" min="50" max="200" step="5" class="control" style="max-width: 90px" aria-label="Zoom-Wert">
+                <button id="siteZoomResetBtn" class="btn ghost">Global</button>
+              </div>
+              <span class="field-hint">Leer = globaler Seiten-Zoom (oben). Praktisch: DIM etwas kleiner, News-Seiten größer.</span>
+            </div>
+
+            <div class="field">
+              <label for="siteReaderSelect">Lesemodus pro Webseite</label>
+              <div class="input-row">
+                <select id="siteReaderSelect" class="control"></select>
+                <select id="siteReaderValue" class="control">
+                  <option value="">Wie global</option>
+                  <option value="on">An</option>
+                  <option value="off">Aus</option>
+                </select>
+              </div>
+              <span class="field-hint">Überschreibt den globalen Lesemodus für die gewählte Seite (News-Seiten im Reader, DIM ohne).</span>
+            </div>
+
+            <div class="field">
+              <label for="blockerSiteSelect">Blocker-Ausnahmen pro Webseite</label>
+              <div class="input-row">
+                <select id="blockerSiteSelect" class="control"></select>
+              </div>
+              <label class="check-row">
+                <input id="blockerAdOff" type="checkbox">
+                <span>AdBlock für diese Seite aus (wenn Inhalte fehlen)</span>
+              </label>
+              <label class="check-row">
+                <input id="blockerCookieOff" type="checkbox">
+                <span>Cookie-Banner-Blocker für diese Seite aus</span>
+              </label>
+              <div class="field-actions-row">
+                <button id="blockerResetBtn" class="btn ghost">Ausnahmen entfernen</button>
+              </div>
+              <span class="field-hint">Gilt nur für die gewählte Seite. Nach Änderung die Seite einmal neu laden (F5).</span>
+            </div>
+
+            <details class="compat-details">
+              <summary>Webseiten-Kompatibilität im Overlay</summary>
+              <div class="compat-list">
+                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>DIM (Destiny Item Manager)</strong><span>Voll funktionsfähig. Anmelden, Items verwalten, Loadouts wechseln.</span></div>
+                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>Braytech</strong><span>Voll funktionsfähig. Alle Seiten laden korrekt.</span></div>
+                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>Light.gg</strong><span>Funktioniert gut. Einzelne Popups evtl. abgeschnitten.</span></div>
+                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>D2Checklist</strong><span>Voll funktionsfähig. Checklisten abhaken funktioniert.</span></div>
+                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>Today in Destiny</strong><span>Voll funktionsfähig. Alle Rotationen korrekt.</span></div>
+                <div class="compat-item warn"><span class="compat-icon">⚠</span><strong>Raid Report</strong><span>Funktioniert, aber lange Ladezeiten bei vielen Raid-Einträgen.</span></div>
+                <div class="compat-item warn"><span class="compat-icon">⚠</span><strong>Bungie.net</strong><span>Anmeldung funktioniert, aber einige Popups/Dialoge evtl. nicht klickbar.</span></div>
+                <div class="compat-item warn"><span class="compat-icon">⚠</span><strong>Mobalytics</strong><span>Builds anzeigen funktioniert, Editor evtl. eingeschränkt.</span></div>
+                <div class="compat-item bad"><span class="compat-icon">✗</span><strong>YouTube / Twitch</strong><span>Video-Wiedergabe funktioniert, aber Fullscreen-Modus nicht empfohlen.</span></div>
+                <div class="compat-item bad"><span class="compat-icon">✗</span><strong>Reddit</strong><span>Alte Version wird angezeigt. Anmelden nur eingeschränkt möglich.</span></div>
+              </div>
+              <p class="small-note">Bewertung basiert auf Community-Erfahrung. Cookie-Banner werden automatisch ausgeblendet.</p>
+            </details>
+
+            <div class="field-actions-row">
+              <button id="unloadAllBtn" class="btn ghost" data-icon="reload">Alle Seiten entladen</button>
+              <button id="clearWebDataBtn" class="btn danger" data-icon="trash">Website-Daten löschen</button>
+            </div>
+            <p class="small-note">Website-Daten löschen entfernt Cookies und Anmeldungen aller Seiten. Das Tool selbst bleibt unberührt.</p>
+            <p id="webInfo" class="small-note"></p>
+            <div class="field">
+              <label for="webIdleUnload">Inaktive Seiten entladen</label>
+              <select id="webIdleUnload" class="control">
+                <option value="0">Nie</option>
+                <option value="15">Nach 15 Minuten</option>
+                <option value="30">Nach 30 Minuten</option>
+                <option value="60">Nach 60 Minuten</option>
+              </select>
+              <span class="field-hint">Entlädt Seiten, die lange nicht benutzt wurden – sie laden beim nächsten Öffnen neu.</span>
+            </div>
+            <div class="field-actions-row">
+              <button type="button" id="webMemoryBtn" class="btn ghost small">Speicher der Seiten anzeigen</button>
+            </div>
+            <div id="webMemoryList" class="history-list">—</div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="custom">
+            <h3>Eigene Seiten</h3>
+            <p class="panel-hint">Füge beliebige Webseiten hinzu. Sie erscheinen in der gewählten Kategorie und zusätzlich unter "Eigene".</p>
+
+            <div class="custom-form">
+              <div class="field">
+                <label for="customName">Name</label>
+                <input id="customName" type="text" maxlength="80" placeholder="z. B. Meine Clan-Seite">
+              </div>
+              <div class="field">
+                <label for="customUrl">Adresse</label>
+                <input id="customUrl" type="text" maxlength="2000" placeholder="https://example.com">
+              </div>
+              <div class="field">
+                <label for="customCategory">Kategorie</label>
+                <select id="customCategory" class="control"></select>
+              </div>
+              <button id="customAddBtn" class="btn primary" data-icon="plus">Hinzufügen</button>
+            </div>
+
+            <div id="customList" class="custom-list"></div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="display">
+            <h3>Darstellung</h3>
+            <p class="panel-hint">Schrift, Kontrast, Sprache und Barrierefreiheit. Gilt für die Bedienoberfläche, nicht für Webseiten.</p>
+            <details class="settings-group" open>
+              <summary>Größe &amp; Sprache</summary>            <div class="field-row">
+              <div class="field">
+                <label for="uiScale">Oberflächen-Zoom <span id="uiScaleValue" class="value-badge">100 %</span></label>
+                <input id="uiScale" type="range" min="80" max="140" step="5" value="100">
+                <span class="field-hint">Vergrößert die Bedienoberfläche (nicht die Webseiten). Gut für größere Bildschirme/Abstände.</span>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="fontScale">Schriftgröße</label>
+                <input id="fontScale" type="range" min="85" max="130" step="5" value="100">
+                <span class="field-hint">Zusätzliche Textskalierung für bessere Lesbarkeit.</span>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="uiLanguage">Sprache der Oberfläche</label>
+                <select id="uiLanguage" class="control">
+                  <option value="de">Deutsch</option>
+                  <option value="en">English</option>
+                </select>
+                <span class="field-hint">Übersetzt die Bedienoberfläche. Item-Namen und Beschreibungen bleiben in der Spielsprache (Deutsch).</span>
+            <div class="field-actions-row">
+              <label class="check-row"><input id="dyslexiaMode" type="checkbox"><span>Lesefreundliche Darstellung (größere Abstände, klarere Schrift)</span></label>
+              <label class="check-row"><input id="solidUiMode" type="checkbox"><span>Undurchsichtige Flächen (mehr Kontrast, weniger GPU-Last)</span></label>
+              <button id="resetUiSettings" class="btn ghost small">UI-Einstellungen zurücksetzen</button>
+            </div>
+              </div>
+            </div>
+            </details>
+            <details class="settings-group" open>
+              <summary>Kontrast &amp; Bewegung</summary>            <div class="settings-checks">
+              <label class="check-row"><input id="colorblindMode" type="checkbox"><span>Farbmodus für Rot/Grün-Schwäche (Godrolls, Stat-Vergleich)</span></label>
+              <label class="check-row"><input id="highContrastMode" type="checkbox"><span>Hoher Kontrast (hellere Texte/Ränder, dunklerer Hintergrund)</span></label>
+              <label class="check-row"><input id="reduceMotionMode" type="checkbox"><span>Animationen reduzieren (Bewegungsempfindlichkeit)</span></label>
+              <label class="check-row"><input id="simpleModeMode" type="checkbox"><span>Einfache Ansicht (weniger Karten und Optionen)</span></label>
+            </div>
+            <span class="field-hint">Farbmodus ersetzt Grün/Rot durch Blau/Orange; Hoher Kontrast hebt Texte und Ränder an.</span>
+            </details>
+            <details class="settings-group">
+              <summary>TV-Modus (Fernseher)</summary>            <label class="check"><input id="tvModeMode" type="checkbox"> TV-Modus (Fernseher: große Schrift, hoher Kontrast, Fokus statt Hover)</label>
+            <span class="field-hint">Für Spieler auf dem Sofa. Vergrößert alles, blendet Kleinstinfos aus und hält Details per Fokus/Controller erreichbar. Standardmäßig aus.</span>
+            <div class="field-row"><div class="field"><button type="button" id="tvCheckBtn" class="btn ghost small">TV-Check starten</button><span class="field-hint">Testet, ob Text aus 2, 3 und 4 Metern lesbar ist.</span></div></div>
+            </details>
+            <details class="settings-group">
+              <summary>Akzentfarbe</summary>            <div class="field-row two">
+              <div class="field">
+                <label for="accentColor">Akzentfarbe</label>
+                <div class="input-row">
+                  <input id="accentColor" type="color" value="#ff4655">
+                  <button id="accentResetBtn" class="btn ghost">Standard</button>
+                </div>
+                <div class="accent-presets" id="accentPresets"></div>
+                <span class="field-hint">Standard = Farbthema der aktiven Kategorie. Eine eigene Farbe überschreibt alle Akzente (Buttons, aktive Tabs, Markierungen).</span>
+              </div>
+            </div>
+            </details>
+            <details class="settings-group">
+              <summary>Stat-HUD</summary>            <label class="check"><input id="hudShowActivity" type="checkbox"> Stat-HUD: aktuelle Aktivität anzeigen</label>
+            <label class="check"><input id="hudShowChampions" type="checkbox"> Stat-HUD: Champion-Fähigkeiten anzeigen</label>
+
+            </details>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="behavior">
+            <h3>Verhalten</h3>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Windows-Benachrichtigungen</label>
+                <div class="settings-checks"><label class="check-row"><input id="notifyEnabled" type="checkbox"><span>Benachrichtigungen aktiv</span></label>
+                <label class="check-row"><input id="notifyPostmaster" type="checkbox"><span>Poststelle fast voll / voll</span></label>
+                <label class="check-row"><input id="notifyXur" type="checkbox"><span>Xûr ist da</span></label>
+                <label class="check-row"><input id="notifyReset" type="checkbox"><span>Weekly-Reset</span></label>
+                <label class="check-row"><input id="notifyGodroll" type="checkbox"><span>Neue Godrolls im Inventar</span></label>
+                <label class="check-row"><input id="notifySuppressActivity" type="checkbox"><span>Während Aktivitäten keine Godroll-/Xûr-Toasts</span></label>
+                <label class="check-row"><input id="notifyTts" type="checkbox"><span>Benachrichtigungen vorlesen (Windows-Stimme)</span></label></div>
+                <div class="input-row">
+                  <label for="notifyQuietStart" class="field-hint">Ruhezeit von</label>
+                  <input id="notifyQuietStart" type="time">
+                  <label for="notifyQuietEnd" class="field-hint">bis</label>
+                  <input id="notifyQuietEnd" type="time">
+                </div>
+                <span class="field-hint">In der Ruhezeit werden keine Windows-Toasts angezeigt.</span>
+              </div>
+            </div>
+
+            <label class="check-row">
+              <input id="closeToTray" type="checkbox">
+              <span>Schließen-Button legt das Tool in den Tray</span>
+            </label>
+            <label class="check-row">
+              <input id="startMinimized" type="checkbox">
+              <span>Beim Start minimiert im Tray starten</span>
+            </label>
+            <label class="check-row">
+              <input id="startDashboard" type="checkbox">
+              <span>Beim Start das Dashboard zeigen (statt der letzten Webseite)</span>
+            </label>
+            <label class="check-row">
+              <input id="autoRestoreSession" type="checkbox">
+              <span>Beim Start automatisch die letzte Sitzung wiederherstellen (überschreibt Dashboard-Start)</span>
+            </label>
+            <div class="field">
+              <label for="startView">Startansicht</label>
+              <select id="startView">
+                <option value="dashboard">Dashboard</option>
+                <option value="today">Heute (nur Prioritäten)</option>
+                <option value="inventory">Inventar</option>
+                <option value="last">Letzte Webseite / Sitzung</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="clickThroughAutoReset">Maus durchlassen automatisch zurückholen</label>
+              <select id="clickThroughAutoReset" class="control">
+                <option value="0">Aus (manuell)</option>
+                <option value="2">Nach 2 Minuten</option>
+                <option value="5">Nach 5 Minuten</option>
+                <option value="10">Nach 10 Minuten</option>
+              </select>
+              <span class="field-hint">Verhindert das vergessene Durchlassen — nach Ablauf wird die Maus automatisch ins Overlay zurückgeholt.</span>
+            </div>
+            <label class="check-row">
+              <input id="startWithWindows" type="checkbox">
+              <span>Mit Windows starten</span>
+            </label>
+            <label class="check-row">
+              <input id="autoOverlayOnGame" type="checkbox">
+              <span>Overlay automatisch zeigen, wenn Destiny 2 startet</span>
+            </label>
+            <label class="check-row">
+              <input id="gameModeOptimize" type="checkbox">
+              <span>Spielmodus: Beim Spielstart Webseiten entladen (RAM sparen)</span>
+            </label>
+            <label class="check-row">
+              <input id="refocusGameOnHide" type="checkbox">
+              <span>Nach dem Ausblenden den Fokus an Destiny 2 zurückgeben (verhindert die Taskleiste über dem Vollbild)</span>
+            </label>
+            <label class="check-row">
+              <input id="disableGpu" type="checkbox">
+              <span>Hardware-Beschleunigung deaktivieren (Neustart nötig – hilft bei grafikbezogenen Abstürzen / Bluescreens)</span>
+            </label>
+            <label class="check-row">
+              <input id="adBlock" type="checkbox">
+              <span>Werbe- und Tracker-Domains blockieren</span>
+            </label>
+            <label class="check-row">
+              <input id="resetAlarm" type="checkbox">
+              <span>Alarm 15/5 Minuten vor Daily- und Weekly-Reset (Hinweis + Tray-Benachrichtigung)</span>
+            </label>
+            <label class="check-row">
+              <input id="alarmSound" type="checkbox">
+              <span>Bei Reset-Alarm zusätzlich einen Signalton abspielen</span>
+            </label>
+            <div class="field">
+              <label for="alarmSoundPathInput">Eigener Alarm-Sound (optional)</label>
+              <div class="input-row">
+                <input id="alarmSoundPathInput" type="text" readonly placeholder="Standard: kurzer Signalton">
+                <button id="alarmSoundSelectBtn" class="btn ghost">Datei wählen</button>
+                <button id="alarmSoundClearBtn" class="btn ghost">Standard</button>
+              </div>
+              <span class="field-hint">Eigene .wav/.mp3/.ogg-Datei statt dem Standardton – wird bei Reset-Alarms und Erinnerungen abgespielt.</span>
+            </div>
+            <label class="check-row">
+              <input id="lowPower" type="checkbox">
+              <span>Low-Power-Modus (spart Akku: Hintergrund gedrosselt, kein Seiten-Vorladen – Neustart nötig)</span>
+            </label>
+            <label class="check-row">
+              <input id="globalSiteHotkeys" type="checkbox">
+              <span>Globale Seiten-Kürzel (Strg+Alt+1…8): Kategorien systemweit öffnen – auch mitten im Spiel</span>
+            </label>
+
+            <div class="field-actions-row">
+              <button id="alarmTestBtn" class="btn ghost" data-icon="clock">Alarm testen</button>
+            </div>
+            <span class="field-hint">Der Test zeigt Benachrichtigung und (falls aktiviert) den Signalton, ohne auf den Reset zu warten.</span>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="gameLaunchUrl">Start-Adresse für "Spielen"</label>
+                <input id="gameLaunchUrl" type="text" spellcheck="false">
+                <span class="field-hint">Standard ist Steam. Für Epic kann hier ein anderer Link stehen.</span>
+              </div>
+            </div>
+
+            <details class="settings-group">
+              <summary>Wöchentlicher Aufräum-Vorschlag</summary>
+              <label class="check-row"><input id="cleanupScheduleEnabled" type="checkbox"><span>Wöchentlich an einen Aufräum-Lauf erinnern (Trockenlauf, nichts wird gelöscht)</span></label>
+              <div class="field-row two">
+                <div class="field">
+                  <label for="cleanupScheduleWeekday">Wochentag</label>
+                  <select id="cleanupScheduleWeekday" class="control">
+                    <option value="0">Sonntag</option><option value="1">Montag</option><option value="2">Dienstag</option><option value="3">Mittwoch</option><option value="4">Donnerstag</option><option value="5">Freitag</option><option value="6">Samstag</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cleanupScheduleTime">Uhrzeit</label>
+                  <input id="cleanupScheduleTime" type="time" class="control" value="19:00">
+                </div>
+              </div>
+              <span class="field-hint">Zur gewählten Zeit erscheint ein Hinweis mit „Bericht öffnen“ – der Lauf zeigt nur Vorschläge.</span>
+            </details>
+
+            <details class="settings-group">
+              <summary>Persönliche Erinnerungen</summary>
+            <div id="reminderList" class="reminder-list"></div>
+            <div class="reminder-add">
+              <input id="reminderText" type="text" maxlength="80" placeholder="z. B. Raid mit Clan">
+              <input id="reminderTime" type="time" class="control" aria-label="Erinnerungszeit">
+              <select id="reminderRepeat" class="control">
+                <option value="once">Einmalig</option>
+                <option value="daily">Täglich</option>
+                <option value="weekly">Wöchentlich</option>
+                <option value="onstart">Bei Destiny-2-Start</option>
+              </select>
+              <select id="reminderWeekday" class="control hidden">
+                <option value="1">Mo</option>
+                <option value="2">Di</option>
+                <option value="3">Mi</option>
+                <option value="4">Do</option>
+                <option value="5">Fr</option>
+                <option value="6">Sa</option>
+                <option value="0">So</option>
+              </select>
+              <button id="reminderAddBtn" class="btn primary small" data-icon="plus">Hinzufügen</button>
+            </div>
+            <span class="field-hint">Erinnerung als Tray-/Fenster-Benachrichtigung – funktioniert auch, wenn das Tool im Tray liegt.</span>
+            <div class="field-actions-row">
+              <button id="reminderFromScheduleBtn" class="btn ghost" data-icon="sort">Erinnerungen aus Wochenplan übernehmen</button>
+            </div>
+            <span class="field-hint">Findet Uhrzeiten im Wochenplan (Einstellungen → Overlay) und legt wöchentliche Erinnerungen dafür an – bereits vorhandene Zeiten werden übersprungen.</span>
+
+            </details>
+
+            <div class="field">
+              <label for="notesFolderInput">Notizen-Ordner (optional, .md-Dateien mit Cloud-Sync)</label>
+              <div class="input-row">
+                <input id="notesFolderInput" type="text" readonly placeholder="Standard: Notiz-Blätter in der Konfiguration">
+                <button id="notesFolderBtn" class="btn ghost">Ordner wählen</button>
+                <button id="notesFolderClearBtn" class="btn ghost">Deaktivieren</button>
+              </div>
+              <span class="field-hint">Im Ordner-Modus sind die Notizen normale .md-Dateien (z. B. im Dropbox-Ordner) – in jedem Editor bearbeitbar und automatisch synchronisiert.</span>
+            </div>
+
+            <details class="settings-group">
+              <summary>Konfig-Profile</summary>
+            <div class="field">
+              <div class="input-row">
+                <input id="profileName" type="text" maxlength="30" placeholder="Profilname, z. B. Gaming-PC">
+                <button id="profileSaveBtn" class="btn primary small" data-icon="plus">Aktuellen Stand speichern</button>
+                <button id="profileImportBtn" class="btn ghost small" data-icon="external">Profil importieren</button>
+              </div>
+            </div>
+            <div id="profileList" class="custom-list"></div>
+            <span class="field-hint">Profile sind vollständige Snapshots (Einstellungen, Seiten, Erinnerungen …). Umschalten lädt die Oberfläche neu – auch im Tray-Menü verfügbar.</span>
+
+            </details>
+            <details class="settings-group">
+              <summary>Kategorie-Reihenfolge</summary>
+            <div id="categoryOrderList" class="order-list"></div>
+            <span class="field-hint">Reihenfolge der Reiter mit den Pfeilen anpassen. Fehlende Einträge hängen automatisch hinten an – der Standard bleibt so erreichbar.</span>
+
+            </details>
+
+            <div class="field-actions-row">
+              <button id="launchGameBtn" class="btn primary" data-icon="play">Destiny 2 starten</button>
+              <button id="openConfigFolderBtn" class="btn ghost" data-icon="external">Konfigurationsordner öffnen</button>
+<button id="openCrashLogBtn" class="btn ghost" data-icon="info">Absturzprotokoll öffnen</button>
+              <button id="refreshGameBtn" class="btn ghost" data-icon="reload">Spielstatus prüfen</button>
+            </div>
+            <div class="controller-status-line">
+              <span class="dot" id="behaviorGameDot"></span>
+              <span id="behaviorGameStatus">Spielstatus wird geprüft ...</span>
+            </div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="security">
+            <h3>Sicherheit</h3>
+            <p class="panel-hint">Zugriffsschutz, lokale Schnittstellen und Sicherungen der Konfiguration.</p>
+            <details class="settings-group" open>
+              <summary>Zugriffsschutz</summary>            <div class="field-actions-row">
+              <label class="check"><input id="readOnlyMode" type="checkbox"> Read-only-Modus (keine Aktionen)</label>
+              <button id="setPinBtn" class="btn ghost" data-icon="lock">PIN setzen</button>
+              <button id="clearPinBtn" class="btn ghost">PIN entfernen</button>
+              <button id="scrubBackupsBtn" class="btn ghost">Alte Tokens aus Backups entfernen</button>
+            </div>
+            <p class="field-hint" id="securityStatus">Kein PIN gesetzt.</p>
+            <div class="field">
+              <label for="securityAutoLock">Automatisch sperren nach Minuten (0 = aus)</label>
+              <input id="securityAutoLock" type="number" min="0" max="240" step="1" value="0">
+            </div>
+            </details>
+            <details class="settings-group" open>
+              <summary>Schnittstellen (Stream Deck, Discord)</summary>            <div class="field-actions-row">
+              <label class="check"><input id="localApiEnabled" type="checkbox"> Stream-Deck-API (nur 127.0.0.1)</label>
+              <label class="check"><input id="localApiLan" type="checkbox"> Im Heimnetz freigeben (LAN)</label>
+              <input id="localApiPort" type="number" min="1024" max="65535" step="1" placeholder="Port" style="width:96px">
+              <button id="saveIntegrationsBtn" class="btn ghost" data-icon="reload">Integrationen speichern</button>
+              <button id="rotateTokenBtn" class="btn ghost" data-icon="lock">Token neu</button>
+              <button id="rotateReadTokenBtn" class="btn ghost" data-icon="lock">Nur-Lese-Token neu</button>
+              <button id="copyLocalApiBtn" class="btn ghost" data-icon="external">URL kopieren</button>
+              <button id="copyReadOnlyApiBtn" class="btn ghost" data-icon="external">Nur-Lese-URL</button>
+            </div>
+            <p class="field-hint" id="localApiStatus">Lokale API ist aus.</p>
+            <img id="localApiQr" class="local-api-qr hidden" alt="QR-Code für die lokale API">
+            <p class="field-hint" id="localApiQrHint">Der QR-Code nutzt nur den Nur-Lese-Token. Der Schreib-Token bleibt lokal.</p>
+            <div class="field-actions-row">
+              <label class="check"><input id="localApiAllowQuery" type="checkbox"> Query-Token erlauben (veraltet)</label>
+              <input id="localApiRateLimit" type="number" min="10" max="1000" step="10" placeholder="Limit/min" style="width:110px">
+            </div>
+            <div class="field-actions-row">
+              <label class="check"><input id="localApiRequireHmac" type="checkbox"> LAN: HMAC verlangen</label>
+              <input id="localApiLanIps" type="text" maxlength="500" placeholder="IP-Allowlist, z. B. 192.168.1.50, 192.168.1.0/24" style="flex:1;min-width:220px">
+            </div>
+            <div class="field">
+              <label for="localApiOrigins">Erlaubte Browser-Origins (Komma-getrennt, optional)</label>
+              <input id="localApiOrigins" type="text" maxlength="500" placeholder="http://localhost:3000, https://example.local">
+            </div>
+            <details class="settings-group">
+              <summary>Benannte Tokens</summary>
+              <div class="field-actions-row">
+                <input id="tokenName" type="text" maxlength="60" placeholder="Name (z. B. Stream Deck)" style="flex:1;min-width:160px">
+                <select id="tokenScope" style="width:140px">
+                  <option value="read">Nur lesen</option>
+                  <option value="action" selected>Aktionen</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <input id="tokenDays" type="number" min="0" max="3650" step="1" placeholder="Tage" style="width:90px">
+                <button id="createTokenBtn" class="btn ghost" data-icon="lock">Token erzeugen</button>
+              </div>
+              <p class="field-hint" id="tokenCreated"></p>
+              <div id="tokenList" class="token-list"></div>
+            </details>
+            <details class="settings-group">
+              <summary>Stream-Deck-Einrichtung</summary>
+              <p class="field-hint">1. Plugin-Paket aus <code>dist/com.freakitout.d2tool.streamDeckPlugin</code> installieren. 2. In den Plugin-Einstellungen API-URL und Token eintragen. 3. Status-Keys oder Aktionen auf das Deck legen.</p>
+              <div class="field-actions-row">
+                <button id="copyStreamDeckSetupBtn" class="btn ghost" data-icon="external">URL + Token kopieren</button>
+              </div>
+              <p class="field-hint" id="streamDeckSetupStatus">Noch nicht kopiert.</p>
+              <div class="field-actions-row">
+                <input id="signedUrlPath" type="text" value="/action/overlay" style="flex:1;min-width:220px">
+                <button id="copySignedUrlBtn" class="btn ghost">Signierte URL (24 h)</button>
+              </div>
+              <p class="field-hint" id="signedUrlStatus"></p>
+            </details>
+            <details class="settings-group">
+              <summary>API-Konsole</summary>
+              <div class="field-actions-row">
+                <select id="apiConsoleMethod" style="width:96px">
+                  <option>GET</option>
+                  <option>POST</option>
+                  <option>PATCH</option>
+                  <option>DELETE</option>
+                </select>
+                <input id="apiConsolePath" type="text" value="/state" style="flex:1;min-width:220px">
+                <button id="apiConsoleSend" class="btn ghost">Senden</button>
+              </div>
+              <div class="field-actions-row">
+                <button class="btn ghost" data-api-preset="/health">/health</button>
+                <button class="btn ghost" data-api-preset="/state">/state</button>
+                <button class="btn ghost" data-api-preset="/manifest">/manifest</button>
+                <button class="btn ghost" data-api-preset="/metrics">/metrics</button>
+                <button class="btn ghost" data-api-preset="/logs?tail=20">/logs</button>
+              </div>
+              <textarea id="apiConsoleBody" rows="3" placeholder='JSON-Body (nur POST/PATCH)' style="width:100%;box-sizing:border-box;margin-top:6px"></textarea>
+              <pre id="apiConsoleOut" class="api-console-out">Bereit.</pre>
+            </details>
+            <div class="field-actions-row">
+              <input id="discordWebhook" type="text" maxlength="400" placeholder="Discord-Webhook-URL (https://discord.com/api/webhooks/…)" style="flex:1;min-width:220px">
+              <button id="testDiscordBtn" class="btn ghost">Discord-Test</button>
+            </div>
+            <div class="field-actions-row">
+              <label class="check"><input id="webhookEnabled" type="checkbox"> Allgemeiner Webhook</label>
+              <input id="webhookUrl" type="text" maxlength="500" placeholder="https://example.local/hook" style="flex:1;min-width:220px">
+              <button id="testWebhookBtn" class="btn ghost">Webhook-Test</button>
+            </div>
+            <div class="field-actions-row">
+              <input id="webhookSecret" type="password" maxlength="128" placeholder="HMAC-Secret (optional)" style="flex:1;min-width:180px">
+              <input id="webhookEvents" type="text" maxlength="120" placeholder="Events: notification,reset,xur,godroll,vendor" style="flex:1;min-width:220px">
+            </div>
+
+            </details>
+            <details class="settings-group">
+              <summary>Konfiguration exportieren &amp; sichern</summary>
+            <div class="field">
+              <label for="backupFolderInput">Backup-Ordner (optional, z. B. OneDrive/Dropbox)</label>
+              <div class="input-row">
+                <input id="backupFolderInput" type="text" readonly placeholder="Standard: Datenordner des Tools">
+                <button id="backupFolderBtn" class="btn ghost">Ordner wählen</button>
+                <button id="backupFolderClearBtn" class="btn ghost">Standard</button>
+              </div>
+              <div class="input-row">
+                <label for="backupKeep" class="field-hint">Backups behalten</label>
+                <select id="backupKeep" class="control">
+                  <option value="4">4</option>
+                  <option value="8">8</option>
+                  <option value="12">12</option>
+                  <option value="20">20</option>
+                </select>
+              </div>
+              <span class="field-hint">Dort landen die wöchentlichen Sicherungen und verschlüsselten Auto-Backups – praktisch für Cloud-Sync.</span>
+            </div>            <div class="field-actions-row">
+              <button id="exportConfigBtn" class="btn ghost" data-icon="external">Konfiguration exportieren</button>
+              <button id="importConfigBtn" class="btn ghost" data-icon="external">Konfiguration importieren</button>
+              <button id="exportEncryptedBtn" class="btn ghost" data-icon="lock">Verschlüsseltes Backup</button>
+              <button id="importEncryptedBtn" class="btn ghost" data-icon="lock">Backup laden</button>
+              <button id="exportDiagBtn" class="btn ghost" data-icon="info">Diagnose exportieren</button>
+            </div>
+            </details>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="bungie">
+            <h3>Bungie-API</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="contentLanguage">Spielsprache der Manifest-Daten</label>
+                <select id="contentLanguage">
+                  <option value="de">Deutsch</option>
+                  <option value="en">English</option>
+                </select>
+                <span class="field-hint">Betrifft Item-, Perk- und Aktivitätsnamen. Die Bedienoberfläche bleibt unabhängig davon.</span>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Konfiguration zwischen portable und installiert übertragen</label>
+                <div class="input-row">
+                  <button id="migrateImportBtn" class="btn ghost small">Aus installiert übernehmen</button>
+                  <button id="migrateExportBtn" class="btn ghost small">In installiert sichern</button>
+                </div>
+                <span class="field-hint">Nach der Übernahme neu starten. Verschlüsselte Tokens sind danach ggf. nicht lesbar und müssen neu angemeldet werden.</span>
+              </div>
+            </div>
+            <p class="panel-hint">Mit einem kostenlosen API-Key zeigt das Dashboard deine Hüter (Lichtlevel, Klasse, zuletzt gespielt). Die Daten kommen direkt von Bungie – ohne Anmeldung im Tool. Es werden nur öffentliche Profildaten gelesen.</p>
+
+            <div class="field">
+              <label for="bungieApiKey">API-Key</label>
+              <input id="bungieApiKey" type="password" maxlength="64" spellcheck="false" autocomplete="off" placeholder="32-stelliger Schlüssel">
+              <span class="field-hint" id="bungieApiKeyState"></span>
+            </div>
+            <div class="field">
+              <label for="bungiePlayerName">Bungie-Name</label>
+              <input id="bungiePlayerName" type="text" maxlength="40" spellcheck="false" placeholder="z. B. Guardian#12345">
+              <span class="field-hint">Dein Name auf bungie.net, inklusive #Nummer (Profilseite oben rechts).</span>
+            </div>
+            <div class="field">
+              <label for="bungieOrigin">Origin (Website des Keys)</label>
+              <input id="bungieOrigin" type="text" maxlength="200" spellcheck="false" placeholder="https://localhost">
+              <span class="field-hint">Muss exakt dem „Website“-Feld deiner Anwendung im Entwicklerportal entsprechen (Standard: https://localhost). Leer lassen, wenn dort nichts steht.</span>
+            </div>
+            <div class="field-actions-row">
+              <button id="bungieTestBtn" class="btn primary" data-icon="reload">Daten testen</button>
+            </div>
+            <p class="field-hint" id="bungieApiStatus">Noch nicht getestet.</p>
+            <p class="small-note">Hinweis: Bungie bindet jeden API-Key an die im Entwicklerportal registrierte Website („Origin“). Das Tool probiert automatisch beide Varianten. Klappt es trotzdem nicht, bearbeite deine Anwendung unter <em>bungie.net → Application</em> und trage bei „Website“ exakt <strong>https://localhost</strong> ein.</p>
+
+            <h4>Bungie-Anmeldung (OAuth, Stufe 1)</h4>
+            <p class="panel-hint">Mit der Anmeldung nutzt das Tool deinen Hüter **auch dann**, wenn das Profil privat ist – und legt die Basis für Inventar/Loadouts (Stufe 2). Die Tokens bleiben auf diesem PC.</p>
+            <div class="field">
+              <label for="bungieClientId">OAuth-Client-ID</label>
+              <input id="bungieClientId" type="text" maxlength="40" spellcheck="false" placeholder="Zahlenwert aus der App-Übersicht">
+              <span class="field-hint">Entwicklerportal → deine Anwendung → „OAuth 2.0 Client ID“. Für dauerhaftes Angemeldetbleiben den OAuth-Typ <strong>„Vertraulich“</strong> wählen (dann zusätzlich das Client-Secret unten eintragen), Redirect-URL <strong>https://localhost</strong>, beide Destiny-Scopes ankreuzen. „Öffentlich“ funktioniert auch, verliert aber nach ~1 Stunde die Anmeldung. (Der API-Key bleibt zusätzlich nötig.)</span>
+            </div>
+            <div class="field">
+              <label for="bungieClientSecret">OAuth-Client-Secret</label>
+              <input id="bungieClientSecret" type="password" maxlength="200" spellcheck="false" autocomplete="new-password" placeholder="Nur bei „Vertraulicher“ App – sonst leer lassen">
+              <span class="field-hint">Bungie stellt <strong>nur vertraulichen Apps</strong> einen Refresh-Token aus – nur damit erneuert sich die Anmeldung automatisch. Secret aus dem Portal hier einfügen (wird verschlüsselt auf diesem PC gespeichert). Danach einmal <strong>Abmelden → Anmelden</strong>. <span id="bungieSecretState"></span></span>
+            </div>
+            <div class="field-actions-row">
+              <button id="bungieSecretClearBtn" class="btn ghost small">Secret löschen</button>
+            </div>
+            <div class="field-actions-row">
+              <button id="bungieLoginBtn" class="btn primary" data-icon="external">Anmelden …</button>
+              <button id="bungieRefreshBtn" class="btn ghost" data-icon="settings">Anmeldung erneuern</button>
+              <button id="bungieLogoutBtn" class="btn ghost" data-icon="close">Abmelden</button>
+            </div>
+            <p class="field-hint" id="bungieOAuthStatus">Nicht angemeldet.</p>
+            <div class="field-actions-row">
+              <button id="bungieCheckBtn" class="btn primary" data-icon="settings">Verbindung prüfen</button>
+            </div>
+            <div id="bungieCheckResult" class="bungie-check-result"></div>
+            <div class="field">
+              <label for="bungieWishlistUrl">Godroll-Wunschliste (DIM-Format, URL)</label>
+              <input id="bungieWishlistUrl" type="text" maxlength="300" spellcheck="false" placeholder="https://raw.githubusercontent.com/DestinyItemManager/dim-wish-list-sources/master/voltron.txt">
+              <span class="field-hint">DIM-Wunschliste(n) für den ✓-Godroll-Check an Waffen — <strong>mehrere URLs mit Komma trennen</strong> (alle werden geladen und gemerged). Leergelassen = kein Check. Aktualisierung alle 24 h beim Inventar-Laden; der Status erscheint im Inventar.</span>
+            </div>
+            <div class="field">
+              <label for="bungieGodrollMode">Godroll-Modus</label>
+              <select id="bungieGodrollMode" class="control">
+                <option value="exact">Exakt – alle Perks müssen passen</option>
+                <option value="traits">Traits – Lauf/Magazin ignorieren</option>
+                <option value="fast">Fast-Godrolls als Godroll zählen</option>
+              </select>
+              <span class="field-hint">„Traits“ ist für Spieler, die nur die Perk-Spalten bewerten. „Fast“ zählt Rollen mit genau einem fehlenden Perk als Godroll; die Kachel bleibt orange markiert.</span>
+            </div>
+
+            <details class="settings-group">
+              <summary>Anleitung: API-Key</summary>
+            <p class="small-note"><strong>Warum braucht dieses Tool eigene Zugangsdaten, DIM aber nicht?</strong> DIM betreibt eine eigene, zentral registrierte Bungie-Anwendung mit eigenem API-Key und OAuth-Client. Diese Zugangsdaten gehören DIM, werden nicht veröffentlicht und dürfen nicht in anderen Tools wiederverwendet werden. Deshalb braucht dieses Tool eine eigene kostenlose Bungie-Anwendung: API-Key + OAuth-Client-ID, das Client-Secret nur für dauerhaftes Angemeldetbleiben.</p>
+            <ol class="small-note steps">
+              <li>Auf <strong>bungie.net</strong> anmelden (dein Destiny-Konto).</li>
+              <li>Direkt zur Anwendungen-Seite: <strong>https://www.bungie.net/de/Application</strong> (oder unten auf der Seite „API“ klicken).</li>
+              <li>Auf <strong>„Neue Anwendung erstellen“ / „Create New App“</strong> klicken.</li>
+              <li>Felder ausfüllen: <strong>Name</strong> (z. B. „Mein D2 Tool“), Website darf leer bleiben.</li>
+              <li>Bei <strong>OAuth</strong>: <strong>„Nicht einsehbar“</strong> wählen – das reicht für die Dashboard-Daten (Hüter, Aktionen, News). Wer sich <em>anmelden</em> will (Inventar &amp; Loadouts), braucht stattdessen <strong>„Öffentlich“</strong> – siehe nächste Anleitung.</li>
+              <li>Erstellen → in der App-Übersicht steht der <strong>API-Key</strong> („API Key“-Zeile). Den 32-stelligen Schlüssel kopieren.</li>
+              <li>Schlüssel hier einfügen + deinen Bungie-Namen (mit #Nummer) eintragen → „Daten testen“.</li>
+            </ol>
+            <p class="small-note">Wichtig: Damit das Dashboard deine Hüter sieht, muss dein Bungie-Profil öffentlich sichtbar sein: bungie.net → Profil → <em>Privatsphäre-Einstellungen</em> → „Verbindungsdaten/Licht“ auf öffentlich.</p>
+
+            </details>
+            <details class="settings-group">
+              <summary>Anleitung: OAuth-Client</summary>
+            <ol class="small-note steps">
+              <li>Auf <strong>bungie.net</strong> anmelden → <strong>https://www.bungie.net/de/Application</strong> → <strong>„Neue Anwendung erstellen“</strong>.</li>
+              <li><strong>Name</strong>: frei (z. B. „Mein D2 Tool“).</li>
+              <li><strong>Website</strong>: exakt <strong>https://localhost</strong> eintragen (dieser Wert muss auch im Feld „Origin“ hier im Tool stehen — Standard ist bereits richtig).</li>
+              <li>Bei <strong>OAuth</strong>: <strong>„Vertraulich“</strong> wählen (englisch „Confidential“). Dadurch erscheinen <strong>„OAuth Redirect-URL“</strong> (dort <strong>https://localhost</strong>) und das <strong>„OAuth Client Secret“</strong>.</li>
+              <li>Bei den <strong>Bereichen (Scope)</strong>: <strong>beide</strong> Destiny-Scopes ankreuzen – <strong>„ReadDestinyInventoryAndVault“</strong> (Tresor &amp; Beutetasche <em>lesen</em>) und <strong>„MoveEquipDestinyItems“</strong> (verschieben/ausrüsten). Ohne das Lesen-Scope bleiben Tresor und Beutetasche leer!</li>
+              <li>„Ich stimme zu“ ankreuzen → <strong>Erstellen</strong>.</li>
+              <li>In der App-Übersicht <strong>„OAuth 2.0 Client ID“</strong> (Zahlenfolge) und <strong>„OAuth Client Secret“</strong> kopieren → beide oben einfügen.</li>
+              <li>„<strong>Anmelden …</strong>“ drücken → Bungie-Fenster → „Autorisieren“. Danach erneuert sich die Anmeldung automatisch (Refresh-Token).</li>
+            </ol>
+            <p class="small-note">Warum „Vertraulich“? Bungie stellt <strong>öffentlichen</strong> Apps bewusst <strong>keinen Refresh-Token</strong> aus (offizielle OAuth-Doku). Dann gilt die Anmeldung nur ca. 1 Stunde und endet mit „Anmeldung abgelaufen“. Mit Client-Secret bleibt das Tool dauerhaft angemeldet. Scopes erst NACH einer Anmeldung geändert? Einmal <strong>Abmelden → Anmelden</strong> (Abmelden widerruft die alte Autorisierung).</p>
+            </details>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="diag">
+            <h3>Diagnose</h3>
+
+            <details class="settings-group" open>
+              <summary>Session-Statistiken</summary>
+            <p class="panel-hint">Minuten pro Tag, gezählt während Destiny 2 läuft (vor dieser Umstellung gezählte Tool-Zeit bleibt erhalten).</p>
+            <div class="stats-summary" id="statsSummary"></div>
+            <div class="stats-bars" id="statsBars"></div>
+            <div class="field">
+              <label for="weeklyGoalInput">Wochenziel (Minuten, 0 = aus) <span id="weeklyGoalValue" class="value-badge">—</span></label>
+              <input id="weeklyGoalInput" type="number" min="0" max="10080" step="30" value="0">
+              <div class="stats-goal" id="weeklyGoalBar" hidden></div>
+            </div>
+
+            </details>
+            <details class="settings-group">
+              <summary>Netzwerk</summary>
+            <div class="field-actions-row">
+              <button id="netTestBtn" class="btn primary" data-icon="reload">Verbindung testen</button>
+            </div>
+            <div id="netResults" class="net-results"></div>
+
+            </details>
+            <details class="settings-group">
+              <summary>Fenster &amp; Fokus</summary>
+            <div class="field-actions-row">
+              <button id="refocusGameBtn" class="btn ghost" data-icon="target">Fokus an Destiny 2 zurückgeben</button>
+            </div>
+            <span class="field-hint">Holt das Spiel in den Vordergrund, wenn nach dem Schließen des Overlays die Taskleiste sichtbar bleibt.</span>
+            </details>
+            <details class="settings-group">
+              <summary>Controller</summary>
+            <div class="field-actions-row">
+              <button id="controllerTestOpenBtnDiag" class="btn ghost" data-icon="gamepad">Controller-Test öffnen</button>
+              <button id="webDevToolsBtn" class="btn ghost" data-icon="external">DevTools der aktiven Seite</button>
+            </div>
+            <span class="field-hint">Live-Anzeige aller Tasten, Sticks und Trigger – auch ohne geöffnete Einstellungen. DevTools öffnen die Entwicklerkonsole der aktiven Webseite (abgelöst).</span>
+
+            </details>
+            <details class="settings-group">
+              <summary>Controller-Brücke</summary>
+            <div id="bridgeStatus" class="bridge-status">—</div>
+            <div class="field-actions-row">
+              <button id="bridgeRefreshBtn" class="btn ghost" data-icon="reload">Status aktualisieren</button>
+            </div>
+
+            </details>
+            <details class="settings-group">
+              <summary>Kürzel-Test</summary>
+            <div class="field-actions-row">
+              <button id="hotkeyTestBtn" class="btn primary" data-icon="keyboard">Kürzel-Test starten</button>
+            </div>
+            <p class="field-hint" id="hotkeyTestHint">Drücke danach dein Overlay-Kürzel: Das Tool zeigt, ob es angekommen ist (wird zum Testen nicht ausgeführt).</p>
+
+            </details>
+            <details class="settings-group">
+              <summary>App-Status</summary>
+            <div id="appHealth" class="bridge-status">—</div>
+            <div class="field-actions-row">
+              <button id="appHealthBtn" class="btn ghost" data-icon="reload">Aktualisieren</button>
+            </div>
+            <p class="field-hint" id="diagRateLimit"></p>
+
+            </details>
+            <details class="settings-group">
+              <summary>Seiten-Fehler-Radar</summary>
+            <p class="panel-hint">Fehlgeschlagene Ladevorgänge pro Webseite in dieser Sitzung.</p>
+            <div id="errorRadar" class="history-list">—</div>
+            <div class="field-actions-row">
+              <button id="errorRadarBtn" class="btn ghost" data-icon="reload">Radar aktualisieren</button>
+            </div>
+
+            </details>
+            <details class="settings-group">
+              <summary>Benachrichtigungen</summary>
+            <div class="field-actions-row">
+              <button id="notifyRefreshBtn" class="btn ghost" data-icon="reload">Historie aktualisieren</button>
+            </div>
+            <div id="notifyHistory" class="history-list">—</div>
+
+            </details>
+            <details class="settings-group">
+              <summary>Konfig-Backups</summary>
+            <div class="field-actions-row">
+              <button id="backupCreateBtn" class="btn primary" data-icon="plus">Backup jetzt erstellen</button>
+            </div>
+            <div id="backupList" class="history-list">—</div>
+            <span class="field-hint">Wöchentlich automatisch (max. 4 Versionen, Ordner „backups“ im Datenverzeichnis). Wiederherstellen lädt die Oberfläche neu.</span>
+
+            <div class="field-actions-row">
+              <button id="factoryResetBtn" class="btn danger" data-icon="trash">Auf Werkseinstellungen zurücksetzen</button>
+            </div>
+            <span class="field-hint">Setzt die gesamte Konfiguration zurück (Seiten, Einstellungen, Erinnerungen). Nach Bestätigung startet die Oberfläche neu.</span>
+
+            </details>
+            <details class="settings-group">
+              <summary>Protokolle</summary>
+            <div class="input-row">
+              <select id="logSource" class="control">
+                <option value="app">Anwendungslog</option>
+                <option value="crash">Absturzprotokoll</option>
+              </select>
+              <input id="logFilter" class="control" type="search" placeholder="Filtern …">
+              <select id="logLevel" class="control" aria-label="Log-Stufe">
+                <option value="debug">Debug</option>
+                <option value="info">Info</option>
+                <option value="warn">Warnung</option>
+                <option value="error">Nur Fehler</option>
+              </select>
+              <label class="check-row log-live"><input id="logLive" type="checkbox"><span>Live</span></label>
+            </div>
+            <pre id="logOutput" class="log-output">—</pre>
+            <p class="small-note" id="logPathNote"></p>
+            </details>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="about">
+            <h3>Über das Tool</h3>
+            <div class="about-grid">
+              <div><span>Version</span><strong id="aboutVersion">—</strong></div>
+              <div><span>Electron</span><strong id="aboutElectron">—</strong></div>
+              <div><span>Chrome</span><strong id="aboutChrome">—</strong></div>
+              <div><span>Konfiguration</span><strong id="aboutConfig" class="path">—</strong></div>
+            </div>
+
+            <h4>Globale Tastenkürzel</h4>
+            <p class="small-note" id="aboutHotkeys">—</p>
+
+            <h4>Rechtliches</h4>
+            <p class="small-note">Dieses Tool ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zu Bungie. Destiny 2 und alle zugehörigen Inhalte sind Eigentum von Bungie, Inc. Die verlinkten Webseiten gehören ihren jeweiligen Betreibern.</p>
+
+            <h4>Danke</h4>
+            <p class="small-note">Gebaut für schnelle Blicke zwischen zwei Raids - mit Tabs, Drop-Downs, Overlay und Controller.</p>
+          </section>
+        </div>
+      </div>
+
+      <footer class="modal-foot">
+        <span class="small-note">Änderungen werden sofort gespeichert.</span>
+        <button id="settingsCloseBtn" class="btn primary">Fertig</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ==================== Hilfe ==================== -->
+  <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-card help-card">
+      <header class="modal-head">
+        <div>
+          <h2 id="helpTitle">Hilfe &amp; Steuerung</h2>
+          <p class="modal-sub">So kommt das Overlay über Destiny 2.</p>
+        </div>
+        <button class="icon-btn" id="helpCloseBtn" data-icon="close" aria-label="Schließen"></button>
+      </header>
+      <div class="help-body">
+        <section class="help-section">
+          <h3>Overlay einrichten</h3>
+          <ol>
+            <li>In Destiny 2 unter <em>Einstellungen &rarr; Video</em> den <strong>Fenstermodus (randlos)</strong> wählen.</li>
+            <li>Im Tool <kbd id="helpHotkey">Alt+D</kbd> drücken - oder den Controller verwenden.</li>
+            <li>Das Overlay erscheint. Mit demselben Kürzel blendest du es wieder aus und spielst weiter.</li>
+            <li>Mit <kbd id="helpClickThroughHotkey">Alt+Shift+D</kbd> lässt du die Maus durch das Overlay zum Spiel durch.</li>
+          </ol>
+          <p class="small-note">Im exklusiven Vollbildmodus kann Windows kein Overlay anzeigen. Das ist eine Einschränkung des Spielmodus, nicht des Tools.</p>
+        </section>
+
+        <section class="help-grid">
+          <div>
+            <h4>Tastatur</h4>
+            <div class="key-table">
+              <div><kbd>Alt+D</kbd><span>Overlay ein-/ausblenden</span></div>
+              <div><kbd>Alt+Shift+D</kbd><span>Maus durchlassen</span></div>
+              <div><kbd>Alt+1 … 8</kbd><span>Kategorie wechseln</span></div>
+              <div><kbd>F5</kbd><span>Seite neu laden</span></div>
+              <div><kbd>Strg+Q</kbd><span>Zuletzt genutzte Seite</span></div>
+              <div><kbd>Strg+Tab</kbd><span>Nächste Kategorie</span></div>
+              <div><kbd>Strg+Shift+T</kbd><span>Geschlossene Seite wiederherstellen</span></div>
+              <div><kbd>Strg+F</kbd><span>Seite durchsuchen</span></div>
+              <div><kbd>Strg+L</kbd><span>Adressleiste fokussieren</span></div>
+              <div><kbd>Strg+K</kbd><span>Befehlspalette öffnen</span></div>
+              <div><kbd>Strg+M</kbd><span>Minimodus (nur Webseite)</span></div>
+              <div><kbd>Strg+Alt+S</kbd><span>Split-View (2 Seiten nebeneinander)</span></div>
+              <div><kbd>Strg+Alt+D</kbd><span>Dashboard umschalten (global)</span></div>
+              <div><kbd>Strg+Alt+1 … 8</kbd><span>Kategorie aus dem Spiel öffnen</span></div>
+              <div><kbd>Esc</kbd><span>Dialog schließen / Overlay ausblenden</span></div>
+              <div><kbd>Strg</kbd> + <kbd>Mausrad</kbd><span>Seite zoomen</span></div>
+              <div><kbd>Alt</kbd> + <kbd>Mausrad</kbd><span>Overlay-Deckkraft ändern</span></div>
+            </div>
+          </div>
+          <div>
+            <h4>Controller</h4>
+            <div class="key-table">
+              <div><kbd>A</kbd><span>Klicken</span></div>
+              <div><kbd>B</kbd><span>Zurück / ausblenden</span></div>
+              <div><kbd>X</kbd><span>Neu laden</span></div>
+              <div><kbd>Y</kbd><span>Präzisionsmodus</span></div>
+              <div><kbd>LB</kbd><kbd>RB</kbd><span>Kategorie</span></div>
+              <div><kbd>D←</kbd><kbd>D→</kbd><span>Webseite</span></div>
+              <div><kbd>D↑</kbd><kbd>D↓</kbd><span>Scrollen</span></div>
+              <div><kbd>L3</kbd><kbd>R3</kbd><span>Overlay ein-/ausblenden</span></div>
+              <div><kbd>Guide</kbd><span>Overlay ein-/ausblenden (wenn verfügbar)</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="help-section">
+          <h3>Minimodus &amp; Split-View</h3>
+          <ul>
+            <li><strong>Minimodus</strong> (<kbd>Strg+M</kbd>, 📥-Knopf oder Palette): blendet alle Leisten aus und zeigt nur die Webseite — ideal über dem Spiel. Zurück über <kbd>Strg+M</kbd> oder den kleinen ✕-Chip oben rechts.</li>
+            <li><strong>Split-View</strong> (<kbd>Strg+Alt+S</kbd>, 🗀-Knopf oder Palette): die aktuelle Seite wird links gepinnt, die nächste Auswahl öffnet rechts — zwei Seiten gleichzeitig. Beendet denselben Knopf.</li>
+            <li>Split-View braucht zwei offene Seiten. Der gepinnte Frame bleibt von „Andere entladen“ und der Cache-Räumung verschont.</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h3>Inventar &amp; Loadouts (Bungie)</h3>
+          <ol>
+            <li>Einstellungen → Bungie: API-Key setzen und <strong>anmelden</strong> (OAuth) — erst danach ist das Inventar verfügbar.</li>
+            <li>🎒-Knopf (oder Palette „Inventar öffnen“) öffnet das Panel: <strong>Angelegt</strong>, <strong>Beutetasche</strong> und <strong>Tresor</strong> pro Hüter, durchsuchbar.</li>
+            <li>Transfer mit „→ Tresor“ bzw. „→ Titan/Jäger/Warlock“ direkt aus der Liste.</li>
+            <li><strong>Loadouts sichern:</strong> Charakter wählen, Namen eintippen, „Loadout sichern“ — die aktuell angelegten Items werden gespeichert.</li>
+            <li><strong>Loadout anlegen:</strong> „Anlegen“ holt die Items zurück (Transfer + Ausrüsten automatisch). Bungie kann abstoßen (z. B. zweites Exotic, Item bei anderem Hüter) — die Meldung erscheint als Toast.</li>
+          </ol>
+          <p class="small-note">Für Transfers muss deine Bungie-App-Registrierung das Scope „MoveEquipDestinyItems“ erlauben. Der erste Inventar-Laden zieht einmalig die Item-Definitionen (danach gecacht).</p>
+        </section>
+
+        <section class="help-section">
+          <h3>Deine aktuelle Belegung (Cheatsheet)</h3>
+          <div class="key-table" id="helpBindings"></div>
+        </section>
+
+        <div class="help-actions">
+          <button id="helpOpenSettingsBtn" class="btn primary" data-icon="layers">Overlay-Einstellungen</button>
+          <button id="helpOpenControllerBtn" class="btn ghost" data-icon="gamepad">Controller einstellen</button>
+          <button id="helpExportBtn" class="btn ghost" data-icon="external">Belegung exportieren</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Controller-Test ==================== -->
+  <div id="controllerTestModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="controllerTestTitle">
+    <div class="modal-card controller-test-card">
+      <header class="modal-head">
+        <div>
+          <h2 id="controllerTestTitle">Controller-Test</h2>
+          <p class="modal-sub">Live-Anzeige aller Eingaben. Drücke Tasten und bewege die Sticks.</p>
+        </div>
+        <button class="icon-btn" id="controllerTestCloseBtn" data-icon="close" aria-label="Schließen"></button>
+      </header>
+      <div class="controller-test-body">
+        <div class="test-status">
+          <span id="testConnection" class="test-badge">Nicht verbunden</span>
+          <span id="testBattery" class="test-badge" hidden>Akku: —</span>
+          <span id="testGuide" class="test-badge" hidden>Guide: —</span>
+          <span id="testLastAction" class="test-badge">Letzte Aktion: —</span>
+        </div>
+        <div class="test-buttons" id="testButtons">
+          <div class="test-btn" data-btn="0">A</div>
+          <div class="test-btn" data-btn="1">B</div>
+          <div class="test-btn" data-btn="2">X</div>
+          <div class="test-btn" data-btn="3">Y</div>
+          <div class="test-btn" data-btn="4">LB</div>
+          <div class="test-btn" data-btn="5">RB</div>
+          <div class="test-btn" data-btn="6">LT</div>
+          <div class="test-btn" data-btn="7">RT</div>
+          <div class="test-btn" data-btn="8">View</div>
+          <div class="test-btn" data-btn="9">Menu</div>
+          <div class="test-btn" data-btn="10">L3</div>
+          <div class="test-btn" data-btn="11">R3</div>
+          <div class="test-btn" data-btn="12">D↑</div>
+          <div class="test-btn" data-btn="13">D↓</div>
+          <div class="test-btn" data-btn="14">D←</div>
+          <div class="test-btn" data-btn="15">D→</div>
+          <div class="test-btn" data-btn="16">Guide</div>
+        </div>
+        <div class="test-axes">
+          <div class="test-axis"><span class="test-axis-label">LX</span><div class="test-axis-bar"><div id="testLX" class="test-axis-fill"></div></div><span id="testLXVal" class="test-axis-value">0.00</span></div>
+          <div class="test-axis"><span class="test-axis-label">LY</span><div class="test-axis-bar"><div id="testLY" class="test-axis-fill"></div></div><span id="testLYVal" class="test-axis-value">0.00</span></div>
+          <div class="test-axis"><span class="test-axis-label">RX</span><div class="test-axis-bar"><div id="testRX" class="test-axis-fill"></div></div><span id="testRXVal" class="test-axis-value">0.00</span></div>
+          <div class="test-axis"><span class="test-axis-label">RY</span><div class="test-axis-bar"><div id="testRY" class="test-axis-fill"></div></div><span id="testRYVal" class="test-axis-value">0.00</span></div>
+          <div class="test-axis"><span class="test-axis-label">LT</span><div class="test-axis-bar"><div id="testLT" class="test-axis-fill"></div></div><span id="testLTVal" class="test-axis-value">0.00</span></div>
+          <div class="test-axis"><span class="test-axis-label">RT</span><div class="test-axis-bar"><div id="testRT" class="test-axis-fill"></div></div><span id="testRTVal" class="test-axis-value">0.00</span></div>
+        </div>
+        <div class="test-recorder"><strong>Letzte Tasten</strong><pre id="controllerTestHistory"></pre></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="commandPalette" class="command-palette hidden" role="dialog" aria-modal="true" aria-label="Befehlspalette">
+    <div class="command-palette-card">
+      <input id="commandPaletteInput" type="search" placeholder="Befehl, Seite oder Einstellung suchen …" autocomplete="off" aria-label="Befehl suchen">
+      <div id="commandPaletteResults" class="command-palette-results"></div>
+      <div class="command-palette-hint">Strg+K öffnet · Esc schließt · Enter führt aus</div>
+    </div>
+  </div>
+
+  <div id="securityLock" class="security-lock hidden">
+    <div class="security-lock-card">
+      <h2>Tool gesperrt</h2>
+      <p>Bitte PIN eingeben, um das Tool zu entsperren.</p>
+      <input id="securityPinInput" type="password" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="PIN">
+      <button id="securityUnlockBtn" class="btn primary" type="button">Entsperren</button>
+      <p id="securityLockError" class="warn"></p>
+    </div>
+  </div>
+  <script src="js/i18n-en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

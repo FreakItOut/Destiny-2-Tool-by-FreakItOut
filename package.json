@@ -1,0 +1,139 @@
+{
+  "name": "frakitouts-destiny-2-tool",
+  "version": "1.0.0",
+  "description": "Destiny 2 Tool by FreakItOut – Webseiten-Overlay mit Tastatur- und Controller-Steuerung",
+  "main": "electron/main.js",
+  "author": "FreakItOut",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut.git"
+  },
+  "homepage": "https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut#readme",
+  "bugs": {
+    "url": "https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut/issues"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "smoke": "electron . --smoke",
+    "check": "node tools/check.js",
+    "test:i18n": "node tools/i18n-check.js",
+    "test:perf": "node tools/perf-test.js",
+    "test:picker": "node tools/armor-picker-test.js",
+    "audit:deps": "node tools/deps-report.js",
+    "test:oauth": "node tools/oauth-test.js",
+    "test:config": "electron tools/config-test.js",
+    "test:sockets": "node tools/socket-columns-test.js",
+    "test:controller": "node tools/controller-nav-test.js",
+    "test:visual": "electron tools/visual-test.js",
+    "e2e": "node tools/e2e-run.js",
+    "test:full": "npm run check && npm run test:lint && npm run test:types && npm run test:i18n && npm run test:i18n-placeholders && npm run test:property && npm run test:zip && npm run test:deeplink && npm run test:contract && npm run test:oauth && npm run test:config && npm run test:config-usage && npm run test:ipc-usage && npm run test:sockets && npm run test:controller && npm run test:picker && npm run test:picker:perf && npm run smoke && npm run e2e && npm run test:settings && npm run test:axe && npm run test:dialogs && npm run test:visual",
+    "icons": "node tools/make-icons.js",
+    "app-icon": "electron tools/make-icon.js",
+    "prebuilt": "node tools/make-prebuilt.js",
+    "release:check": "node tools/release-check.js",
+    "release": "npm run release:check && npm run dist && npm run release:check",
+    "release:all": "node tools/release-all.js",
+    "preflight": "node tools/preflight.js",
+    "baselines:update": "node tools/visual-baselines.js",
+    "test:bundle": "node tools/bundle-budget.js",
+    "test:secrets": "node tools/secret-redaction-test.js",
+    "test:ipc-validation": "node tools/ipc-validation-test.js",
+    "test:xur": "electron tools/xur-page-test.js",
+    "dist": "node tools/preflight.js && node tools/make-prebuilt.js && electron-builder --win && node tools/make-portable-marker.js && node tools/make-streamdeck-plugin.js && node tools/make-streamdeck-profile.js && node tools/make-checksums.js",
+    "dist:portable": "node tools/preflight.js && node tools/make-prebuilt.js && electron-builder --win portable && node tools/make-portable-marker.js",
+    "test:a11y": "node tools/a11y-check.js",
+    "test:picker:perf": "node tools/perf-picker-test.js",
+    "test:contract": "node tools/preload-contract-test.js",
+    "test:pages": "electron tools/page-visual-test.js",
+    "test:modules": "node tools/module-report.js",
+    "test:robust": "node tools/robustness-test.js",
+    "test:events": "node tools/event-contract-test.js",
+    "test:tv": "electron tools/tv-mode-test.js",
+    "test:types": "tsc --noEmit -p tsconfig.json",
+    "test:lint": "node tools/lint.js",
+    "test:property": "node tools/property-test.js",
+    "test:zip": "node tools/zip-test.js",
+    "verify": "node tools/verify.js",
+    "verify:fast": "node tools/verify.js --fast",
+    "test:deeplink": "node tools/deeplink-test.js",
+    "test:vendor-fixture": "node tools/vendor-fixture-test.js",
+    "test:api-commands": "node tools/api-commands-test.js",
+    "test:api-client": "node tools/api-client-test.js",
+    "test:api-contract": "node tools/api-contract-test.js",
+    "test:fixtures": "node tools/mock-bungie-fixtures-test.js",
+    "test:large-vault": "node tools/large-vault-test.js",
+    "test:i18n-qa": "node tools/i18n-qa.js",
+    "test:app-features": "node tools/app-features-test.js",
+    "test:gamepad-ui": "node tools/gamepad-controller-test.js",
+    "test:api-e2e": "node tools/local-api-e2e.js",
+    "test:plugin": "node tools/streamdeck-plugin-test.js",
+    "plugin:pack": "node tools/make-streamdeck-plugin.js",
+    "plugin:profile": "node tools/make-streamdeck-profile.js",
+    "checksums": "node tools/make-checksums.js",
+    "test:package": "node tools/portable-smoke-test.js",
+    "test:plugin-package": "node tools/make-streamdeck-plugin.js && node tools/make-streamdeck-profile.js && node tools/streamdeck-plugin-package-test.js",
+    "test:i18n-placeholders": "node tools/i18n-placeholder-test.js",
+    "test:dialogs": "electron tools/dialog-visual-test.js",
+    "test:settings": "node tools/settings-e2e.js",
+    "test:config-usage": "node tools/config-usage-test.js",
+    "test:ipc-usage": "node tools/ipc-usage-test.js",
+    "test:axe": "node tools/axe-test.js",
+    "test:parity": "node tools/edition-parity-test.js",
+    "sync:le": "node tools/sync-le.js",
+    "testversion": "node tools/update-testversion.js"
+  },
+  "devDependencies": {
+    "archiver": "^5.3.2",
+    "axe-core": "^4.10.2",
+    "electron": "33.4.11",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "qrcode": "^1.5.4"
+  },
+  "build": {
+    "appId": "com.freakitout.destiny2tool",
+    "productName": "Destiny 2 Tool by FreakItOut",
+    "electronLanguages": [
+      "de",
+      "en"
+    ],
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      { "from": "node_modules/qrcode", "to": "modules/node_modules/qrcode" },
+      { "from": "node_modules/dijkstrajs", "to": "modules/node_modules/dijkstrajs" },
+      { "from": "node_modules/pngjs", "to": "modules/node_modules/pngjs" },
+      { "from": "node_modules/js-yaml", "to": "modules/node_modules/js-yaml" },
+      { "from": "node_modules/argparse", "to": "modules/node_modules/argparse" }
+    ],
+    "asarUnpack": [
+      "electron/gamepad-helper/GamepadHelper-prebuilt-*.exe"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "portable",
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "directories": {
+      "output": "dist"
+    }
+  }
+}

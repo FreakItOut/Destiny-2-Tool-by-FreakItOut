@@ -1,0 +1,33 @@
+/* ============================================================
+   Markenfarben – Standard-Edition
+   Rot/Schwarz aus dem FreakItOut-Logo. Wird nach theme.css geladen.
+   ============================================================ */
+
+:root {
+  --brand: #e11d2e;
+  --brand-strong: #ff4655;
+  --brand-soft: #ff9aa4;
+  --brand-deep: #6d0913;
+  --brand-glow: rgba(225, 29, 46, 0.32);
+  --brand-glow-soft: rgba(225, 29, 46, 0.12);
+  --brand-line: rgba(225, 29, 46, 0.34);
+
+  --accent: #ff4655;
+  --accent-contrast: #ffffff;
+  --gold: #f3c66a;
+  --ok: #5fe0a0;
+  --danger: #ff5c72;
+
+  /* Triumph- & Sammlungsansicht – rote Edition */
+  --records-accent: #ff4655;
+  --records-accent-2: #f3c66a;
+  --records-complete: #5fe0a0;
+  --records-panel: rgba(225, 29, 46, 0.055);
+  --records-line: rgba(225, 29, 46, 0.22);
+  --records-glow: rgba(255, 70, 85, 0.24);
+
+  --bg: #07080b;
+  --bg-soft: #0b0d12;
+  --panel: rgba(16, 18, 24, 0.84);
+  --panel-solid: #10131a;
+}

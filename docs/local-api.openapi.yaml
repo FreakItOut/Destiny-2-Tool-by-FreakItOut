@@ -1,0 +1,4394 @@
+# Automatisch erzeugt von tools/make-openapi.js – nicht von Hand bearbeiten.
+# Die Laufzeit liefert dieselbe Beschreibung unter /openapi.json und /openapi.yaml.
+openapi: 3.1.0
+info:
+  title: Destiny 2 Tool – Lokale API
+  version: 1.5.0
+  description: >-
+    Lokale HTTP-API für Stream Deck, Skripte und Overlays. Token per X-D2-Token, Authorization: Bearer, signierter URL
+    oder HMAC. Rollen: read, action, admin.
+servers:
+  - url: http://127.0.0.1:7331
+  - url: http://127.0.0.1:7331/v1
+security:
+  - tokenQuery: []
+  - tokenHeader: []
+  - bearerAuth: []
+paths:
+  /action/view:
+    get:
+      summary: Werkzeugseite öffnen
+      parameters:
+        - name: view
+          in: query
+          required: false
+          description: overview|builds|week|collection|vendor
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/focus:
+    get:
+      summary: Overlay fokussieren
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/toast:
+    get:
+      summary: Kurze Meldung im Tool anzeigen
+      parameters:
+        - name: message
+          in: query
+          required: false
+          description: Text
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/vendor:
+    get:
+      summary: Händler oder Angebot öffnen
+      parameters:
+        - name: hash
+          in: query
+          required: false
+          description: Vendor-Hash
+          schema:
+            type: string
+        - name: item
+          in: query
+          required: false
+          description: Item-Hash (optional)
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/collection:
+    get:
+      summary: Sammlungs-Unterseite öffnen
+      parameters:
+        - name: tab
+          in: query
+          required: false
+          description: overview|crafting|cleanup|sources
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/week:
+    get:
+      summary: Wochenplan mit Filter öffnen
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          description: all|must|rec|opt|own
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/vendors:
+    get:
+      summary: Händler mit Wunschroll-Filter öffnen
+      parameters:
+        - name: wishlist
+          in: query
+          required: false
+          description: 1|0
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/picker:
+    get:
+      summary: Rüstungs-Picker für eine Klasse öffnen
+      parameters:
+        - name: class
+          in: query
+          required: false
+          description: 0|1|2
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/postmaster/counter:
+    get:
+      summary: Postfach-Zähler ein-/ausschalten
+      parameters:
+        - name: 'on'
+          in: query
+          required: false
+          description: 1|0
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/xur/open:
+    get:
+      summary: Xûr-Fenster öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/xur/remind:
+    get:
+      summary: Xûr-Erinnerung ein-/ausschalten
+      parameters:
+        - name: 'on'
+          in: query
+          required: false
+          description: 1|0
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/batch:
+    get:
+      summary: Mehrere Aktionen nacheinander ausführen
+      parameters:
+        - name: do
+          in: query
+          required: false
+          description: aktion[:param=wert],…
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Batch per JSON mit steps ausführen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonObject'
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/webhook/test:
+    get:
+      summary: Webhook-Test auslösen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/loadout:
+    get:
+      summary: Gespeichertes Loadout anwenden
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: Loadout-ID
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: false
+          description: Loadout-Name (alternativ)
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/loadout/missing:
+    get:
+      summary: Nur fehlende Teile eines Loadouts anlegen
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: Loadout-ID
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: false
+          description: Loadout-Name (alternativ)
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/loadout/next:
+    get:
+      summary: Nächstes Loadout anwenden
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/loadout/prev:
+    get:
+      summary: Vorheriges Loadout anwenden
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/view/next:
+    get:
+      summary: Nächste Werkzeugseite öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/view/prev:
+    get:
+      summary: Vorherige Werkzeugseite öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/workflow:
+    post:
+      summary: Workflow mit Bedingungen ausführen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowRequest'
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/tokens/create:
+    get:
+      summary: Benannten Token erzeugen
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Name
+          schema:
+            type: string
+        - name: scope
+          in: query
+          required: false
+          description: read|write
+          schema:
+            type: string
+        - name: days
+          in: query
+          required: false
+          description: Laufzeit
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/tokens/revoke:
+    get:
+      summary: Benannten Token widerrufen
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: Token-ID
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/checklist/toggle:
+    get:
+      summary: Checklisten-Punkt abhaken oder öffnen
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: Punkt-ID
+          schema:
+            type: string
+        - name: text
+          in: query
+          required: false
+          description: Punkt-Text (alternativ)
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /checklist/{id}:
+    patch:
+      summary: Checklisten-Punkt bearbeiten
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonObject'
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Checklisten-Punkt löschen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Einzelner Checklisten-Punkt
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /checklist/reorder:
+    post:
+      summary: Checklisten-Reihenfolge setzen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonObject'
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /jobs/{id}/cancel:
+    post:
+      summary: Hintergrund-Job abbrechen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/checklist/add:
+    get:
+      summary: Checklisten-Punkt hinzufügen
+      parameters:
+        - name: text
+          in: query
+          required: false
+          description: Neuer Punkt
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/checklist/reset:
+    get:
+      summary: Wochen-Checkliste zurücksetzen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/overlay:
+    get:
+      summary: Overlay ein- oder ausblenden
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/overlay/show:
+    get:
+      summary: Overlay anzeigen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/overlay/hide:
+    get:
+      summary: Overlay ausblenden
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/overlay/enter:
+    get:
+      summary: In den Overlay-Modus wechseln
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/overlay/leave:
+    get:
+      summary: Overlay-Modus verlassen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/click-through:
+    get:
+      summary: Maus-Durchlassen umschalten
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/inventory:
+    get:
+      summary: Inventar öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/postmaster:
+    get:
+      summary: Postfach im Inventar öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/dashboard:
+    get:
+      summary: Dashboard öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/settings:
+    get:
+      summary: Einstellungen öffnen
+      parameters:
+        - name: tab
+          in: query
+          required: false
+          description: overlay|overlaybar|controller|steam|web|custom|display|behavior|security|bungie|diag|about
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/notes:
+    get:
+      summary: Notizen öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/checklist:
+    get:
+      summary: Wochen-Checkliste öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/mini:
+    get:
+      summary: Minimodus umschalten oder setzen
+      parameters:
+        - name: 'on'
+          in: query
+          required: false
+          description: 1|0 (optional)
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/xur:
+    get:
+      summary: Xûr-Fenster öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/refresh-inventory:
+    get:
+      summary: Inventar neu laden
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/refresh-wishlist:
+    get:
+      summary: Wunschliste neu laden
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/refresh:
+    get:
+      summary: Wunschlisten-Caches leeren
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/digest:
+    get:
+      summary: Weekly-Digest senden
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/collect-postmaster:
+    get:
+      summary: Postfach sammeln
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/game/launch:
+    get:
+      summary: Destiny 2 starten
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /health:
+    get:
+      summary: Lebenszeichen ohne Token
+      security: []
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /manifest:
+    get:
+      summary: Fähigkeiten, Aktionen und Kurz-URLs
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /state:
+    get:
+      summary: Gesamtstatus für Key-Anzeigen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /state.txt:
+    get:
+      summary: Gesamtstatus als kompakte Textzeile
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /focus:
+    get:
+      summary: Fokus-Status des Overlays
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /key/{name}:
+    get:
+      summary: Einzelwert (postmaster, vault, reset, xur, focus, controller …)
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyValue'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /badge/{name}.svg:
+    get:
+      summary: SVG-Badge für Stream-Deck-Tasten
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyValue'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /events:
+    get:
+      summary: Server-Sent-Events-Stream mit Statusänderungen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /openapi.json:
+    get:
+      summary: OpenAPI-Dokument
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /commands.txt:
+    get:
+      summary: Befehlsliste als Text
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /openapi.yaml:
+    get:
+      summary: OpenAPI-Dokument als YAML
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /items:
+    get:
+      summary: Inventar-Items mit Filtern
+      parameters:
+        - name: filter
+          in: query
+          required: false
+          description: all|godroll|vault|backpack|equipped|postmaster
+          schema:
+            type: string
+        - name: q
+          in: query
+          required: false
+          description: Suche
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: 1..200
+          schema:
+            type: string
+        - name: offset
+          in: query
+          required: false
+          description: Start
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /item/{id}:
+    get:
+      summary: Item nach Instanz-ID oder Hash
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /notes:
+    patch:
+      summary: Notizen aktualisieren
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonObject'
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Notizen und Notizblätter
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reminders:
+    post:
+      summary: Erinnerung anlegen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonObject'
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Persönliche Erinnerungen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reminders/{id}:
+    get:
+      summary: Einzelne Erinnerung
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Erinnerung bearbeiten
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonObject'
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Erinnerung löschen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /search:
+    get:
+      summary: Items, Loadouts und Checkliste durchsuchen
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Suchbegriff
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /auth/status:
+    get:
+      summary: Bungie-OAuth- und API-Status
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /queue:
+    get:
+      summary: Bungie-Queue und API-Kennzahlen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /digest/preview:
+    get:
+      summary: Vorschau des Weekly-Digests
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /characters:
+    get:
+      summary: Charaktere mit Lichtlevel
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /vendors:
+    get:
+      summary: Händler und Angebote
+      parameters:
+        - name: character
+          in: query
+          required: false
+          description: Charakter-ID
+          schema:
+            type: string
+        - name: force
+          in: query
+          required: false
+          description: 1|0
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /vendor/{hash}:
+    get:
+      summary: Angebote eines Händlers
+      parameters:
+        - name: force
+          in: query
+          required: false
+          description: 1|0
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /activities:
+    get:
+      summary: Aktuelle Aktivitäten
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /nightfall:
+    get:
+      summary: Nightfall und Modifikatoren
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /season:
+    get:
+      summary: Saison-Ziele
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /crafting:
+    get:
+      summary: Waffenbaupläne
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /jobs:
+    get:
+      summary: Hintergrund-Jobs
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /jobs/{id}:
+    get:
+      summary: Status eines Jobs
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /tokens:
+    get:
+      summary: Benannte Tokens (ohne Geheimnis)
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenList'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /metrics:
+    get:
+      summary: API-Kennzahlen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /metrics.txt:
+    get:
+      summary: API-Kennzahlen im Prometheus-Format
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /audit:
+    get:
+      summary: API-Audit-Log (Admin)
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /logs:
+    get:
+      summary: Letzte Logzeilen
+      parameters:
+        - name: tail
+          in: query
+          required: false
+          description: Anzahl Zeilen
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /status:
+    get:
+      summary: Spieler und Charaktere
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /inventory:
+    get:
+      summary: Inventar-Kennzahlen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /loadouts:
+    get:
+      summary: Loadout-Liste
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /loadout:
+    get:
+      summary: Loadout-Details
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: Loadout-ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /xur:
+    get:
+      summary: Xûr-Status und Angebote
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /summary:
+    get:
+      summary: Dashboard-Zusammenfassung
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /dashboard:
+    get:
+      summary: Alias für /summary
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /priorities:
+    get:
+      summary: Offene Aufgaben
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /weekly:
+    get:
+      summary: Weekly-Reset und Xûr
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /actions:
+    get:
+      summary: Letzte protokollierte Aktionen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /checklist:
+    get:
+      summary: Wochen-Checkliste mit offenen Punkten
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /materials:
+    get:
+      summary: Materialien und Währungen
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /currencies:
+    get:
+      summary: Alias für /materials
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /postmaster:
+    get:
+      summary: Postfach-Inhalt je Charakter
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /reset:
+    get:
+      summary: Daily-/Weekly-Reset-Zeiten
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /version:
+    get:
+      summary: App-Version und API-Status
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /commands:
+    get:
+      summary: Diese Befehlsliste
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /changelog:
+    get:
+      summary: API-Changelog und Deprecation-Politik
+      responses:
+        '200':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonObject'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    tokenQuery:
+      type: apiKey
+      in: query
+      name: token
+    tokenHeader:
+      type: apiKey
+      in: header
+      name: X-D2-Token
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Error:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        code:
+          type: string
+        error:
+          type: string
+        requestId:
+          type: string
+        durationMs:
+          type: integer
+    JsonObject:
+      type: object
+      additionalProperties: true
+    ActionResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        requestId:
+          type: string
+        durationMs:
+          type: integer
+      additionalProperties: true
+    Health:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        running:
+          type: boolean
+        ready:
+          type: boolean
+        degraded:
+          type: boolean
+        api:
+          type: string
+        renderer:
+          type: string
+        game:
+          type: string
+    State:
+      type: object
+      additionalProperties: true
+    KeyValue:
+      type: object
+      additionalProperties: true
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+        state:
+          type: string
+        progress:
+          type: integer
+        message:
+          type: string
+        error:
+          type: string
+        startedAt:
+          type: integer
+        finishedAt:
+          type: integer
+      additionalProperties: true
+    JobResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        job:
+          $ref: '#/components/schemas/Job'
+    Token:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        scope:
+          type: string
+        prefix:
+          type: string
+        expiresAt:
+          type: integer
+        lastUsedAt:
+          type: integer
+    TokenList:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/Token'
+    WorkflowRequest:
+      type: object
+      properties:
+        steps:
+          type: array
+          items:
+            type: object
+        dryRun:
+          type: boolean
+        stopOnError:
+          type: boolean
+        timeoutMs:
+          type: integer

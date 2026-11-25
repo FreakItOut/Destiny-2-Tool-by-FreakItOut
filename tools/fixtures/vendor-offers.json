@@ -1,0 +1,77 @@
+{
+  "Response": {
+    "sales": {
+      "data": {
+        "672118013": {
+          "saleItems": {
+            "0": {
+              "itemHash": 3001,
+              "vendorItemIndex": 0,
+              "quantity": 1,
+              "failureIndexes": []
+            },
+            "1": {
+              "itemHash": 5001,
+              "vendorItemIndex": 1,
+              "quantity": 1,
+              "failureIndexes": [7]
+            }
+          },
+          "nextRefreshDate": "2030-01-01T12:07:00Z"
+        }
+      },
+      "privacy": 2
+    },
+    "itemComponents": {
+      "672118013": {
+        "stats": {
+          "data": {
+            "3001": {
+              "stats": {
+                "155624089": { "statHash": 155624089, "value": 80 }
+              }
+            }
+          }
+        },
+        "perks": {
+          "data": {
+            "3001": {
+              "perks": [
+                { "plugHash": 6111, "isActive": true, "visible": true },
+                { "plugHash": 6112, "isActive": false, "visible": true }
+              ]
+            }
+          }
+        },
+        "sockets": {
+          "data": {
+            "3001": {
+              "sockets": [
+                {
+                  "socketIndex": 0,
+                  "plugHash": 6111,
+                  "reusablePlugHashes": [6111, 6112]
+                }
+              ]
+            }
+          }
+        },
+        "renderData": {
+          "data": {
+            "3001": {
+              "icon": "/common/destiny2_content/icons/test.png",
+              "name": "Testgewehr",
+              "description": "Ein Testgewehr mit Beschreibung.",
+              "flavorText": "Flavor-Text"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ErrorCode": 1,
+  "ThrottleSeconds": 0,
+  "ErrorStatus": "Success",
+  "Message": "Ok",
+  "MessageData": {}
+}

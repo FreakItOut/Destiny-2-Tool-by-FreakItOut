@@ -1,0 +1,8 @@
+{
+  "name": "com.freakitout.d2tool.sdplugin",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

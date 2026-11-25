@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Xûr</title>
+<link rel="stylesheet" href="xur.css">
+</head>
+<body>
+  <div class="xur-card">
+    <header class="xur-head">
+      <span class="xur-mark">🛒</span>
+      <div class="xur-title"><strong>XÛR</strong><span id="xurReset">Agent der Neun</span></div>
+      <button type="button" class="xur-btn" id="xurRefresh">Aktualisieren</button>
+      <button type="button" class="xur-btn" id="xurClose" aria-label="Schließen">✕</button>
+    </header>
+    <div class="xur-body">
+      <div id="xurStatus" class="xur-status">Xûr-Daten werden geladen …</div>
+      <div id="xurList" class="xur-list"></div>
+    </div>
+    <footer class="xur-foot">
+      <span class="xur-hint">Bungie-API · nur Anzeige</span>
+      <span class="xur-hint" id="xurCount"></span>
+    </footer>
+  </div>
+  <div id="xurTip" class="xur-tip"></div>
+  <script src="js/i18n-en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="xur.js"></script>
+</body>
+</html>

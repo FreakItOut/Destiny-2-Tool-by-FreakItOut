@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'unsafe-inline' 'self'; img-src 'self' data:;">
+  <title>Poststelle</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --text: #e9eef9;
+      --muted: #8d9ab2;
+      --muted-2: #66738a;
+      --accent: #ff4655;
+      --ok: #67e0a3;
+      --warn: #f0c66b;
+      --danger: #ff7088;
+    }
+
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      color: var(--text);
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    #card {
+      position: relative;
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      padding: 7px 10px 8px;
+      background: linear-gradient(155deg, rgba(17, 28, 46, 0.95), rgba(6, 11, 20, 0.95));
+      border: 1px solid rgba(255, 70, 85, 0.32);
+      border-radius: 11px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    body[data-theme="light"] {
+      --text: #182231;
+      --muted: #52637a;
+      --muted-2: #6a7a90;
+      --accent: #2a6bb8;
+    }
+
+    body[data-theme="light"] #card {
+      background: linear-gradient(155deg, rgba(249, 251, 255, 0.96), rgba(224, 232, 243, 0.96));
+      border-color: rgba(42, 107, 184, 0.4);
+      box-shadow: 0 8px 22px rgba(20, 35, 55, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+    }
+
+    #card.warn {
+      border-color: rgba(240, 198, 107, 0.75);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), 0 0 12px rgba(240, 198, 107, 0.25);
+    }
+
+    #card.danger {
+      border-color: rgba(255, 112, 136, 0.85);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), 0 0 14px rgba(255, 112, 136, 0.35);
+    }
+
+    .pm-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      -webkit-app-region: drag;
+      cursor: grab;
+    }
+
+    .pm-head:active {
+      cursor: grabbing;
+    }
+
+    .pm-title {
+      flex: 1;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      color: var(--muted);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    #pmAge {
+      font-size: 9px;
+      color: var(--muted-2);
+      white-space: nowrap;
+    }
+
+    #pmReset {
+      font-size: 9px;
+      color: var(--muted-2);
+      white-space: nowrap;
+    }
+
+    .pm-menu {
+      position: fixed;
+      z-index: 50;
+      min-width: 150px;
+      padding: 4px;
+      border: 1px solid rgba(255, 70, 85, 0.35);
+      border-radius: 8px;
+      background: rgba(10, 17, 28, 0.98);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .pm-menu.hidden {
+      display: none;
+    }
+
+    .pm-menu button {
+      -webkit-app-region: no-drag;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text);
+      font: 11px "Segoe UI", sans-serif;
+      text-align: left;
+      padding: 5px 8px;
+      cursor: pointer;
+    }
+
+    .pm-menu button:hover {
+      background: rgba(255, 70, 85, 0.18);
+    }
+
+    .pm-icon {
+      -webkit-app-region: no-drag;
+      width: 17px;
+      height: 17px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font: 600 12px/1 "Segoe UI", sans-serif;
+      cursor: pointer;
+    }
+
+    .pm-icon:hover {
+      background: rgba(255, 70, 85, 0.18);
+      color: var(--text);
+    }
+
+    .pm-close:hover {
+      background: rgba(255, 112, 136, 0.24);
+      color: #fff;
+    }
+
+    .pm-main {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      min-height: 24px;
+    }
+
+    #pmCount {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      color: var(--ok);
+    }
+
+    #card.warn #pmCount {
+      color: var(--warn);
+    }
+
+    #card.danger #pmCount {
+      color: var(--danger);
+    }
+
+    #pmCount .pm-cap {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted-2);
+    }
+
+    #pmHint {
+      flex: 1;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pm-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    #pmFill {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: 2px;
+      background: var(--ok);
+      transition: width 220ms ease, background 160ms ease;
+    }
+
+    #card.warn #pmFill {
+      background: var(--warn);
+    }
+
+    #card.danger #pmFill {
+      background: var(--danger);
+    }
+
+    .pm-chars {
+      display: flex;
+      gap: 5px;
+    }
+
+    .pm-chip {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      height: 16px;
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+    }
+
+    .pm-chip.active {
+      border-color: rgba(255, 70, 85, 0.55);
+      background: rgba(255, 70, 85, 0.14);
+      color: var(--text);
+      box-shadow: inset 0 -2px 0 rgba(255, 70, 85, 0.7);
+    }
+
+    .pm-chip.warn {
+      border-color: rgba(240, 198, 107, 0.55);
+      color: var(--warn);
+    }
+
+    .pm-chip.danger {
+      border-color: rgba(255, 112, 136, 0.65);
+      color: var(--danger);
+    }
+
+    .pm-chip .pm-key {
+      font-size: 9px;
+      opacity: 0.75;
+    }
+
+    /* Kompakt: nur Zahl + Balken (Kopf mit ⟳/× bleibt bedienbar). */
+    #card.compact .pm-title,
+    #card.compact #pmAge,
+    #card.compact #pmReset,
+    #card.compact .pm-chars {
+      display: none;
+    }
+
+    #card.compact {
+      padding: 6px 9px;
+      gap: 3px;
+    }
+
+    #card.compact .pm-main {
+      min-height: 22px;
+    }
+
+    /* Postfach voll: dezentes Pulsieren als Blickfang. */
+    @keyframes pmPulse {
+      0%, 100% { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), 0 0 8px rgba(255, 112, 136, 0.25); }
+      50% { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), 0 0 20px rgba(255, 112, 136, 0.65); }
+    }
+
+    #card.full {
+      animation: pmPulse 1.8s ease-in-out infinite;
+    }
+
+    /* Position gesperrt: kein Ziehen mehr. */
+    #card.locked .pm-head {
+      -webkit-app-region: no-drag;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <div id="card">
+    <div class="pm-head">
+      <span class="pm-title">Poststelle</span>
+      <span id="pmReset"></span>
+      <span id="pmAge"></span>
+      <button id="pmRefresh" class="pm-icon" type="button" title="Jetzt aktualisieren" aria-label="Jetzt aktualisieren">&#8635;</button>
+      <button id="pmClose" class="pm-icon pm-close" type="button" title="Poststellen-Zähler ausblenden" aria-label="Ausblenden">&times;</button>
+    </div>
+    <div class="pm-main">
+      <strong id="pmCount">&ndash; <span class="pm-cap">/ 21</span></strong>
+      <span id="pmHint"></span>
+    </div>
+    <div class="pm-bar"><span id="pmFill"></span></div>
+    <div class="pm-chars" id="pmChars"></div>
+  </div>
+  <div id="pmMenu" class="pm-menu hidden">
+    <button type="button" data-pm-action="inventory">Inventar-Poststelle</button>
+    <button type="button" data-pm-action="collect">Poststelle einsammeln …</button>
+    <button type="button" data-pm-action="refresh">Jetzt aktualisieren</button>
+    <button type="button" data-pm-action="settings">Einstellungen</button>
+    <button type="button" data-pm-action="hide">Ausblenden</button>
+  </div>
+  <script src="js/i18n-en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="postmaster.js"></script>
+</body>
+</html>
