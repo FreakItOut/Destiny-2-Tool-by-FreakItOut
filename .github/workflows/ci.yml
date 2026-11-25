@@ -25,6 +25,9 @@ jobs:
       - name: Syntax/Struktur prüfen
         run: npm run check
 
+      - name: Typen prüfen
+        run: npm run test:types
+
       - name: Übersetzungen prüfen
         run: npm run test:i18n
 
