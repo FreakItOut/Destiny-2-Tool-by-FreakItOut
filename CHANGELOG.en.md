@@ -6,6 +6,28 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] – 2026-11-25
+
+### Removed
+
+- **All embedded websites** – tabs, favourites, categories, page picker,
+  address bar, find-in-page, webview area and the site navigation in the
+  overlay are gone. The app starts directly on the dashboard.
+- **Website settings** – “Websites” and “Custom pages” are removed from the
+  settings navigation; their panels are no longer shown.
+- **Mini mode, split view, PiP and page zoom**, including their shortcuts and
+  palette commands.
+- **Webview support in the main process** (`webviewTag` disabled, frame
+  sources limited to `none`) and the `/action/mini` endpoint.
+
+### Changed
+
+- **Slim app bar** with only inventory, checklist, overlay, notes, key legend,
+  settings and help.
+- **Reset/Xûr chips** open the dashboard or vendor view instead of a website;
+  DIM links open in the default browser.
+- Version **1.4.0**; E2E **482**, app features **73**, verify **48**.
+
 ## [1.3.0] – 2026-11-25
 
 ### Added

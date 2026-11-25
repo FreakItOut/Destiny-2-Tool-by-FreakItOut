@@ -1161,6 +1161,20 @@ body.mode-overlay .web-area {
   flex: 0 0 auto;
 }
 
+/* Schlanke App-Leiste: nur noch eigene Ansichten, keine Webseiten. */
+#legacyBrowser { display: none !important; }
+.settings-panel[data-settings-panel="web"],
+.settings-panel[data-settings-panel="custom"] { display: none !important; }
+.app-toolbar { min-height: 46px; padding: 6px 14px; }
+.app-toolbar-title {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.app-toolbar .toolbar-actions { flex-wrap: wrap; }
+.app-toolbar .btn { height: 30px; padding: 0 11px; }
+
 .nav-group {
   display: flex;
   align-items: center;

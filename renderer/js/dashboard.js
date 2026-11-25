@@ -403,26 +403,8 @@ export function createDashboard(ctx) {
   }
 
   function restoreAfterDashboard() {
-    hideDashboard();
-    const site = currentSite();
-    if (site) {
-      ctx.web.show(site);
-      ctx.pageTitle.textContent = site.name;
-    } else {
-      ctx.showEmpty();
-    }
-    ctx.updateWindowTitle();
-  }
-
-  function currentSite() {
-    const config = getConfig();
-    const categoryId = config.lastCategory;
-    const siteId = (config.lastSite && config.lastSite[categoryId]) || '';
-    for (const category of ctx.getCategories()) {
-      if (category.id !== categoryId) continue;
-      return category.sites.find((site) => site.id === siteId) || null;
-    }
-    return null;
+    // Ohne Webseiten bleibt das Dashboard die Hauptansicht.
+    openDashboard();
   }
 
   if (dashboardBtn) {
@@ -1193,47 +1175,6 @@ export function createDashboard(ctx) {
   }
 
   // ------------------------------------------------------------
-  // Schnellzugriff (Favoriten + letzte Sitzung)
-  // ------------------------------------------------------------
-  function renderQuickAccess() {
-    const body = qs('#dashQuickBody');
-    if (!body) return;
-    const favoriteIds = new Set(getConfig().favorites || []);
-    const favorites = [];
-    for (const category of ctx.getCategories()) {
-      for (const site of category.sites) {
-        if (favoriteIds.has(site.id)) favorites.push({ category, site });
-      }
-    }
-    const sessionIds = (getConfig().session && getConfig().session.siteIds) || [];
-    const session = [];
-    for (const siteId of sessionIds) {
-      for (const category of ctx.getCategories()) {
-        const site = category.sites.find((entry) => entry.id === siteId);
-        if (site) { session.push({ category, site }); break; }
-      }
-    }
-    const chip = ({ category, site }, attr) =>
-      `<button class="dash-fav" ${attr}="${esc(category.id)}" data-dash-site="${esc(site.id)}">` +
-      `${icon(category.icon)}<span>${esc(site.name)}</span></button>`;
-    body.innerHTML =
-      `<div class="dash-subhead">Favoriten</div>` +
-      (favorites.length
-        ? `<div class="dash-favorites">${favorites.map((entry) => chip(entry, 'data-dash-cat')).join('')}</div>`
-        : '<span class="dash-muted">Noch keine Favoriten – Stern-Symbol in der Toolbar.</span>') +
-      `<div class="dash-subhead">Letzte Sitzung</div>` +
-      (session.length
-        ? `<div class="dash-favorites">${session.map((entry) => chip(entry, 'data-session-cat')).join('')}</div>`
-        : '<span class="dash-muted">Keine gespeicherten Seiten.</span>');
-    for (const button of qsa('[data-dash-cat]', body)) {
-      button.addEventListener('click', () => ctx.selectCategory(button.dataset.dashCat, button.dataset.dashSite));
-    }
-    for (const button of qsa('[data-session-cat]', body)) {
-      button.addEventListener('click', () => ctx.selectCategory(button.dataset.sessionCat, button.dataset.dashSite));
-    }
-  }
-
-  // ------------------------------------------------------------
   // Bungie-News
   // ------------------------------------------------------------
   async function renderDashboardNews(force) {
@@ -1332,24 +1273,6 @@ export function createDashboard(ctx) {
         maybeLoadXur();
         renderDashboardNews(true);
         return;
-      case 'restore-session': {
-        const ids = (getConfig().session && getConfig().session.siteIds) || [];
-        const found = [];
-        for (const siteId of ids) {
-          for (const category of ctx.getCategories()) {
-            const site = category.sites.find((entry) => entry.id === siteId);
-            if (site) { found.push({ category, site }); break; }
-          }
-        }
-        if (!found.length) {
-          toast('Keine Seiten der letzten Sitzung gefunden.', 'info', 2000);
-          return;
-        }
-        for (const { site } of found) ctx.web.preload(site);
-        ctx.selectCategory(found[0].category.id, found[0].site.id);
-        toast(`${found.length} Seite${found.length === 1 ? '' : 'n'} geladen.`, 'success', 2400);
-        return;
-      }
       default:
         return;
     }
@@ -1371,25 +1294,6 @@ export function createDashboard(ctx) {
         renderDashboard();
         return;
       }
-      const select = event.target.closest('[data-dash-profile]');
-      if (!select) return;
-      const value = String(select.value || '');
-      select.value = '';
-      if (!value) return;
-      const patterns = {
-        pvp: /pvp|schmelztiegel|crucible|prüfung|trials|eisenbanner|iron banner/i,
-        pve: /pve|nightfall|großmeister|grandmaster|vanguard|strike/i,
-        raid: /raid|dungeon|verlies/i,
-        gambit: /gambit/i
-      };
-      const pattern = patterns[value];
-      for (const category of ctx.getCategories()) {
-        if (!pattern.test(`${category.name || ''} ${category.id || ''}`)) continue;
-        const site = (category.sites || [])[0];
-        if (site) ctx.selectCategory(category.id, site.id);
-        return;
-      }
-      toast('Keine passende Kategorie für dieses Profil gefunden.', 'info', 2200);
     });
     dashboardPanel.addEventListener('contextmenu', (event) => {
       const card = event.target.closest('.dash-card, .dash-fold');
@@ -1568,10 +1472,7 @@ export function createDashboard(ctx) {
       if (ctx.checklistToggle) ctx.checklistToggle();
     });
   }
-  const dashSessionRestoreBtn = qs('#dashSessionRestore');
-  if (dashSessionRestoreBtn) {
-    dashSessionRestoreBtn.addEventListener('click', () => runDashboardAction('restore-session'));
-  }
+
 
   // ------------------------------------------------------------
   // „Fehlt noch diese Woche“: Saisonziele, Muster, Siegel, Rotation
@@ -1839,7 +1740,6 @@ export function createDashboard(ctx) {
     hidden: dashboardHidden,
     render: renderDashboard,
     updateClocks: updateDashboardClocks,
-    applyHero: () => renderHero(),
-    restoreSession: () => runDashboardAction('restore-session')
+    applyHero: () => renderHero()
   };
 }

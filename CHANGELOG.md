@@ -6,6 +6,29 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.4.0] – 2026-11-25
+
+### Entfernt
+
+- **Alle eingebetteten Webseiten** – Reiter, Favoriten, Kategorien,
+  Seitenauswahl, Adressleiste, Find-in-Page, Webview-Fläche und die
+  Seitennavigation im Overlay sind weg. Die App startet direkt im Dashboard.
+- **Webseiten-Einstellungen** – „Webseiten“ und „Eigene Seiten“ sind aus der
+  Einstellungsnavigation entfernt; die zugehörigen Panels werden nicht mehr
+  angezeigt.
+- **Minimodus, Split-View, PiP und Seiten-Zoom** inklusive der zugehörigen
+  Kürzel und Palette-Befehle.
+- **Webview-Unterstützung im Hauptprozess** (`webviewTag` deaktiviert,
+  Frame-Quellen auf `none` begrenzt) und der `/action/mini`-Endpunkt.
+
+### Geändert
+
+- **Schlanke App-Leiste** mit nur noch Inventar, Checkliste, Overlay,
+  Notizen, Tasten-Legende, Einstellungen und Hilfe.
+- **Reset-/Xûr-Chips** öffnen Dashboard bzw. Händleransicht statt einer
+  Webseite; DIM-Links öffnen im Standardbrowser.
+- Version **1.4.0**; E2E **482**, App-Features **73**, Verify **48**.
+
 ## [1.3.0] – 2026-11-25
 
 ### Hinzugefügt

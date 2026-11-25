@@ -1,6 +1,21 @@
 'use strict';
 // Automatisch erzeugt von tools/make-i18n.js.
 window.__I18N_EN__ = {
+  "Keine Internetverbindung – Daten werden aktualisiert, sobald du wieder online bist.": "No internet connection – data will be refreshed as soon as you are back online.",
+  "Im Overlay kannst du mit dem Controller arbeiten oder das Overlay mit der Maus durchlassen, um weiterzuspielen.": "In the overlay you can use the controller or let the mouse through to keep playing.",
+  "Profile sind vollständige Snapshots (Einstellungen, Erinnerungen …). Umschalten lädt die Oberfläche neu – auch im Tray-Menü verfügbar.": "Profiles are complete snapshots (settings, reminders …). Switching reloads the interface – also available from the tray menu.",
+  "Setzt die gesamte Konfiguration zurück (Einstellungen, Erinnerungen, Loadouts). Nach Bestätigung startet die Oberfläche neu.": "Resets the entire configuration (settings, reminders, loadouts). The interface restarts after confirmation.",
+  "Gebaut für schnelle Blicke zwischen zwei Raids – mit Dashboard, Inventar, Werkzeugen, Overlay und Controller.": "Built for quick looks between two raids – with dashboard, inventory, tools, overlay and controller.",
+  "Befehl oder Einstellung suchen …": "Search command or setting …",
+  "Wieder online – Daten können aktualisiert werden.": "Back online – data can be refreshed.",
+  "Kurze Vibration bei Ansichtswechsel": "Short vibration on view change",
+  "D-Pad-Scrollrichtung umkehren (↑ scrollt nach unten)": "Invert D-pad scroll direction (↑ scrolls down)",
+  "Schrift, Kontrast, Sprache und Barrierefreiheit der Bedienoberfläche.": "Font, contrast, language and accessibility of the interface.",
+  "Vergrößert die Bedienoberfläche. Gut für größere Bildschirme/Abstände.": "Enlarges the interface. Good for larger screens and viewing distances.",
+  "Low-Power-Modus (spart Akku: Hintergrund gedrosselt, keine Hintergrundaktualisierung – Neustart nötig)": "Low-power mode (saves battery: throttled background, no background refresh – restart required)",
+  "Live-Anzeige aller Tasten, Sticks und Trigger – auch ohne geöffnete Einstellungen.": "Live view of all buttons, sticks and triggers – even without open settings.",
+  "Dieses Tool ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zu Bungie. Destiny 2 und alle zugehörigen Inhalte sind Eigentum von Bungie, Inc.": "This tool is an unofficial community project and is not affiliated with Bungie. Destiny 2 and all related content are property of Bungie, Inc.",
+  "Es gibt keine Webseiten mehr – alles läuft über Dashboard und Inventar.": "Websites have been removed – everything runs through the dashboard and inventory.",
   "Overlay & Webseiten": "Overlay & websites",
   "Spielen": "Play",
   "Beenden": "Quit",

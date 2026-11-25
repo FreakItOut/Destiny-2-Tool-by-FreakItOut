@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.3.0
+# Destiny 2 Tool by FreakItOut 1.4.0
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,46 +6,48 @@
 
 ## Deutsch
 
-Version 1.3.0 erweitert das Dashboard um eine echte Aktivitäts-Analyse: KPIs,
-14-Tage-Verlauf, 12-Wochen-Heatmap und Kategorien – auf Basis eines längeren
-Verlaufs für alle Charaktere.
+Version 1.4.0 macht Schluss mit den eingebetteten Webseiten: Die App zeigt nur
+noch Dashboard, Inventar & Loadouts und die Werkzeuge – aufgeräumter, schneller
+und ohne fremde Seiten.
 
-### Neu in 1.3.0
+### Neu in 1.4.0
 
-- **Aktivitäts-Analyse** – neue Dashboard-Karte mit Kennzahlen für 7 und
-  30 Tage: Aktivitäten, Raids & Dungeons, Großmeister, PvP inkl. Prüfungen,
-  K/D, Serie und Spielzeit.
-- **14-Tage-Balken** – Aktivitäten pro Tag mit Minuten-Tooltip.
-- **12-Wochen-Heatmap** – Intensität je Tag, Montag bis Sonntag; zukünftige
-  Tage bleiben leer.
-- **Kategorien & Top-Aktivitäten** – Verteilung auf Raid, Dungeon, Nightfall,
-  GM, Prüfungen, PvP, Gambit und Sonstiges sowie die häufigsten Aktivitäten
-  der letzten 30 Tage.
-- **Längerer Verlauf** – Aktivitäten aller Charaktere, bis zu 100 Einträge je
-  Charakter, dedupliziert und nach Datum sortiert; inklusive Modus-Kategorie
-  für eine robuste Einordnung.
-- **Ein Abruf für zwei Karten** – „Letzte Aktivitäten“ und Analyse teilen
-  Cache und Request; „Neu laden“ aktualisiert beide.
+- **Webseiten komplett entfernt** – Reiter, Kategorien, Favoriten,
+  Seitenauswahl, Adressleiste, Find-in-Page und die Webview-Fläche sind weg.
+  Die App startet direkt im Dashboard.
+- **Schlanke Bedienleiste** – nur noch Inventar, Checkliste, Overlay, Notizen,
+  Tasten-Legende, Einstellungen und Hilfe.
+- **Aufgeräumte Einstellungen** – „Webseiten“ und „Eigene Seiten“ sind aus der
+  Navigation entfernt; deren Panels werden nicht mehr angezeigt.
+- **Overlay ohne Seitennavigation** – keine Kategorie-/Seitenauswahl und keine
+  Zurück-/Vorwärts-/Neu-laden-Knöpfe für Webseiten mehr.
+- **Entfernt:** Minimodus, Split-View, Bild-in-Bild, Seiten-Zoom,
+  Adressleisten- und Find-Kürzel sowie der `/action/mini`-Endpunkt.
+- **Sicherer:** `webviewTag` ist deaktiviert und die CSP erlaubt keine
+  eingebetteten Frames mehr.
+- **Direkte Aktionen:** Reset-Chip öffnet das Dashboard, Xûr-Chip die
+  Händleransicht; DIM-Links öffnen im Standardbrowser.
 
-### Enthalten aus 1.2.0
+### Enthalten aus 1.3.0
 
-- Inventar-Virtualisierung mit festen Kachelhöhen, Paint-Virtualisierung und
-  120er-Blöcken für große Tresorlisten.
-- Stream Deck aus 1.1.0: Verbindungs-Action, Encoder, Rezepte, Profil-Modus.
+- Dashboard-Analytik mit 7/30-Tage-KPIs, 14-Tage-Balken, 12-Wochen-Heatmap
+  und Kategorien.
+- Inventar-Virtualisierung mit 120er-Blöcken für große Tresorlisten.
+- Stream Deck mit Verbindungs-Action, Encodern, Rezepten und Profil-Modus.
 
 ### Downloads
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.3.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.3.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.4.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.4.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `SHA256SUMS.txt` | Prüfsummen aller Dateien |
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.3.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.4.0.exe`).
 
 ### Voraussetzungen
 
@@ -61,9 +63,6 @@ GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 - Die portable Version legt ihre Daten im Ordner `Daten` neben der EXE ab
   (inkl. Konfiguration und verschlüsselter Zugangsdaten). Beim Kopieren den
   `Daten`-Ordner mitnehmen.
-- Die Analyse nutzt die Aktivitäts-Historie der Bungie-API. „XP“ wird dort
-  nicht je Woche ausgeliefert; die Spielzeit (Minuten) dient als belastbare
-  Kennzahl.
 - Prüfsummen: `SHA256SUMS.txt` herunterladen und z. B. mit
   `Get-FileHash .\Datei.exe -Algorithm SHA256` vergleichen.
 - Vollständige Anleitung:
@@ -81,46 +80,48 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.3.0 adds real activity analytics to the dashboard: KPIs, a 14-day
-trend, a 12-week heatmap and categories – based on a longer history for all
-characters.
+Version 1.4.0 removes the embedded websites: the app now shows only the
+dashboard, inventory & loadouts and the tools – cleaner, faster and without
+third-party pages.
 
-### New in 1.3.0
+### New in 1.4.0
 
-- **Activity analytics** – new dashboard card with 7/30-day metrics:
-  activities, raids & dungeons, Grandmaster, PvP incl. Trials, K/D, streak and
-  play time.
-- **14-day bars** – activities per day with a minutes tooltip.
-- **12-week heatmap** – intensity per day, Monday to Sunday; future days stay
-  empty.
-- **Categories & top activities** – distribution across raid, dungeon,
-  Nightfall, GM, Trials, PvP, Gambit and other, plus the most frequent
-  activities of the last 30 days.
-- **Longer history** – activities of all characters, up to 100 entries each,
-  deduplicated and sorted by date, including the mode category for robust
-  classification.
-- **One fetch for two cards** – “Last activities” and analytics share cache
-  and request; “Reload” refreshes both.
+- **Websites fully removed** – tabs, categories, favourites, page picker,
+  address bar, find-in-page and the webview area are gone. The app starts
+  directly on the dashboard.
+- **Slim app bar** – only inventory, checklist, overlay, notes, key legend,
+  settings and help.
+- **Cleaner settings** – “Websites” and “Custom pages” are removed from the
+  navigation; their panels are no longer shown.
+- **Overlay without site navigation** – no category/page picker and no
+  back/forward/reload buttons for websites.
+- **Removed:** mini mode, split view, picture-in-picture, page zoom, address
+  bar and find shortcuts, and the `/action/mini` endpoint.
+- **Safer:** `webviewTag` is disabled and the CSP no longer allows embedded
+  frames.
+- **Direct actions:** the reset chip opens the dashboard, the Xûr chip the
+  vendor view; DIM links open in the default browser.
 
-### Included from 1.2.0
+### Included from 1.3.0
 
-- Inventory virtualization with fixed tile heights, paint virtualization and
-  120-item chunks for large vault lists.
-- Stream Deck from 1.1.0: connection action, encoders, recipes, profile mode.
+- Dashboard analytics with 7/30-day KPIs, 14-day bars, a 12-week heatmap and
+  categories.
+- Inventory virtualization with 120-item chunks for large vault lists.
+- Stream Deck with connection action, encoders, recipes and profile mode.
 
 ### Downloads
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.3.0.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.3.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.4.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.4.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `SHA256SUMS.txt` | Checksums for all files |
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.3.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.4.0.exe`).
 
 ### Requirements
 
@@ -136,8 +137,6 @@ GitHub replaces spaces in file names with dots. The checksums in
 - The portable version stores its data in the `Daten` folder next to the EXE
   (including configuration and encrypted credentials). Copy that folder along
   with the EXE.
-- Analytics uses the Bungie activity history. “XP” is not exposed per week
-  there, so play time (minutes) is used as a reliable metric.
 - Checksums: download `SHA256SUMS.txt` and compare with e.g.
   `Get-FileHash .\File.exe -Algorithm SHA256`.
 - Full guide:

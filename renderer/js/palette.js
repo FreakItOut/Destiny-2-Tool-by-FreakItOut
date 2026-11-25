@@ -56,17 +56,12 @@ export function createPalette(ctx) {
     actions.push({ label: 'Dashboard umschalten', run: () => (ctx.dashboard.hidden() ? ctx.dashboard.open() : ctx.dashboard.restore()) });
   actions.push({ label: 'Was ist neu? (Changelog)', run: () => openChangelog() });
   actions.push({ label: 'Tour starten', run: () => openTour() });
-    actions.push({ label: 'Seite neu laden', run: () => { ctx.hideError(); ctx.web.reload(); } });
-    actions.push({ label: 'Alle Seiten neu laden', run: () => { ctx.hideError(); if (ctx.web.reloadAll) ctx.web.reloadAll(); } });
     actions.push({ label: 'Notizen öffnen', run: () => { if (ctx.notesApi && ctx.notesApi.isHidden()) ctx.notesApi.open(); else if (ctx.notesApi) ctx.notesApi.close(); } });
     actions.push({ label: 'Wöchentliche Checkliste öffnen', run: () => ctx.checklistToggle() });
-    actions.push({ label: 'Andere Seiten entladen', run: () => { const removed = ctx.web.unloadOthers(); toast(`${removed} Seite${removed === 1 ? '' : 'n'} entladen.`, 'info', 1800); } });
     actions.push({ label: 'Destiny 2 starten', run: () => ctx.api.launchGame().catch(() => {}) });
     actions.push({ label: 'Alarm testen', run: () => ctx.api.testAlarm().catch(() => {}) });
     actions.push({ label: 'Stoppuhr-Ergebnis in Notiz anhängen', run: () => ctx.appendStopwatchToNote() });
-    actions.push({ label: 'Letzte Sitzung wiederherstellen', run: () => ctx.dashboard.restoreSession() });
-    actions.push({ label: 'Minimodus umschalten (Strg+M)', run: () => ctx.toggleMiniMode() });
-    actions.push({ label: 'Split-View umschalten (Strg+Alt+S)', run: () => ctx.toggleSplitView() });
+
     actions.push({ label: 'Inventar öffnen (Bungie)', run: () => ctx.inventory && ctx.inventory.toggle() });
     for (const [view, label] of [['overview', 'Übersicht'], ['builds', 'Builds'], ['collection', 'Sammlung'], ['week', 'Woche'], ['vendor', 'Händler']]) {
       actions.push({ label: `Werkzeuge: ${label}`, run: () => {
@@ -85,21 +80,11 @@ export function createPalette(ctx) {
   actions.push({ label: 'Bungie: Anmelden', run: () => ctx.bungieLogin && ctx.bungieLogin() });
   actions.push({ label: 'Godroll-Wunschliste aktualisieren', run: () => ctx.refreshWishlist && ctx.refreshWishlist() });
   actions.push({ label: 'Bungie-Verbindung prüfen', run: () => ctx.settings.open('bungie') });
-    actions.push({ label: 'Geschlossene Seite wiederherstellen (Strg+Shift+T)', run: () => {
-      const restored = ctx.web.restoreLast();
-      toast(restored ? `Seite wiederhergestellt: ${restored.name}` : 'Keine geschlossene Seite im Speicher.', restored ? 'success' : 'info', 1800);
-    } });
-    actions.push({ label: 'Verlauf öffnen', run: () => { const button = qs('#backHistoryBtn'); if (button) button.click(); } });
     for (const [tab, label] of [
-      ['overlay', 'Overlay'], ['controller', 'Controller'], ['web', 'Webseiten'], ['custom', 'Eigene Seiten'],
+      ['overlay', 'Overlay'], ['controller', 'Controller'],
       ['behavior', 'Verhalten'], ['bungie', 'Bungie'], ['diag', 'Diagnose'], ['about', 'Über']
     ]) {
       actions.push({ label: `Einstellungen: ${label}`, run: () => ctx.settings.open(tab) });
-    }
-    for (const category of ctx.getCategories()) {
-      for (const site of category.sites) {
-        actions.push({ label: `Seite öffnen: ${site.name}`, run: () => ctx.selectCategory(category.id, site.id) });
-      }
     }
     // Zuletzt genutzte Befehle oben einsortieren, ohne sie unten zu doppeln.
     const recentLabels = loadPaletteRecent();

@@ -72,7 +72,7 @@ check('Stream-Deck-Aktionen akzeptieren GET und POST', main.includes("url.pathna
 check('Lese-Endpunkt bekommt URL-Parameter', main.includes('localApiData(url.pathname, url)') && main.includes('function localApiData(pathname, url = null)'));
 check('Loadout-Anwendung nur mit id', main.includes("actionPath === 'loadout' || actionPath === 'loadout/apply'") && main.includes("actionPath === 'loadout/missing'"));
 check('Overlay-Aktionen vorhanden', ['show', 'hide', 'enter', 'leave'].every((kind) => handledActions.has(`overlay/${kind}`)));
-check('UI-Aktionen an den Renderer', ['inventory', 'postmaster', 'dashboard', 'settings', 'notes', 'checklist', 'mini'].every((name) => app.includes(`action === '${name}'`)));
+check('UI-Aktionen an den Renderer', ['inventory', 'postmaster', 'dashboard', 'settings', 'notes', 'checklist'].every((name) => app.includes(`action === '${name}'`)));
 check('Checklisten-Aktionen an den Renderer', ['checklist-toggle', 'checklist-add', 'checklist-reset'].every((name) => app.includes(`action === '${name}'`)));
 check('Renderer lädt Inventar-Aktionen nach', app.includes('applyLoadoutMissingById') && app.includes('refresh-inventory') && app.includes('refresh-wishlist'));
 check('Detail-Aktionen im Renderer', ['toast', 'vendor', 'collection', 'week', 'vendors', 'picker'].every((name) => app.includes(`action === '${name}'`)));

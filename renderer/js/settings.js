@@ -657,7 +657,6 @@ export function initSettings({
     qs('#closeToTray').checked = config.behavior.closeToTray !== false;
     qs('#startMinimized').checked = config.behavior.startMinimized === true;
     qs('#startWithWindows').checked = config.behavior.startWithWindows === true;
-    qs('#startDashboard').checked = config.behavior.startOnDashboard !== false;
     const startViewSelect = qs('#startView');
     if (startViewSelect) startViewSelect.value = (config.appearance && config.appearance.startView) || 'dashboard';
     const notif = (config && config.notifications) || {};
@@ -669,8 +668,6 @@ export function initSettings({
     qs('#notifySuppressActivity').checked = notif.suppressDuringActivity !== false;
     qs('#notifyQuietStart').value = String(notif.quietStart || '23:00');
     qs('#notifyQuietEnd').value = String(notif.quietEnd || '07:00');
-    const autoRestoreSessionInput = qs('#autoRestoreSession');
-    if (autoRestoreSessionInput) autoRestoreSessionInput.checked = config.behavior.autoRestoreSession === true;
     const ctAutoResetSelect = qs('#clickThroughAutoReset');
     if (ctAutoResetSelect) ctAutoResetSelect.value = String(Math.round(Number(config.behavior.clickThroughAutoReset) || 0));
     const showItems = (config.overlay && config.overlay.showItems) || {};
@@ -757,7 +754,8 @@ export function initSettings({
     qs('#autoOverlayOnGame').checked = config.behavior.autoOverlayOnGame === true;
     qs('#disableGpu').checked =
       config.behavior.disableGpu === true || config.behavior.disableGpuAuto === true;
-    qs('#adBlock').checked = config.behavior.adBlock !== false;
+    const adBlockInput = qs('#adBlock');
+    if (adBlockInput) adBlockInput.checked = config.behavior.adBlock !== false;
     qs('#gameLaunchUrl').value = config.behavior.gameLaunchUrl;
     qs('#resetAlarm').checked = config.behavior.resetAlarm !== false;
     qs('#alarmSound').checked = config.behavior.alarmSound === true;
@@ -1624,7 +1622,6 @@ export function initSettings({
   });
 
   qs('#closeToTray').addEventListener('change', (event) => setConfig({ behavior: { closeToTray: event.target.checked } }));
-  qs('#startDashboard').addEventListener('change', (event) => setConfig({ behavior: { startOnDashboard: event.target.checked } }));
   const startViewListener = qs('#startView');
   if (startViewListener) {
     startViewListener.addEventListener('change', (event) => setConfig({ appearance: { startView: String(event.target.value || 'dashboard') } }));
@@ -1640,7 +1637,6 @@ export function initSettings({
     const input = qs(`#${id}`);
     if (input) input.addEventListener('change', (event) => setConfig({ notifications: { [key]: String(event.target.value || '') } }));
   }
-  qs('#autoRestoreSession').addEventListener('change', (event) => setConfig({ behavior: { autoRestoreSession: event.target.checked } }));
   const ctAutoResetListener = qs('#clickThroughAutoReset');
   if (ctAutoResetListener) ctAutoResetListener.addEventListener('change', (event) => setConfig({ behavior: { clickThroughAutoReset: Number(event.target.value) || 0 } }));
   qs('#startMinimized').addEventListener('change', (event) => setConfig({ behavior: { startMinimized: event.target.checked } }));
@@ -1658,7 +1654,6 @@ export function initSettings({
   );
   qs('#openCrashLogBtn').addEventListener('click', () => api.openCrashLogFolder());
   qs('#startWithWindows').addEventListener('change', (event) => setConfig({ behavior: { startWithWindows: event.target.checked } }));
-  qs('#adBlock').addEventListener('change', (event) => setConfig({ behavior: { adBlock: event.target.checked } }));
   qs('#gameLaunchUrl').addEventListener('change', (event) => {
     const value = event.target.value.trim();
     if (!/^(steam:|https?:\/\/|com\.epicgames\.launcher:)/i.test(value)) {
@@ -2185,7 +2180,6 @@ export function initSettings({
     toast('Standard-Beep wieder aktiv.', 'info', 1600);
   });
   qs('#lowPower').addEventListener('change', (event) => setConfig({ behavior: { lowPower: event.target.checked } }));
-  qs('#globalSiteHotkeys').addEventListener('change', (event) => setConfig({ behavior: { globalSiteHotkeys: event.target.checked } }));
   for (const [key, id] of [
     ['notes', 'ovShowNotes'], ['dashboard', 'ovShowDashboard'], ['loadouts', 'ovShowLoadouts'], ['lock', 'ovShowLock'],
     ['hide', 'ovShowHide'], ['exit', 'ovShowExit'],
@@ -3388,7 +3382,8 @@ export function initSettings({
           .join('')
       : '<div class="check-empty">Keine Ladefehler in dieser Sitzung.</div>';
   }
-  qs('#errorRadarBtn').addEventListener('click', renderErrorRadar);
+  const errorRadarBtn = qs('#errorRadarBtn');
+  if (errorRadarBtn) errorRadarBtn.addEventListener('click', renderErrorRadar);
   renderErrorRadar();
 
   // Erinnerungen aus dem Wochenplan ableiten: Uhrzeiten im Text der

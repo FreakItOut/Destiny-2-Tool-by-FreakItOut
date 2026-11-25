@@ -201,10 +201,6 @@ const DEFAULTS = {
     // Testmodus: Das Overlay-Kürzel öffnet das normale Fenster
     // statt des Overlays. Nur für Verhaltenstests gedacht.
     testOpenWindowOnHotkey: false,
-    // Nach dem Start automatisch die letzte Sitzung wiederherstellen.
-    autoRestoreSession: false,
-    // Minimodus: nur die Webseite sichtbar (Strg+M / Palette / ✕-Chip).
-    overlayMini: false,
     // Click-Through automatisch zurückholen nach X Minuten (0 = aus).
     clickThroughAutoReset: 0,
     adBlock: true,
@@ -949,8 +945,6 @@ function normalize(raw) {
   merged.behavior.showBindingHud = merged.behavior.showBindingHud === true;
   merged.behavior.startOnDashboard = merged.behavior.startOnDashboard !== false;
   merged.behavior.globalSiteHotkeys = merged.behavior.globalSiteHotkeys === true;
-  merged.behavior.autoRestoreSession = merged.behavior.autoRestoreSession === true;
-  merged.behavior.overlayMini = merged.behavior.overlayMini === true;
   const ctAutoReset = Math.round(Number(merged.behavior.clickThroughAutoReset) || 0);
   merged.behavior.clickThroughAutoReset = Number.isFinite(ctAutoReset) ? Math.max(0, Math.min(30, ctAutoReset)) : 0;
   // Ruhemodus: Zeitstempel in der Zukunft (max. 24 h) oder 0.

@@ -2,8 +2,8 @@
 
 **Deutsch** · [English](README.en.md)
 
-Ein Desktop-Tool für Destiny 2: Webseiten in Reitern und Drop-Downs, ein
-Overlay über dem Spiel, globale Tastenkürzel und vollständige
+Ein Desktop-Tool für Destiny 2: Dashboard, Inventar & Loadouts, Werkzeuge und
+ein Overlay über dem Spiel – mit globalen Tastenkürzeln und vollständiger
 Controller-Steuerung. Gebaut mit Electron, ohne Bündler und ohne
 Laufzeit-Abhängigkeiten außer Electron selbst.
 
@@ -13,9 +13,9 @@ Laufzeit-Abhängigkeiten außer Electron selbst.
 
 Die fertigen Windows-Builds liegen unter **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.3.0.exe`** – portable Version, keine
+- **`Destiny.2.Tool.by.FreakItOut.1.4.0.exe`** – portable Version, keine
   Installation nötig.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.3.0.exe`** – Installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.4.0.exe`** – Installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optionales Stream-Deck-Plugin.
 - **`streamdeck-profile.json`** – passende Stream-Deck-Belegung.
 - **`SHA256SUMS.txt`** – Prüfsummen aller Dateien.
@@ -37,27 +37,22 @@ Repository.
 
 ## Funktionen
 
-- **Reiter + Drop-Downs** – acht Kategorien (Heute, Ausrüstung, Waffen,
-  Händler, Gruppen, Statistiken, Guides & Lore, Eigene) mit insgesamt
-  27 vorkonfigurierten Webseiten.
+- **Eigene Ansichten statt Webseiten** – Dashboard, Inventar/Loadouts und
+  Werkzeugzentrale sind native Ansichten; es werden keine fremden Seiten
+  mehr eingebettet.
 - **Overlay über dem Spiel** – randloses, immer im Vordergrund liegendes
   Fenster, Größe, Position, Monitor und Deckkraft sind einstellbar.
 - **Globale Tastenkürzel** – funktionieren auch, wenn Destiny 2 den Fokus
   hat. Standard: `Alt+D` für das Overlay, `Alt+Shift+D` für
   Maus-Durchlassen, `Alt+P` für den Poststellen-Zähler, `Alt+I` fürs
   Inventar (alle änderbar).
-- **Controller-Steuerung** – virtueller Cursor, Klicken, Scrollen,
-  Kategorie- und Seitenwechsel. Ein frei aufnehmbares Tastenpaar (Standard
+- **Controller-Steuerung** – virtueller Cursor, Klicken, Scrollen und
+  Ansichtswechsel. Ein frei aufnehmbares Tastenpaar (Standard
   `L3 + R3`) blendet das Overlay ein und aus.
 - **Maus-Durchlassen** – im Overlay gehen Mausklicks ans Spiel durch,
   während das Overlay sichtbar bleibt.
-- **Eigene Seiten** – beliebige http(s)-Adressen hinzufügen, einer
-  Kategorie zuordnen und wieder entfernen.
 - **Reset- und Xur-Anzeige** – Countdown bis zum täglichen Reset (17:00 UTC)
   und Xur-Status in der Kopfzeile.
-- **Sitzung bleibt erhalten** – alle Webseiten teilen sich eine
-  persistente Sitzung; Anmeldungen bei Bungie, Reddit und Co. bleiben
-  bestehen.
 - **Tray** – das Tool läuft im Hintergrund weiter, das Overlay bleibt
   per Kürzel erreichbar.
 - **Champion-Planer** – zeigt pro Hüter, welche Champions durch Waffen,
@@ -260,10 +255,11 @@ Leisten-Elemente lassen sich als **Layout-Profil** speichern (Einstellungen
 | --- | --- |
 | `Alt+D` | Overlay ein-/ausblenden (anpassbar) |
 | `Alt+Shift+D` | Maus durchlassen (anpassbar) |
-| `Alt+1` … `Alt+8` | Kategorie wechseln |
-| `F5` | aktuelle Seite neu laden |
+| `Strg+K` | Befehlspalette öffnen |
+| `Strg+Alt+D` | Dashboard umschalten (global) |
+| `Strg+Alt+I` | Inventar öffnen |
+| `Strg+Alt+1` … `5` | Werkzeugansicht öffnen |
 | `Esc` | Dialog schließen bzw. Overlay ausblenden |
-| `Strg` + Mausrad | Seite zoomen |
 
 ## Controller
 
@@ -273,12 +269,11 @@ Die Belegung im Overlay:
 | --- | --- |
 | Linker/rechter Stick | Cursor bewegen (Tooltips/Perk-Erklärungen erscheinen auch mit dem Controller) |
 | A | Klicken / auswählen |
-| B | Zurück: schließt zuerst Item-Popup/Loadout-Editor, dann Seite oder Dialog |
-| X | Seite neu laden (im Inventar: Inventar aktualisieren) |
+| B | Zurück: schließt zuerst Item-Popup/Loadout-Editor, dann Dialog |
+| X | Aktualisieren (im Inventar: Inventar aktualisieren) |
 | Y | Präzisionsmodus |
-| LB / RB | Kategorie zurück/weiter (im Inventar: Tab wechseln) |
-| Steuerkreuz oben/unten | App/Dialoge: navigieren; Webseite: scrollen |
-| Steuerkreuz links/rechts | App/Dialoge: navigieren; Webseite: Webseite wechseln |
+| LB / RB | Tab / Ansicht wechseln |
+| Steuerkreuz | Navigieren und scrollen |
 | LT / RT | Schnell scrollen |
 | View | Einstellungen |
 | Menu | Overlay ausblenden |
@@ -290,7 +285,7 @@ hervorgehoben und automatisch in den sichtbaren Bereich gescrollt.
 **LB/RB** wechselt im Inventar zwischen Inventar und Loadout-Editor,
 **X** aktualisiert dort die Bungie-Daten.
 
-Der **zweite Analog-Stick** scrollt durch Inventar, Dialoge und Webseiten
+Der **zweite Analog-Stick** scrollt durch Inventar und Dialoge
 (standardmäßig der rechte Stick, wenn links den Cursor steuert).
 **A auf dem Suchfeld** oder der Knopf **⌨ Tastatur** öffnet eine
 controller-bedienbare Bildschirmtastatur für die Inventar-Suche.
@@ -407,19 +402,12 @@ Y-Achse umkehren**, falls der Controller sie gespiegelt liefert.
 ### Tasten belegen
 
 Unter **Einstellungen → Controller → Tasten belegen** wird jeder
-Funktion (Klicken, Zurück, Kategorie wechseln, Webseite wechseln,
-Präzisionsmodus, Einstellungen, Overlay ausblenden) eine beliebige
-Taste zugeordnet. „Nicht belegt“ deaktiviert die Funktion.
+Funktion (Klicken, Zurück, Ansichtswechsel, Präzisionsmodus,
+Einstellungen, Overlay ausblenden) eine beliebige Taste zugeordnet.
+„Nicht belegt“ deaktiviert die Funktion.
 
 Der Guide-/Xbox-Knopf und die Tastenkombination werden getrennt
 davon eingestellt (siehe oben).
-
-## Eigene Seiten
-
-Unter **Einstellungen → Eigene Seiten** Name, Adresse und Kategorie
-angeben. Die Seite erscheint in der gewählten Kategorie und zusätzlich
-unter **Eigene**. Adressen werden auf `http`/`https` geprüft; doppelte
-Einträge werden abgelehnt.
 
 ## Aufbau
 
@@ -435,9 +423,9 @@ renderer/
   index.html    Oberfläche, Einstellungen, Hilfe
   styles.css    Destiny-inspiriertes Dark-Design inkl. Overlay-Modus
   js/
-    app.js        Start, Reiter, Auswahl, Overlay-Ereignisse
-    sites.js      Katalog der Kategorien und Webseiten
-    webviews.js   <webview>-Verwaltung mit Keep-Alive
+    app.js        Start, Ansichten, Overlay-Ereignisse
+    dashboard.js  Kommandostand, Prioritäten und Analytik
+    inventory.js  Inventar, Loadouts und Werkzeuge
     controller.js Gamepad-Abfrage, Cursor, Klick/Scroll
     settings.js   Einstellungsdialog und Aufnahme
     clock.js      Reset- und Xur-Countdown
@@ -448,10 +436,9 @@ tools/
   check.js      Projektprüfung
 ```
 
-Die Webseiten laufen in `<webview>`-Elementen mit deaktiviertem
-Node-Zugriff, aktivierter Sandbox und einer gemeinsamen Partition
-(`persist:destiny2tool`). Pop-ups und Links nach außen werden im
-Standardbrowser geöffnet.
+Alle Ansichten laufen lokal im Renderer. Es werden keine fremden
+Webseiten mehr eingebettet; externe Links (z. B. Bungie-Portal oder
+Discord) öffnen im Standardbrowser.
 
 ## Fehlersuche
 
@@ -474,11 +461,8 @@ Standardbrowser geöffnet.
   direkt und ignoriert ihn nur, solange das Spiel nicht im Vordergrund ist.
   Deshalb holt sich das Overlay den Fokus; im Maus-Durchlass-Modus bleibt der
   Controller beim Spiel.
-- **Seite lädt nicht:** Die Fehlerseite bietet **Erneut versuchen** und
-  **Im Browser öffnen**. Manche Seiten blockieren eingebettete Browser;
-  dann im externen Browser öffnen.
-- **Anmeldungen weg:** Unter **Einstellungen → Webseiten** lassen sich
-  Cookies und Website-Daten löschen. Danach ist eine neue Anmeldung nötig.
+- **Daten veraltet:** Im Inventar „Aktualisieren“ drücken oder das
+  Dashboard-Layout neu laden. Bungie-Anmeldung und API-Key prüfen.
 
 ## Datenschutz & Zugangsdaten
 
@@ -517,8 +501,7 @@ echten API-Keys, Tokens oder lokalen Konfigurationsdateien einchecken.
 
 Dieses Tool ist ein inoffizielles Community-Projekt und steht in keiner
 Verbindung zu Bungie. Destiny 2 und alle zugehörigen Inhalte sind Eigentum
-von Bungie, Inc. Die verlinkten Webseiten gehören ihren jeweiligen
-Betreibern.
+von Bungie, Inc.
 
 ## Lizenz
 

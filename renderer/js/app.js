@@ -1,5 +1,5 @@
-import { buildCategories, totalSiteCount } from './sites.js';
-import { createWebManager } from './webviews.js';
+// Die frühere Webseiten-Ansicht wurde entfernt. Die App zeigt nur noch
+// Dashboard, Inventar/Loadouts und die Werkzeuge.
 import { createController, BUTTONS } from './controller.js';
 import { initSettings, BINDING_ACTIONS } from './settings.js';
 import { initClock, nextDailyReset, nextWeeklyReset, xurEnd, xurActive } from './clock.js';
@@ -97,7 +97,8 @@ function logConfigPatch(before, patch) {
     // Protokoll ist optional.
   }
 }
-let categories = buildCategories(cfg.customSites);
+const APP_CATEGORY = { id: 'app', name: 'App', hint: '', icon: 'sun', color: '#f0c66b', sites: [] };
+let categories = [APP_CATEGORY];
 let overlayState = (await api.getOverlayState().catch(() => null)) || {
   mode: 'window',
   visible: false,
@@ -216,66 +217,38 @@ const controllerStatus = qs('#controllerStatus');
 const controllerStatusText = qs('#controllerStatusText');
 
 // ------------------------------------------------------------
-// Webseiten
+// Ehemalige Webseiten-Schnittstelle (abgeschaltet)
 // ------------------------------------------------------------
+// Die App lädt keine fremden Seiten mehr. Der Stub hält die noch
+// vorhandenen Aufrufstellen (Dashboard, Controller, Tastatur) ruhig.
 
-const web = createWebManager({
-  api,
-  container: qs('#webviews'),  getConfig: () => cfg,
-  onState: (payload) => {
-    if (!payload) return;
-    if (payload.type === 'loading') {
-      loadingBar.classList.toggle('hidden', !payload.loading);
-      if (payload.loading) {
-        hideError();
-        loadState.textContent = 'Lädt …';
-        loadState.classList.add('loading');
-      } else {
-        loadState.textContent = 'Bereit';
-        loadState.classList.remove('loading');
-      }
-    } else if (payload.type === 'stalled') {
-      const name = (payload.site && payload.site.name) || 'Die Seite';
-      toast(`${name} reagiert nicht. Neu laden?`, 'warning', 12000, true, [
-        { label: 'Neu laden', run: () => { try { web.reload(); } catch (error) { /* egal */ } } },
-        { label: 'Andere entladen', run: () => { try { web.unloadOthers(); } catch (error) { /* egal */ } } }
-      ]);
-    } else if (payload.type === 'shown') {
-      loadingBar.classList.toggle('hidden', !payload.loading);
-      loadState.classList.toggle('loading', Boolean(payload.loading));
-      loadState.textContent = payload.loading ? 'Lädt …' : 'Bereit';
-    } else if (payload.type === 'navigated') {
-      hideError();
-      // Error-Radar: lädt die Seite erfolgreich, verfällt der
-      // Sitzungszähler — die Radar-Liste bleibt damit aktuell.
-      try {
-        const siteId = payload.site && payload.site.id;
-        if (siteId && window.__d2ErrorRadar) window.__d2ErrorRadar.delete(siteId);
-      } catch (error) {
-        // Radar-Pflege darf nie bremsen.
-      }
-      if (urlInput && document.activeElement !== urlInput) {
-        urlInput.value = String(payload.url || '');
-      }
-    } else if (payload.type === 'empty') {
-      loadingBar.classList.add('hidden');
-      loadState.classList.remove('loading');
-      loadState.textContent = 'Keine Seiten';
-    }
-  },
-  onTitle: (payload) => {
-    pageTitle.textContent = payload && payload.title ? payload.title : '';
-    updateWindowTitle();
-  },
-  onError: (error) => {
-    loadingBar.classList.add('hidden');
-    loadState.classList.remove('loading');
-    loadState.textContent = 'Fehler';
-    showError(error);
-  }
-});
-// Kategorie-Zugriff für "Geschlossene Seite wiederherstellen".
-web.setCategoryProvider(() => categories);
+const web = {
+  show() {},
+  preload() {},
+  showUrl() {},
+  reload() {},
+  goBack() { return false; },
+  goForward() { return false; },
+  home() {},
+  navigate() { return false; },
+  openExternal() {},
+  applyZoom() {},
+  applyReaderMode() {},
+  reloadAll() {},
+  unloadAll() {},
+  unloadOthers() { return 0; },
+  unloadSite() { return false; },
+  restoreLast() { return null; },
+  toggleSplit() { return false; },
+  splitActive() { return false; },
+  getOpenSiteIds() { return []; },
+  setCategoryProvider() {},
+  hide() {},
+  getWebContentsId() { return null; },
+  activeElement() { return null; },
+  activeSite() { return null; },
+  count: 0
+};
 
 // ------------------------------------------------------------
 // Feature-Module Phase 3: Notizen + Checkliste
@@ -406,11 +379,8 @@ const dashboard = createDashboard({
   api,
   getConfig: () => cfg,
   setConfig,
-  getCategories: () => categories,
-  selectCategory,
   web,
   hideError,
-  showEmpty,
   pageTitle,
   siteDesc,
   loadState,
@@ -422,7 +392,7 @@ const dashboard = createDashboard({
   openOnboarding: () => { if (onboarding) onboarding.open(); },
   openSettings: (tab) => settings.open(tab),
   openInventory: () => showInventoryPage(),
-  onOpen: () => hideInventoryPage(),
+  onOpen: () => closeInventorySilently(),
   toast,
   escapeHtml,
   icon,
@@ -440,8 +410,6 @@ const palette = createPalette({
   settings: { open: (tab) => settings.open(tab) },
   notesApi: notes,
   checklistToggle: checklist.toggle,
-  toggleMiniMode,
-  toggleSplitView,
   inventory: { toggle: toggleInventoryPage, open: showInventoryPage },
   contentSearch: (query) => (inventory && typeof inventory.searchContent === 'function' ? inventory.searchContent(query) : []),
   openPostmaster: () => {
@@ -1068,8 +1036,7 @@ function updateOfflineBanner() {
   offlineBanner.classList.toggle('hidden', !offline);
   if (!offline && offlineReloadDone) {
     offlineReloadDone = false;
-    try { web.reload(); } catch (error) { /* egal */ }
-    toast('Wieder online – Seite wird neu geladen.', 'success', 2000);
+    toast('Wieder online – Daten können aktualisiert werden.', 'success', 2000);
   }
 }
 window.addEventListener('online', updateOfflineBanner);
@@ -1077,46 +1044,11 @@ window.addEventListener('offline', updateOfflineBanner);
 window.addEventListener('DOMContentLoaded', updateOfflineBanner);
 updateOfflineBanner();
 
-// Zuletzt entladene Seiten wiederherstellen (Strg+Shift+T).
-window.addEventListener('keydown', (event) => {
-  if (event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey && String(event.key).toLowerCase() === 't') {
-    if (anyModalOpen()) return;
-    event.preventDefault();
-    const restored = web.restoreLast();
-    if (restored) toast(`Seite wiederhergestellt: ${restored.name}`, 'success', 1800);
-    else toast('Keine geschlossene Seite im Speicher.', 'info', 1800);
-  }
-});
-
-// Strg+Tab / Strg+Shift+Tab: Seite vor/zurück (wie im Browser).
-window.addEventListener('keydown', (event) => {
-  if (event.ctrlKey && !event.altKey && !event.metaKey && event.key === 'Tab') {
-    if (anyModalOpen()) return;
-    event.preventDefault();
-    cycleSite(event.shiftKey ? -1 : 1);
-  }
-});
-
-// Strg+Q: zur zuletzt genutzten Seite zurückspringen (Ping-Pong wie
-// Alt+Tab für Tabs). Ausgelöst per Tastatur und aus Webviews (Haupt-
-// prozess leitet Strg+Q als nav:shortcut weiter). lastSelection ist
-// oben bei den Grundzuständen deklariert.
+// Die früheren Webseiten-Kürzel (Strg+Shift+T, Strg+Tab, Strg+Q)
+// entfallen mit der Webseiten-Ansicht.
 function jumpToLastSite() {
-  if (anyModalOpen()) return;
-  if (lastSelection && (lastSelection.category !== current.category || lastSelection.site !== current.site)) {
-    const target = { ...lastSelection };
-    lastSelection = null;
-    selectCategory(target.category, target.site);
-  } else {
-    toast('Keine vorherige Seite gemerkt.', 'info', 1600);
-  }
+  toast('Es gibt keine Webseiten mehr – alles läuft über Dashboard und Inventar.', 'info', 2200);
 }
-window.addEventListener('keydown', (event) => {
-  if (event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey && String(event.key).toLowerCase() === 'q') {
-    event.preventDefault();
-    jumpToLastSite();
-  }
-});
 
 // ------------------------------------------------------------
 // Fenstertitel mit Seitennamen (Alt+Tab / Taskbar)
@@ -1738,91 +1670,8 @@ if (findInput) {
 }
 if (findNextBtn) findNextBtn.addEventListener('click', () => runFind(true));
 if (findCloseBtn) findCloseBtn.addEventListener('click', closeFindBar);
-window.addEventListener('keydown', (event) => {
-  if (event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey && String(event.key).toLowerCase() === 'f') {
-    if (anyModalOpen()) return;
-    event.preventDefault();
-    openFindBar();
-  }
-});
-
-// Strg+L fokussiert die Adressleiste (wie im Browser).
-window.addEventListener('keydown', (event) => {
-  if (event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey && String(event.key).toLowerCase() === 'l') {
-    if (anyModalOpen()) return;
-    event.preventDefault();
-    if (urlInput) {
-      urlInput.focus();
-      urlInput.select();
-    }
-  }
-});
-
-// ------------------------------------------------------------
-// Minimodus: nur die Webseite, ohne Leisten (Strg+M)
-// ------------------------------------------------------------
-// Fürs Spiel-Fenster: schaltet Tab-/Adress-/Statusleisten ab und
-// zeigt nur den Webview. Rückweg: Strg+M, Palette oder der kleine
-// ✕-Chip oben rechts. Zustand bleibt über Neustarts erhalten.
-
-function setMiniMode(on) {
-  const next = on === true;
-  if (document.body.classList.contains('mini-mode') === next) return;
-  document.body.classList.toggle('mini-mode', next);
-  setConfig({ behavior: { overlayMini: next } });
-  if (next) toast('Minimodus: nur die Webseite. Strg+M oder der Chip oben rechts kehren zurück.', 'info', 3400, true);
-  else toast('Minimodus beendet.', 'info', 1600);
-}
-
-function toggleMiniMode() {
-  setMiniMode(!document.body.classList.contains('mini-mode'));
-}
-
-const miniBtn = qs('#miniBtn');
-if (miniBtn) {
-  miniBtn.addEventListener('click', () => toggleMiniMode());
-}
-const miniExitBtn = qs('#miniExitBtn');
-if (miniExitBtn) {
-  miniExitBtn.addEventListener('click', () => setMiniMode(false));
-}
-window.addEventListener('keydown', (event) => {
-  if (event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey && String(event.key).toLowerCase() === 'm') {
-    event.preventDefault();
-    toggleMiniMode();
-  }
-});
-
-// ------------------------------------------------------------
-// Split-View: zwei Webviews nebeneinander (Strg+Alt+S)
-// ------------------------------------------------------------
-// Die aktuell aktive Seite wird links gepinnt; die nächste
-// Auswahl landet im rechten Slot. Rückweg über denselben Knopf.
-
-const splitBtn = qs('#splitBtn');
-
-function toggleSplitView() {
-  const result = web.toggleSplit();
-  const on = Boolean(result && result.on);
-  if (splitBtn) splitBtn.classList.toggle('active', on);
-  if (on) {
-    toast('Split-View: links die gepinnte Seite, rechts die aktive Auswahl. Strg+Alt+S beendet.', 'info', 3600, true);
-  } else if (result && result.error === 'need-two') {
-    toast('Split-View braucht zwei offene Seiten – erst eine zweite wählen.', 'warning', 2600);
-  } else {
-    toast('Split-View beendet.', 'info', 1500);
-  }
-}
-
-if (splitBtn) {
-  splitBtn.addEventListener('click', () => toggleSplitView());
-}
-window.addEventListener('keydown', (event) => {
-  if (event.ctrlKey && event.altKey && !event.shiftKey && !event.metaKey && String(event.key).toLowerCase() === 's') {
-    event.preventDefault();
-    toggleSplitView();
-  }
-});
+// Minimodus, Split-View, Strg+F/Strg+L und die Webseiten-Kürzel
+// wurden mit der Webseiten-Ansicht entfernt.
 
 // ------------------------------------------------------------
 // Auto-Refresh pro Webseite
@@ -2052,11 +1901,15 @@ api.onOpenInApp?.(({ url } = {}) => {
 });
 
 initClock({
-  onToday: () => selectCategory('today', 'todayindestiny'),
-  onXur: () => selectCategory('vendors', 'whereisxur'),
+  onToday: () => dashboard.open(),
+  onXur: () => {
+    try { showInventoryPage(); } catch (error) { /* egal */ }
+    try { inventory.openTools('vendor', { vendorHash: 2190858386 }); } catch (error) { /* egal */ }
+  },
   onReset: () => {
-    toast('Wöchentlicher Reset – Webseiten werden neu geladen', 'info', 4000);
-    try { web.reloadAll(); } catch (error) { web.reload(); }
+    toast('Wöchentlicher Reset – Daten werden aktualisiert', 'info', 4000);
+    try { inventory.refreshInventory(); } catch (error) { /* egal */ }
+    try { dashboard.render(); } catch (error) { /* egal */ }
   }
 });
 
@@ -2153,22 +2006,19 @@ function showInventoryPage() {
   inventory.open();
 }
 
-function hideInventoryPage() {
+function closeInventorySilently() {
   if (!inventoryPageOpen) return;
   inventoryPageOpen = false;
   if (inventoryView) inventoryView.classList.add('hidden');
   try { api.inventorySetOpen?.(false); } catch (error) { /* egal */ }
   inventory.close();
-  for (const button of qsa('.tab', tabbar)) {
-    button.classList.toggle('active', button.dataset.cat === current.category);
-  }
-  const site = currentSite();
-  if (site) {
-    web.show(site);
-    pageTitle.textContent = site.name;
-  } else {
-    showEmpty();
-  }
+}
+
+function hideInventoryPage() {
+  if (!inventoryPageOpen) return;
+  closeInventorySilently();
+  // Ohne Webseiten ist das Dashboard die Startseite.
+  dashboard.open();
   updateWindowTitle();
 }
 
@@ -2432,21 +2282,6 @@ function showEmpty() {
   hideError();
 }
 
-function cycleCategory(direction) {
-  const index = categories.findIndex((category) => category.id === current.category);
-  const next = categories[(index + direction + categories.length) % categories.length];
-  if (!next) return;
-  selectCategory(next.id, cfg.lastSite && cfg.lastSite[next.id]);
-}
-
-function cycleSite(direction) {
-  const category = currentCategory();
-  if (!category || category.sites.length < 2) return;
-  const index = category.sites.findIndex((site) => site.id === current.site);
-  const next = category.sites[(index + direction + category.sites.length) % category.sites.length];
-  if (next) selectSite(next.id);
-}
-
 // ------------------------------------------------------------
 // Fehleranzeige
 // ------------------------------------------------------------
@@ -2525,37 +2360,9 @@ function setConfig(patch) {
   }, 180);
 }
 
-function onCustomSitesChanged(nextSites, select) {
-  cfg.customSites = Array.isArray(nextSites) ? nextSites : [];
-  categories = buildCategories(cfg.customSites);
-  updateSiteSearchList();
-  renderFavorites();
-  sendSiteCatalog();
-  web.setCategoryProvider(() => categories);
-
-  if (select && select.category) {
-    selectCategory(select.category, select.siteId);
-    return;
-  }
-
-  let category = categories.find((entry) => entry.id === current.category);
-  if (!category) {
-    category = categories[0];
-    current.category = category.id;
-  }
-
-  const site = category.sites.find((entry) => entry.id === current.site) || null;
-  if (!site) {
-    selectCategory(category.id, null);
-    return;
-  }
-
-  current.site = site.id;
-  renderTabs();
-  applyAccent(category);
-  syncSiteSelects();
-  emptyState.classList.add('hidden');
-  web.show(site);
+function onCustomSitesChanged() {
+  // Eigene Webseiten werden nicht mehr unterstützt.
+  cfg.customSites = [];
 }
 
 // ------------------------------------------------------------
@@ -2795,12 +2602,10 @@ function cycleInventoryTab(direction) {
 const PAD_ACTION_LABELS = {
   click: 'A – Klicken',
   back: 'B – Zurück',
-  reload: 'X – Neu laden',
+  reload: 'X – Aktualisieren',
   precision: 'LT – Präzisionsmodus',
-  'category-prev': 'LB – Kategorie zurück',
-  'category-next': 'RB – Kategorie weiter',
-  'site-prev': 'Webseite zurück',
-  'site-next': 'Webseite weiter',
+  'category-prev': 'LB – Ansicht zurück',
+  'category-next': 'RB – Ansicht weiter',
   settings: 'Einstellungen',
   hide: 'Ausblenden',
   notes: 'Notizen',
@@ -2953,14 +2758,12 @@ function handlePadAction(action, payload) {
     case 'category-prev':
       if (cycleToolView(-1)) break;
       if (cycleLoadoutSection(-1)) break;
-      if (cycleInventoryTab(-1)) break;
-      cycleCategory(-1);
+      cycleInventoryTab(-1);
       break;
     case 'category-next':
       if (cycleToolView(1)) break;
       if (cycleLoadoutSection(1)) break;
-      if (cycleInventoryTab(1)) break;
-      cycleCategory(1);
+      cycleInventoryTab(1);
       break;
     case 'quickmenu': {
       const inventoryPage = qs('#inventoryView');
@@ -2969,18 +2772,6 @@ function handlePadAction(action, payload) {
       } else {
         openRadialMenu();
       }
-      break;
-    }
-    case 'site-prev': {
-      const inventoryPage = qs('#inventoryView');
-      if (inventoryPage && !inventoryPage.classList.contains('hidden')) break;
-      cycleSite(-1);
-      break;
-    }
-    case 'site-next': {
-      const inventoryPage = qs('#inventoryView');
-      if (inventoryPage && !inventoryPage.classList.contains('hidden')) break;
-      cycleSite(1);
       break;
     }
     case 'settings':
@@ -3343,34 +3134,7 @@ window.addEventListener('keydown', (event) => {
 
   if (anyModalOpen()) return;
 
-  if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && /^[1-9]$/.test(event.key)) {
-    const category = categories[Number(event.key) - 1];
-    if (category) {
-      event.preventDefault();
-      selectCategory(category.id);
-    }
-    return;
-  }
-
-  if (event.key === 'F5') {
-    event.preventDefault();
-    hideError();
-    web.reload();
-  }
 });
-
-window.addEventListener(
-  'wheel',
-  (event) => {
-    if (!event.ctrlKey || anyModalOpen()) return;
-    event.preventDefault();
-    const next = clamp(cfg.web.zoom + (event.deltaY < 0 ? 0.05 : -0.05), 0.5, 2);
-    setConfig({ web: { zoom: next } });
-    web.applyZoom();
-    toast(`Zoom: ${Math.round(next * 100)} %`, 'info', 1200);
-  },
-  { passive: false }
-);
 
 // Alt + Mausrad ändert die Overlay-Deckkraft (nur wenn kein Dialog offen).
 window.addEventListener(
@@ -3677,10 +3441,6 @@ if (typeof api.onApiAction === 'function') {
       toast('Checkliste zurückgesetzt.', 'info', 1800);
       return;
     }
-    if (action === 'mini') {
-      try { setMiniMode(payload.on == null ? !document.body.classList.contains('mini-mode') : payload.on === true); } catch (error) { /* egal */ }
-      return;
-    }
     if (action === 'refresh-inventory') {
       if (inventory && inventory.refresh) inventory.refresh(true);
       return;
@@ -3756,16 +3516,12 @@ window.__smokeSend = (snapshot) => {
   if (xinputHandler) xinputHandler(snapshot);
 };
 
-// Links auf Destiny Item Manager werden im DIM-Tab unter Ausrüstung
+// DIM-Links werden nicht mehr eingebettet, sondern im Standardbrowser
 // geöffnet (der Hauptprozess meldet sie hierher).
 api.onOpenInDim(({ url } = {}) => {
   if (!url) return;
-  const category = categories.find((entry) => entry.id === 'gear');
-  const dimSite = category && category.sites.find((entry) => entry.id === 'dim');
-  if (!dimSite) return;
-  selectCategory('gear', 'dim');
-  web.showUrl(dimSite, url);
-  toast('Im Destiny-Item-Manager-Tab geöffnet.', 'info', 1600);
+  api.openExternal(url).catch(() => {});
+  toast('Im Browser geöffnet.', 'info', 1600);
 });
 api.onWindowState(({ maximized }) => {
   const button = qs('[data-win="maximize"]');
@@ -3915,58 +3671,12 @@ setInterval(async () => {
   } catch (error) { /* egal */ }
 }, 90000);
 if (api.onBungieOAuth) api.onBungieOAuth(() => { tokenWarningShown = false; });
-applyCategoryOrder();
 applyOverlayVisibility();
-syncSiteSelects();
-updateSiteSearchList();
-renderFavorites();
-sendSiteCatalog();
-refreshAutoRefreshTimer();
 
-const startSite = currentSite();
-// Optionale Auto-Wiederherstellung: letzte Sitzung direkt laden.
-const sessionIds = (cfg.session && cfg.session.siteIds) || [];
+// Es gibt keine Webseiten mehr: Start ist immer Dashboard oder Inventar.
 const startView = (cfg.appearance && cfg.appearance.startView) || 'dashboard';
-if (startView === 'inventory') {
-  showInventoryPage();
-} else if (startView === 'dashboard') {
-  dashboard.open();
-} else if (startView === 'today') {
-  document.body.classList.remove('simple-expanded');
-  dashboard.open();
-} else if (cfg.behavior && cfg.behavior.autoRestoreSession === true && sessionIds.length) {
-  const found = [];
-  for (const siteId of sessionIds) {
-    for (const category of categories) {
-      const site = category.sites.find((entry) => entry.id === siteId);
-      if (site) { found.push({ category, site }); break; }
-    }
-  }
-  if (found.length) {
-    for (const { site } of found) web.preload(site);
-    current.category = found[0].category.id;
-    current.site = found[0].site.id;
-    renderTabs();
-    applyAccent(found[0].category);
-    syncSiteSelects();
-    emptyState.classList.add('hidden');
-    web.show(found[0].site);
-    pageTitle.textContent = found[0].site.name;
-    if (urlInput) urlInput.value = found[0].site.url;
-  }
-} else if (cfg.behavior && cfg.behavior.startOnDashboard === true) {
-  // Dashboard als Startseite; die gemerkte Seite bleibt gewählt und
-  // kommt per Kategorie-Klick oder Dashboard-Aus zurück.
-  dashboard.open();
-} else if (startSite) {
-  emptyState.classList.add('hidden');
-  web.show(startSite);
-  pageTitle.textContent = startSite.name;
-  if (urlInput) urlInput.value = startSite.url;
-  if (web.applyReaderMode) web.applyReaderMode();
-} else {
-  showEmpty();
-}
+if (startView === 'inventory') showInventoryPage();
+else dashboard.open();
 checklist.checkReset();
 // Einrichtungs-Assistent beim allerersten Start (überspringbar).
 setTimeout(() => {
@@ -3996,11 +3706,6 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
-// Gespeicherten Minimodus anwenden (ohne Toast).
-if (cfg.behavior && cfg.behavior.overlayMini === true) {
-  document.body.classList.add('mini-mode');
-}
-
 applyOverlayState(overlayState);
 updateHints();
 updateGameStatus(await api.getGameStatus().catch(() => ({ running: false })));
@@ -4019,7 +3724,7 @@ window.__D2_READY__ = true;
 window.__D2_DIAG__ = () => ({
   ready: Boolean(window.__D2_READY__),
   categories: categories.length,
-  sites: totalSiteCount(categories),
+  sites: 0,
   tabs: document.querySelectorAll('.tab').length,
   siteOptions: siteSelect.options.length,
   customSites: (cfg.customSites || []).length,

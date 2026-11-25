@@ -94,9 +94,7 @@ const FILES = [
   'renderer/js/app.js',
   'renderer/js/controller.js',
   'renderer/js/settings.js',
-  'renderer/js/sites.js',
   'renderer/js/ui.js',
-  'renderer/js/webviews.js',
   'tools/check.js',
   'package.json',
   'README.md'

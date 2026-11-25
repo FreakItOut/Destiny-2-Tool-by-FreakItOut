@@ -1,12 +1,12 @@
 # Destiny 2 Tool by FreakItOut — Anleitung
 
-Ein Overlay-Tool für Destiny 2: Webseiten (light.gg, DIM, YouTube …) direkt über dem Spiel, mit Controller-Steuerung, Bungie-API-Anbindung (Hüter, Aktionen, **Inventar & Loadouts**), Notizen, Checklisten, Erinnerungen und einem Dashboard.
+Ein Overlay-Tool für Destiny 2: Dashboard, **Inventar & Loadouts**, Werkzeuge und ein Overlay direkt über dem Spiel – mit Controller-Steuerung, Bungie-API-Anbindung, Notizen, Checklisten und Erinnerungen. Fremde Webseiten werden nicht mehr eingebettet.
 
 ---
 
 ## 1. Schnellstart
 
-1. `Destiny 2 Tool by FreakItOut Setup 1.1.0.exe` installieren **oder** die portable EXE starten.
+1. `Destiny 2 Tool by FreakItOut Setup 1.3.0.exe` installieren **oder** die portable EXE starten.
    - **Portable**: Alle Daten (Config, Notizen, Backups, Cache) landen im `Daten`-Ordner neben der EXE — ideal für USB-Sticks.
 2. In Destiny 2: *Einstellungen → Video → Fenstermodus (randlos)*. Exklusives Vollbild kann kein Overlay anzeigen (Windows-Einschränkung).
 3. Im Tool `Alt+D` drücken (oder Controller) → das Overlay erscheint über dem Spiel. Erneut drücken blendet es aus.
@@ -24,39 +24,21 @@ Ein Overlay-Tool für Destiny 2: Webseiten (light.gg, DIM, YouTube …) direkt �
 | `Alt+Shift+D` | Maus durchlassen ein/aus |
 | `Alt+P` | Poststellen-Zähler ein-/ausblenden (änderbar) |
 | `Alt+I` | Inventar öffnen (änderbar) |
-| `Alt+1 … Alt+8` | Kategorie wechseln |
-| `Strg+Q` | Zuletzt genutzte Seite wieder öffnen |
-| `Strg+Tab` | Nächste Kategorie |
-| `Strg+Shift+T` | Geschlossene Seite wiederherstellen |
-| `Strg+F` | Seite durchsuchen (Find-in-Page) |
-| `Strg+L` | Adressleiste fokussieren (URL direkt öffnen) |
 | `Strg+K` | Befehlspalette |
-| `Strg+M` | **Minimodus**: nur die Webseite, ohne Leisten |
-| `Strg+Alt+S` | **Split-View**: zwei Seiten nebeneinander |
 | `Strg+Alt+D` | Dashboard umschalten (global, im Spiel aktivierbar) |
-| `Strg+Alt+1 … 8` | Kategorie aus dem Spiel öffnen (global, optional) |
-| `F5` | Seite neu laden |
+| `Strg+Alt+I` | Inventar öffnen (global) |
+| `Strg+Alt+1 … 5` | Werkzeugansicht öffnen (global) |
 | `Esc` | Dialog schließen / Overlay ausblenden |
-| `Strg` + Mausrad | Seite zoomen (pro Seite speicherbar) |
 | `Alt` + Mausrad | Overlay-Deckkraft ändern |
 
 ---
 
-## 3. Webseiten & Kategorien
+## 3. Ansichten
 
-- **Kategorien** sind Reiter (Guides, Tools, Builds, …), darunter ein Favoriten-Streifen und die Toolbar mit Navigation.
-- **Eigene Seiten**: Toolbar → ⊕ oder einfach einen Link aufs Tool-Fenster ziehen (Drag&Drop). Rechtsklick auf einen Reiter oder **in einer Webseite** öffnet das Kontextmenü (Link kopieren, Link im Mini-Fenster, als eigene Seite speichern, Zoom 100 %, AdBlock-Ausnahme …).
-- **Kontextmenü in Webseiten**: Rechtsklick in der Seite bietet Link-Aktionen + Seiten-Aktionen (PiP, entladen, Favorit, AdBlock, Zoom).
-- **Mini-Fenster (PiP)**: 🖥-Knopf — die Seite als immer-vorn-Fensterchen.
-- **Lesemodus** & **AdBlock-Ausnahmen** pro Seite (Einstellungen → Webseiten).
-- **Auto-Refresh** pro Seite einstellbar; **Find-in-Page** über `Strg+F`.
-- **Fehler bei einer Seite?** Die Fehlerkarte bietet „Erneut versuchen", „Im Browser öffnen" und „Details kopieren". Wiederholte Fehler landen im **Error-Radar** (Diagnose-Tab) und verfallen automatisch, wenn die Seite wieder lädt.
-
-### Minimodus (`Strg+M` / 📥-Knopf)
-Blendet Titelleiste, Reiter, Toolbar und Statuszeile aus — nur die Webseite bleibt. Rückweg: `Strg+M`, der ✕-Chip oben rechts oder die Palette. Der Zustand bleibt über Neustarts erhalten.
-
-### Split-View (`Strg+Alt+S` / 🗀-Knopf)
-Die aktuell aktive Seite wird **links gepinnt**, die nächste Auswahl öffnet **rechts** — z. B. Build-Video links, light.gg rechts. Benötigt zwei offene Seiten. Der gepinnte Frame ist vor „Andere entladen" und der Cache-Räumung geschützt.
+- **Dashboard** ist die Startseite: Hüter, Power, Prioritäten, Aktivitäts-Analyse, Sammlung, Wochen-Checkliste und mehr.
+- **Inventar** (🎒) öffnet Tresor, Beutetaschen, Loadouts und den Loadout-Editor.
+- **Werkzeuge** sind über die Inventar-Reiter erreichbar (Übersicht, Builds, Sammlung, Woche, Händler).
+- **Overlay** zeigt Dashboard, Loadouts, Notizen und die wichtigsten Status-Chips über dem Spiel.
 
 ---
 
@@ -64,12 +46,12 @@ Die aktuell aktive Seite wird **links gepinnt**, die nächste Auswahl öffnet **
 
 Einstellungen → Controller: Belegungen (Tasten → Aktionen), Cursor-Geschwindigkeit/Kurve, Deadzone, Kalibrierung, Stick-Auswahl (bei defektem zweiten Stick fest „Linker Stick").
 
-- **Standard-Belegung**: A = Klicken, B = Zurück/Ausblenden, X = Neu laden, Y = Präzisionsmodus, LB/RB = Kategorie, D-Pad = Navigieren/Scrollen, L3+R3 = Overlay, Guide = Overlay.
-- **Inventar & Dialoge**: D-Pad navigiert zwischen Schaltflächen/Items (Fokus wird hervorgehoben), A wählt aus, B schließt zuerst Popup/Editor und dann die Seite, LB/RB wechselt zwischen Inventar und Loadout-Editor, X aktualisiert die Inventardaten. Tooltips und Perk-Erklärungen erscheinen auch mit dem Controller-Cursor. Der zweite Stick scrollt; A auf dem Suchfeld (oder „⌨ Tastatur“) öffnet die virtuelle Bildschirmtastatur.
+- **Standard-Belegung**: A = Klicken, B = Zurück/Ausblenden, X = Aktualisieren, Y = Präzisionsmodus, LB/RB = Tab/Ansicht, D-Pad = Navigieren/Scrollen, L3+R3 = Overlay, Guide = Overlay.
+- **Inventar & Dialoge**: D-Pad navigiert zwischen Schaltflächen/Items (Fokus wird hervorgehoben), A wählt aus, B schließt zuerst Popup/Editor und dann den Dialog, LB/RB wechselt zwischen Inventar und Loadout-Editor, X aktualisiert die Inventardaten. Tooltips und Perk-Erklärungen erscheinen auch mit dem Controller-Cursor. Der zweite Stick scrollt; A auf dem Suchfeld (oder „⌨ Tastatur“) öffnet die virtuelle Bildschirmtastatur.
 - **Spiel mitsteuern / Anti-Cheat**: Das Tool liest XInput nur und sendet keine Eingaben an Destiny 2. Für getrennte Steuerung einen zweiten Controller wählen (Einstellungen → Controller → Overlay-Controller: Controller 2; Spiel nutzt Controller 1). Keine Kernel-Filtertreiber oder Eingabe-Hooks im Tool.
 - **Schnellbedienung**: Im Item-Popup LB=Tresor, RB=Lagern, X=Favorit, Y=Anlegen; R3 öffnet das Schnellmenü. Die Bildschirmtastatur bietet Suchvorschläge. Der zweite Stick scrollt (Geschwindigkeit/Deadzone einstellbar). Die Glocke zeigt den Benachrichtigungsverlauf; der Poststellen-Zähler hat Darstellung, Refresh-Intervall und „nur bei geöffnetem Inventar“.
 - **LT/RT belegbar**: Scrollen (Standard) oder jede beliebige Aktion (Klicken, PiP, Notizen, …) — eigene Dropdowns.
-- **Haptik**: kurze Vibration bei Kategorie-/Seitenwechsel (Schalter).
+- **Haptik**: kurze Vibration bei Ansichtswechsel (Schalter).
 - **Trigger-Schwelle**: ab welchem Druck LT/RT auslösen (bei Losslass-Triggerern höher stellen).
 - **Test-Raum**: Einstellungen → Diagnose → Controller-Test (Sticks, Tasten, Trigger live).
 - Ein Helfer-EXE (GamepadHelper) registriert globale Tasten im Spiel; bei Änderungen an den C#-Dateien wird er automatisch neu gebaut (Fingerprint-prüfsumme im Log).
@@ -119,10 +101,10 @@ Einstellungen → Bungie:
 
 ## 6. Dashboard
 
-Kategorien-Startseite (native, ohne Webview):
+Native Startseite:
 
 - **Reset/Xûr-Countdowns** (Daily/Weekly, Xûr-Status), **Hüter** mit Emblems + Licht, **Aktive Aktionen** (Milestones, Beschreibung antippen zum Ausklappen), **Bungie-News**
-- **Checkliste** direkt abhakbar, **heutige Erinnerungen**, **Spielzeit** (Tage-Wochen), **meistgenutzte Seiten**, **letzte Sitzung** (wiederherstellbar)
+- **Checkliste** direkt abhakbar, **heutige Erinnerungen**, **Spielzeit** (Tage-Wochen), **Aktivitäts-Analyse** (KPIs, 14-Tage-Balken, 12-Wochen-Heatmap)
 - Öffnen per Dashboard-Knopf oder `Strg+Alt+D` aus dem Spiel.
 
 ---
@@ -173,7 +155,6 @@ Kategorien-Startseite (native, ohne Webview):
 
 ## 11. Diagnose (Einstellungen → Diagnose)
 
-- **Error-Radar**: Seiten mit Ladefehlern dieser Sitzung (auto-verfallend)
 - **App-Health**: Bridge/Renderer/Helfer-Status, **Bungie-Warteschlange/Rate-Limit**; **Log-Viewer** mit Filtern
 - **Support-Paket**: Diagnose exportieren (mit System-/Monitor-Infos) oder direkt in die Zwischenablage kopieren („Diagnose kopieren“ im Inventar-Fehler); Keys/Tokens sind geschwärzt
 - **Netzwerk-Test**, **Hotkey-Test**, **Notify-Historie**, **Factory-Reset**
@@ -192,8 +173,8 @@ Kategorien-Startseite (native, ohne Webview):
 | Controller wird nicht erkannt | Dongle/USB prüfen; Einstellungen → Diagnose → Controller-Test; „Defekte Achse erkennen" aktiv lassen bei Ghost-Inputs |
 | Controller „spinnt" (Cursor läuft davon) | Stick-Auswahl fest auf den gesunden Stick stellen, Deadzone erhöhen, Kalibrierung durchführen |
 | Portable EXE „verliert" Einstellungen | Nicht während des Laufs verschieben; Daten-Ordner neben der EXE mitkopieren |
-| Leere Mini-Fenster/Weißscreen | GPU-Hardware-Deaktivierung (Diagnose) testen; nach dem Umstellen Neustart |
+| Leere Ansicht/Weißscreen | GPU-Hardware-Deaktivierung (Diagnose) testen; nach dem Umstellen Neustart |
 
 ---
 
-*Stand: Version 1.1.0 — öffentliche Standard-Edition.*
+*Stand: Version 1.4.0 — öffentliche Standard-Edition.*

@@ -2,10 +2,10 @@
 
 [Deutsch](README.md) · **English**
 
-A desktop tool for Destiny 2: websites in tabs and drop-downs, an overlay on
-top of the game, global hotkeys and full controller support. Built with
-Electron, without a bundler and without runtime dependencies other than
-Electron itself.
+A desktop tool for Destiny 2: dashboard, inventory & loadouts, tools and an
+overlay on top of the game – with global hotkeys and full controller support.
+Built with Electron, without a bundler and without runtime dependencies other
+than Electron itself.
 
 ![Icon](assets/icon.png)
 
@@ -13,9 +13,9 @@ Electron itself.
 
 The ready-to-run Windows builds are available under **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.3.0.exe`** – portable version, no
+- **`Destiny.2.Tool.by.FreakItOut.1.4.0.exe`** – portable version, no
   installation required.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.3.0.exe`** – installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.4.0.exe`** – installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optional Stream Deck plugin.
 - **`streamdeck-profile.json`** – matching Stream Deck profile.
 - **`SHA256SUMS.txt`** – checksums for all files.
@@ -37,24 +37,21 @@ repository.
 
 ## Features
 
-- **Tabs + drop-downs** – eight categories (Today, Gear, Weapons, Vendors,
-  Groups, Statistics, Guides & Lore, Custom) with 27 preconfigured websites.
+- **Native views instead of websites** – dashboard, inventory/loadouts and
+  the tool centre are native views; no third-party pages are embedded any
+  more.
 - **Overlay on top of the game** – borderless, always-on-top window; size,
   position, monitor and opacity are configurable.
 - **Global hotkeys** – work even while Destiny 2 has focus. Defaults:
   `Alt+D` for the overlay, `Alt+Shift+D` for mouse pass-through, `Alt+P` for
   the postmaster counter, `Alt+I` for the inventory (all configurable).
-- **Controller support** – virtual cursor, clicking, scrolling, category and
-  page switching. A freely recordable button pair (default `L3 + R3`) shows
-  and hides the overlay.
+- **Controller support** – virtual cursor, clicking, scrolling and view
+  switching. A freely recordable button pair (default `L3 + R3`) shows and
+  hides the overlay.
 - **Mouse pass-through** – clicks go through to the game while the overlay
   stays visible.
-- **Custom pages** – add any http(s) address, assign it to a category and
-  remove it again.
 - **Reset and Xûr display** – countdown to the daily reset (17:00 UTC) and
   Xûr status in the header.
-- **Persistent session** – all websites share one persistent session; logins
-  with Bungie, Reddit and others survive restarts.
 - **Tray** – the tool keeps running in the background; the overlay stays
   reachable via hotkey.
 - **Champion planner** – shows per Guardian which Champions are covered by
@@ -253,10 +250,11 @@ Up to 8 profiles.
 | --- | --- |
 | `Alt+D` | Show/hide overlay (configurable) |
 | `Alt+Shift+D` | Mouse pass-through (configurable) |
-| `Alt+1` … `Alt+8` | Switch category |
-| `F5` | Reload current page |
+| `Ctrl+K` | Open command palette |
+| `Ctrl+Alt+D` | Toggle dashboard (global) |
+| `Ctrl+Alt+I` | Open inventory |
+| `Ctrl+Alt+1` … `5` | Open a tool view |
 | `Esc` | Close dialog or hide overlay |
-| `Ctrl` + mouse wheel | Zoom page |
 
 ## Controller
 
@@ -266,12 +264,11 @@ Overlay mapping:
 | --- | --- |
 | Left/right stick | Move cursor (tooltips/perk explanations also appear with the controller) |
 | A | Click / select |
-| B | Back: closes item popup/loadout editor first, then page or dialog |
-| X | Reload page (in inventory: refresh inventory) |
+| B | Back: closes item popup/loadout editor first, then dialog |
+| X | Refresh (in inventory: refresh inventory) |
 | Y | Precision mode |
-| LB / RB | Previous/next category (in inventory: switch tab) |
-| D-pad up/down | App/dialogs: navigate; website: scroll |
-| D-pad left/right | App/dialogs: navigate; website: switch website |
+| LB / RB | Switch tab / view |
+| D-pad | Navigate and scroll |
 | LT / RT | Fast scroll |
 | View | Settings |
 | Menu | Hide overlay |
@@ -282,8 +279,8 @@ buttons and items; the focused element is highlighted and automatically
 scrolled into view. **LB/RB** switches between inventory and loadout editor
 there, **X** refreshes the Bungie data.
 
-The **second analog stick** scrolls through the inventory, dialogs and
-websites (by default the right stick when the left one controls the cursor).
+The **second analog stick** scrolls through the inventory and dialogs
+(by default the right stick when the left one controls the cursor).
 **A on the search field** or the **⌨ Keyboard** button opens a
 controller-operated on-screen keyboard for the inventory search.
 
@@ -397,17 +394,11 @@ reports them mirrored.
 ### Button mapping
 
 Under **Settings → Controller → Map buttons** every function (click, back,
-switch category, switch website, precision mode, settings, hide overlay) can
-be assigned any button. “Not assigned” disables the function.
+switch view, precision mode, settings, hide overlay) can be assigned any
+button. “Not assigned” disables the function.
 
 The Guide/Xbox button and the button combination are configured separately
 (see above).
-
-## Custom pages
-
-Under **Settings → Custom pages** enter name, address and category. The page
-appears in the selected category and additionally under **Custom**. Addresses
-are checked for `http`/`https`; duplicate entries are rejected.
 
 ## Structure
 
@@ -423,9 +414,9 @@ renderer/
   index.html    UI, settings, help
   styles.css    Destiny-inspired dark design incl. overlay mode
   js/
-    app.js        start, tabs, selection, overlay events
-    sites.js      catalogue of categories and websites
-    webviews.js   <webview> management with keep-alive
+    app.js        start, views, overlay events
+    dashboard.js  command centre, priorities and analytics
+    inventory.js  inventory, loadouts and tools
     controller.js gamepad polling, cursor, click/scroll
     settings.js   settings dialog and recording
     clock.js      reset and Xûr countdown
@@ -436,9 +427,9 @@ tools/
   check.js      project check
 ```
 
-The websites run in `<webview>` elements with Node access disabled, sandbox
-enabled and a shared partition (`persist:destiny2tool`). Pop-ups and external
-links are opened in the default browser.
+All views run locally in the renderer. No third-party websites are embedded
+any more; external links (e.g. Bungie portal or Discord) open in the default
+browser.
 
 ## Troubleshooting
 
@@ -458,11 +449,8 @@ links are opened in the default browser.
   programs. Destiny 2 polls the controller directly and ignores it only while
   the game is not in the foreground. That is why the overlay takes focus; in
   mouse pass-through mode the controller stays with the game.
-- **Page does not load:** the error page offers **Retry** and **Open in
-  browser**. Some sites block embedded browsers; open them in the external
-  browser then.
-- **Logins are gone:** under **Settings → Websites** cookies and site data
-  can be deleted. A new login is required afterwards.
+- **Data is stale:** press “Refresh” in the inventory or reload the dashboard.
+  Check the Bungie login and API key.
 
 ## Privacy & credentials
 
@@ -499,8 +487,7 @@ personal data, real API keys, tokens or local configuration files.
 ## Legal
 
 This tool is an unofficial community project and is not affiliated with
-Bungie. Destiny 2 and all related content are property of Bungie, Inc. The
-linked websites belong to their respective operators.
+Bungie. Destiny 2 and all related content are property of Bungie, Inc.
 
 ## License
 

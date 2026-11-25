@@ -287,7 +287,6 @@ die Einstellungen.
 | `DELETE /checklist/{id}` | – | Punkt löschen |
 | `POST /checklist/reorder` | `ids` (JSON) | Reihenfolge setzen |
 | `POST /jobs/{id}/cancel` | – | Job abbrechen |
-| `/action/mini` | `on=1\|0` (optional) | Minimodus |
 | `/action/xur` | – | Xûr-Fenster öffnen |
 | `/action/refresh-inventory` | – | Inventar neu laden |
 | `/action/refresh-wishlist` | – | Wunschliste neu laden |
@@ -394,7 +393,7 @@ Das Plugin umfasst jetzt **30 Actions** (SDK 2) und ist versionsgleich mit der A
 ### Verbindung
 
 Die Action **Verbindung** prüft API, Token und App-Version. Sie zeigt
-`OK · v1.3.0 · P1.3.0` oder `Fehler` und löst bei Fehlern einen Alarm aus.
+`OK · v1.4.0 · P1.4.0` oder `Fehler` und löst bei Fehlern einen Alarm aus.
 Der Property Inspector hat zusätzlich **Testen** mit App-/Plugin-Version.
 
 ### Encoder

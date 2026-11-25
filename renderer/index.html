@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' file: blob:; font-src 'self' data:; connect-src 'self' https:; frame-src https: http:; child-src https: http:; media-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' file: blob:; font-src 'self' data:; connect-src 'self' https:; frame-src 'none'; child-src 'none'; media-src 'self' data:;">
   <title>Destiny 2 Tool by FreakItOut</title>
   <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="dashboard.css">
@@ -19,7 +19,7 @@
         <img class="brand-icon" src="../assets/icon-32.png" alt="">
         <div class="brand-text">
           <span class="brand-name">Destiny 2 Tool by FreakItOut</span>
-          <span class="brand-sub">Overlay &amp; Webseiten</span>
+          <span class="brand-sub">Overlay, Inventar &amp; Werkzeuge</span>
         </div>
       </div>
 
@@ -53,16 +53,6 @@
       <div class="overlay-brand">
         <img src="../assets/icon-32.png" alt="">
         <span>D2</span>
-      </div>
-      <div class="overlay-pickers">
-        <select id="overlayCategorySelect" class="control" aria-label="Kategorie"></select>
-        <select id="overlaySiteSelect" class="control" aria-label="Webseite"></select>
-      </div>
-      <div class="overlay-nav">
-        <button id="overlayBackBtn" class="icon-btn" data-icon="back" title="Zurück" aria-label="Zurück"></button>
-        <button id="overlayForwardBtn" class="icon-btn" data-icon="forward" title="Vorwärts" aria-label="Vorwärts"></button>
-        <button id="overlayReloadBtn" class="icon-btn" data-icon="reload" title="Neu laden" aria-label="Neu laden"></button>
-        <button id="overlayHomeBtn" class="icon-btn" data-icon="home" title="Startseite der Webseite" aria-label="Startseite"></button>
       </div>
       <div class="overlay-spacer"></div>
     <div class="bungie-status" id="bungieStatus" title="Bungie-Server-Status" hidden>
@@ -161,93 +151,73 @@
       </div>
     </div>
 
-    <button id="miniExitBtn" class="icon-btn" data-icon="maximize" title="Minimodus beenden (Strg+M)" aria-label="Minimodus beenden"></button>
-
-    <nav class="tabbar" id="tabbar" aria-label="Kategorien"></nav>
-
-    <div class="favorites-bar" id="favoritesBar" aria-label="Favoriten"></div>
-
-    <div class="toolbar" id="toolbar">
-      <div class="nav-group">
-        <button id="backBtn" class="icon-btn" data-icon="back" title="Zurück" aria-label="Zurück"></button>
-        <button id="backHistoryBtn" class="icon-btn" data-icon="clock" title="Verlauf dieses Tabs" aria-label="Verlauf"></button>
-        <button id="forwardBtn" class="icon-btn" data-icon="forward" title="Vorwärts" aria-label="Vorwärts"></button>
-        <button id="reloadBtn" class="icon-btn" data-icon="reload" title="Neu laden (F5)" aria-label="Neu laden"></button>
-        <button id="homeBtn" class="icon-btn" data-icon="home" title="Startseite der Webseite" aria-label="Startseite"></button>
-      </div>
-
-      <div class="site-picker">
-        <label for="siteSelect">Webseite</label>
-        <select id="siteSelect" class="control"></select>
-      </div>
-
-      <div class="site-search">
-        <label for="siteSearch">Suche</label>
-        <input id="siteSearch" class="control" type="search" list="siteList" placeholder="Seite suchen …" aria-label="Seite suchen">
-        <datalist id="siteList"></datalist>
-      </div>
-
+    <div class="toolbar app-toolbar" id="toolbar">
+      <span class="app-toolbar-title">Kommandostand</span>
       <div class="toolbar-actions">
-        <button id="externalBtn" class="btn ghost" data-icon="external">Im Browser</button>
+        <button id="inventoryBtn" class="btn ghost" data-icon="backpack" title="Inventar &amp; Loadouts (Bungie-Anmeldung nötig)">Inventar</button>
+        <button id="checklistBtn" class="btn ghost" data-icon="sort" title="Wöchentliche Challenge-Checkliste">Checkliste</button>
         <button id="overlayBtn" class="btn primary" data-icon="layers">Overlay</button>
-        <button id="favoriteBtn" class="icon-btn" data-icon="star" title="Aktuelle Seite als Favorit" aria-label="Favorit umschalten"></button>
-        <button id="muteBtn" class="icon-btn" data-icon="volume" title="Webseiten-Ton umschalten (Klick: dieser Tab · Rechtsklick: alle Tabs)" aria-label="Webseiten-Ton umschalten"></button>
         <button id="toolbarNotesBtn" class="icon-btn" data-icon="note" title="Notizen / Raid-Callouts" aria-label="Notizen"></button>
         <button id="hudBtn" class="icon-btn" data-icon="gamepad" title="Tasten-Legende ein-/ausblenden" aria-label="Tasten-Legende"></button>
-        <button id="pipBtn" class="icon-btn" data-icon="monitor" title="Aktuelle Seite als Mini-Fenster (Bild-in-Bild)" aria-label="Bild-in-Bild"></button>
-        <button id="miniBtn" class="icon-btn" data-icon="minimize" title="Minimodus: nur die Webseite (Strg+M)" aria-label="Minimodus"></button>
-        <button id="splitBtn" class="icon-btn" data-icon="columns" title="Split-View: zweite Seite daneben (Strg+Alt+S)" aria-label="Split-View"></button>
-        <button id="inventoryBtn" class="icon-btn" data-icon="backpack" title="Inventar &amp; Loadouts (Bungie-Anmeldung nötig)" aria-label="Inventar"></button>
-        <button id="unloadOthersBtn" class="icon-btn" data-icon="trash" title="Andere Seiten entladen (RAM freimachen)" aria-label="Andere Seiten entladen"></button>
-        <button id="checklistBtn" class="icon-btn" data-icon="sort" title="Wöchentliche Challenge-Checkliste" aria-label="Checkliste"></button>
         <button id="settingsBtn" class="icon-btn" data-icon="settings" title="Einstellungen" aria-label="Einstellungen"></button>
         <button id="helpBtn" class="icon-btn" data-icon="help" title="Hilfe &amp; Steuerung" aria-label="Hilfe"></button>
       </div>
     </div>
 
-    <div class="site-line">
-      <span id="siteDesc" class="site-desc"></span>
-      <span id="loadState" class="load-state"></span>
-      <div class="url-bar">
-        <input id="urlInput" class="control" type="text" spellcheck="false" placeholder="Adresse öffnen (Strg+L)" title="Adresse im aktuellen Tab öffnen">
-        <button id="urlGoBtn" class="icon-btn" data-icon="forward" title="Adresse laden" aria-label="Adresse laden"></button>
-        <button id="urlCopyBtn" class="icon-btn" data-icon="note" title="Aktuelle Adresse kopieren" aria-label="Adresse kopieren"></button>
-        <button id="urlSaveBtn" class="icon-btn" data-icon="plus" title="Aktuelle Seite als eigene Webseite speichern" aria-label="Als eigene Seite speichern"></button>
-        <button id="urlShotBtn" class="icon-btn" data-icon="camera" title="Webseite als Bild speichern (Screenshot)" aria-label="Screenshot speichern"></button>
-      </div>
-    </div>
-
-    <div id="findBar" class="find-bar hidden">
-      <input id="findInput" type="text" spellcheck="false" placeholder="Seite durchsuchen (Strg+F)">
-      <span id="findCount" class="find-count">—</span>
-      <button id="findNextBtn" class="icon-btn" data-icon="forward" title="Weiter (Enter)" aria-label="Nächster Treffer"></button>
-      <button id="findCloseBtn" class="icon-btn" data-icon="close" title="Schließen (Esc)" aria-label="Suche schließen"></button>
-    </div>
-
     <main id="webArea" class="web-area">
-      <div id="webviews" class="webviews"></div>
-
-      <div id="emptyState" class="empty-state hidden">
-        <div class="empty-icon">✦</div>
-        <h2>Noch keine eigene Webseite</h2>
-        <p>Füge unter Einstellungen eigene Seiten hinzu. Sie erscheinen hier und in der Kategorie deiner Wahl.</p>
-        <button id="emptyAddBtn" class="btn primary" data-icon="plus">Eigene Seite hinzufügen</button>
-      </div>
-
-      <div id="webError" class="web-error hidden">
-        <div class="error-card">
-          <div class="error-icon">!</div>
-          <h3 id="webErrorTitle">Seite nicht erreichbar</h3>
-          <p id="webErrorText"></p>
-          <div class="error-actions">
-            <button id="webErrorRetry" class="btn primary" data-icon="reload">Erneut versuchen</button>
-            <button id="webErrorExternal" class="btn ghost" data-icon="external">Im Browser öffnen</button>
-            <button id="webErrorCopy" class="btn ghost" data-icon="note">Details kopieren</button>
-          </div>
+      <!-- Die frühere Webseiten-Leiste bleibt nur als unsichtbarer
+           Kompatibilitätsanker für die noch vorhandene Altlogik. -->
+      <div id="legacyBrowser" hidden>
+        <nav class="tabbar" id="tabbar" aria-label="Kategorien"></nav>
+        <div class="favorites-bar" id="favoritesBar"></div>
+        <button id="miniExitBtn" class="icon-btn"></button>
+        <button id="backBtn" class="icon-btn"></button>
+        <button id="backHistoryBtn" class="icon-btn"></button>
+        <button id="forwardBtn" class="icon-btn"></button>
+        <button id="reloadBtn" class="icon-btn"></button>
+        <button id="homeBtn" class="icon-btn"></button>
+        <button id="externalBtn" class="btn ghost"></button>
+        <button id="favoriteBtn" class="icon-btn"></button>
+        <button id="muteBtn" class="icon-btn"></button>
+        <button id="pipBtn" class="icon-btn"></button>
+        <button id="miniBtn" class="icon-btn"></button>
+        <button id="splitBtn" class="icon-btn"></button>
+        <button id="unloadOthersBtn" class="icon-btn"></button>
+        <select id="siteSelect" class="control"></select>
+        <select id="overlayCategorySelect" class="control"></select>
+        <select id="overlaySiteSelect" class="control"></select>
+        <input id="siteSearch" class="control" type="search">
+        <datalist id="siteList"></datalist>
+        <span id="siteDesc" class="site-desc"></span>
+        <span id="loadState" class="load-state"></span>
+        <input id="urlInput" class="control" type="text">
+        <button id="urlGoBtn" class="icon-btn"></button>
+        <button id="urlCopyBtn" class="icon-btn"></button>
+        <button id="urlSaveBtn" class="icon-btn"></button>
+        <button id="urlShotBtn" class="icon-btn"></button>
+        <div id="findBar" class="find-bar hidden">
+          <input id="findInput" type="text">
+          <span id="findCount" class="find-count"></span>
+          <button id="findNextBtn" class="icon-btn"></button>
+          <button id="findCloseBtn" class="icon-btn"></button>
         </div>
+        <div id="emptyState" class="empty-state hidden">
+          <p></p>
+          <button id="emptyAddBtn" class="btn primary"></button>
+        </div>
+        <div id="webError" class="web-error hidden">
+          <h3 id="webErrorTitle"></h3>
+          <p id="webErrorText"></p>
+          <button id="webErrorRetry" class="btn primary"></button>
+          <button id="webErrorExternal" class="btn ghost"></button>
+          <button id="webErrorCopy" class="btn ghost"></button>
+        </div>
+        <div id="loadingBar" class="loading-bar hidden"></div>
+        <button id="overlayBackBtn" class="icon-btn"></button>
+        <button id="overlayForwardBtn" class="icon-btn"></button>
+        <button id="overlayReloadBtn" class="icon-btn"></button>
+        <button id="overlayHomeBtn" class="icon-btn"></button>
       </div>
-
-      <div id="loadingBar" class="loading-bar hidden"></div>
 
       <div id="dashboardPanel" class="dashboard hidden">
         <div class="dash-shell">
@@ -277,13 +247,6 @@
                 <button type="button" class="btn ghost small" data-dash-action="tools">🧭 Werkzeuge</button>
                 <button type="button" class="btn ghost small" data-dash-action="refresh">↻ Daten neu laden</button>
                 <button type="button" class="btn ghost small" data-dash-more>Mehr anzeigen</button>
-                <select class="dash-profile-select" data-dash-profile aria-label="Schnellprofil">
-                  <option value="">Profil …</option>
-                  <option value="pvp">PvP</option>
-                  <option value="pve">PvE</option>
-                  <option value="raid">Raid</option>
-                  <option value="gambit">Gambit</option>
-                </select>
                 <select class="dash-profile-select" data-dash-preset aria-label="Dashboard-Layout">
                   <option value="all">Layout: Alles</option>
                   <option value="beginner">Layout: Anfänger</option>
@@ -471,25 +434,13 @@
   <div id="padCursor" class="pad-cursor hidden" aria-hidden="true"></div>
   <div id="bindingHud" class="binding-hud hidden" aria-hidden="true"></div>
 
-  <div id="offlineBanner" class="offline-banner hidden">Keine Internetverbindung – Seiten werden neu geladen, sobald du wieder online bist.</div>
-
-  <div id="historyPanel" class="checklist-panel hidden">
-    <div class="checklist-head">
-      <strong>Verlauf dieses Tabs</strong>
-      <button id="historyCloseBtn" class="icon-btn" data-icon="close" aria-label="Schließen"></button>
-    </div>
-    <div id="historyList" class="checklist-list"></div>
-  </div>
+  <div id="offlineBanner" class="offline-banner hidden">Keine Internetverbindung – Daten werden aktualisiert, sobald du wieder online bist.</div>
 
   <div id="paletteModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Befehlspalette">
     <div class="palette-card">
       <input id="paletteInput" type="text" spellcheck="false" placeholder="Befehl suchen … (Strg+K)" autocomplete="off">
       <div id="paletteResults" class="palette-results"></div>
     </div>
-  </div>
-
-  <div id="tabContextMenu" class="palette-card tab-context hidden" role="menu">
-    <div id="tabContextBody" class="palette-results"></div>
   </div>
 
   <div id="checklistPanel" class="checklist-panel hidden">
@@ -536,8 +487,8 @@
           <button class="settings-tab" data-settings-tab="overlaybar" data-icon="columns">Overlay-Leiste</button>
           <button class="settings-tab" data-settings-tab="controller" data-icon="gamepad">Controller</button>
           <button class="settings-tab" data-settings-tab="steam" data-icon="gamepad">Steam Input</button>
-          <button class="settings-tab" data-settings-tab="web" data-icon="monitor">Webseiten</button>
-          <button class="settings-tab" data-settings-tab="custom" data-icon="star">Eigene Seiten</button>
+          <button class="settings-tab" data-settings-tab="web" data-icon="monitor" hidden>Webseiten</button>
+          <button class="settings-tab" data-settings-tab="custom" data-icon="star" hidden>Eigene Seiten</button>
           <button class="settings-tab" data-settings-tab="display" data-icon="eye">Darstellung</button>
           <button class="settings-tab" data-settings-tab="behavior" data-icon="settings">Verhalten</button>
           <button class="settings-tab" data-settings-tab="security" data-icon="lock">Sicherheit</button>
@@ -697,7 +648,7 @@
             </details>
 
             <div class="note-box">
-              <strong>Tipp:</strong> Mit <kbd>Strg</kbd> + Mausrad lässt sich die Seite zoomen. Im Overlay kannst du mit dem Controller arbeiten oder das Overlay mit der Maus durchlassen, um weiterzuspielen.
+              <strong>Tipp:</strong> Im Overlay kannst du mit dem Controller arbeiten oder das Overlay mit der Maus durchlassen, um weiterzuspielen.
             </div>
 
           </section>
@@ -966,16 +917,6 @@
               <span>Cursor-Magnet-Snap: Cursor wird in die Nähe klickbarer Oberflächenelemente gezogen</span>
             </label>
 
-            <div class="field">
-              <label for="siteDeadzoneSelect">Feinsteuerung: Deadzone pro Webseite</label>
-              <div class="input-row">
-                <select id="siteDeadzoneSelect" class="control"></select>
-                <input id="siteDeadzoneValue" type="number" min="5" max="60" step="1" class="control" style="max-width: 90px" aria-label="Deadzone-Wert">
-                <button id="siteDeadzoneResetBtn" class="btn ghost">Global</button>
-              </div>
-              <span class="field-hint">Leer = globale Deadzone (siehe oben) nutzen. Kleiner Wert = präziser Cursor – ideal für DIM, größerer Wert für normale Seiten.</span>
-            </div>
-
             </details>
 
             <div class="field-row two">
@@ -1010,12 +951,7 @@
                   <option value="back">Zurück</option>
                   <option value="reload">Neu laden</option>
                   <option value="precision">Präzisionsmodus</option>
-                  <option value="categoryPrev">Kategorie zurück</option>
-                  <option value="categoryNext">Kategorie weiter</option>
-                  <option value="sitePrev">Webseite zurück</option>
-                  <option value="siteNext">Webseite weiter</option>
                   <option value="notes">Notizen öffnen</option>
-                  <option value="pip">Mini-Fenster (PiP)</option>
                   <option value="settings">Einstellungen</option>
                   <option value="hide">Overlay ausblenden</option>
                 </select>
@@ -1028,12 +964,7 @@
                   <option value="back">Zurück</option>
                   <option value="reload">Neu laden</option>
                   <option value="precision">Präzisionsmodus</option>
-                  <option value="categoryPrev">Kategorie zurück</option>
-                  <option value="categoryNext">Kategorie weiter</option>
-                  <option value="sitePrev">Webseite zurück</option>
-                  <option value="siteNext">Webseite weiter</option>
                   <option value="notes">Notizen öffnen</option>
-                  <option value="pip">Mini-Fenster (PiP)</option>
                   <option value="settings">Einstellungen</option>
                   <option value="hide">Overlay ausblenden</option>
                 </select>
@@ -1042,7 +973,7 @@
 
             <label class="check-row">
               <input id="hapticSwitch" type="checkbox">
-              <span>Kurze Vibration bei Kategorie-/Seitenwechsel</span>
+              <span>Kurze Vibration bei Ansichtswechsel</span>
             </label>
 
             <div class="field-row two">
@@ -1093,7 +1024,7 @@
             </label>
             <label class="check-row">
               <input id="gamepadInvertDpad" type="checkbox">
-              <span>D-Pad-Scrollrichtung auf Webseiten umkehren (↑ scrollt nach unten)</span>
+              <span>D-Pad-Scrollrichtung umkehren (↑ scrollt nach unten)</span>
             </label>
             <label class="check-row">
               <input id="gamepadXinput" type="checkbox">
@@ -1128,13 +1059,12 @@
             <details class="settings-group">
               <summary>Steuerung im Overlay</summary>
             <div class="key-table">
-              <div><kbd>A</kbd><span>Klicken (auch in Webseiten)</span></div>
+              <div><kbd>A</kbd><span>Klicken</span></div>
               <div><kbd>B</kbd><span>Zurück, sonst Overlay ausblenden</span></div>
-              <div><kbd>X</kbd><span>Seite neu laden</span></div>
+              <div><kbd>X</kbd><span>Aktualisieren</span></div>
               <div><kbd>Y</kbd><span>Präzisionsmodus für den Cursor</span></div>
-              <div><kbd>LB</kbd><kbd>RB</kbd><span>Kategorie wechseln</span></div>
-              <div><kbd>D↑</kbd><kbd>D↓</kbd><span>Seite scrollen</span></div>
-              <div><kbd>D←</kbd><kbd>D→</kbd><span>Webseite wechseln</span></div>
+              <div><kbd>LB</kbd><kbd>RB</kbd><span>Tab / Ansicht wechseln</span></div>
+              <div><kbd>D↑</kbd><kbd>D↓</kbd><span>Scrollen</span></div>
               <div><kbd>LT</kbd><kbd>RT</kbd><span>Schnell scrollen</span></div>
               <div><kbd>View</kbd><span>Einstellungen öffnen</span></div>
               <div><kbd>Menu</kbd><kbd>R3</kbd><span>Overlay ausblenden</span></div>
@@ -1379,13 +1309,13 @@
 
           <section class="settings-panel" data-settings-panel="display">
             <h3>Darstellung</h3>
-            <p class="panel-hint">Schrift, Kontrast, Sprache und Barrierefreiheit. Gilt für die Bedienoberfläche, nicht für Webseiten.</p>
+            <p class="panel-hint">Schrift, Kontrast, Sprache und Barrierefreiheit der Bedienoberfläche.</p>
             <details class="settings-group" open>
               <summary>Größe &amp; Sprache</summary>            <div class="field-row">
               <div class="field">
                 <label for="uiScale">Oberflächen-Zoom <span id="uiScaleValue" class="value-badge">100 %</span></label>
                 <input id="uiScale" type="range" min="80" max="140" step="5" value="100">
-                <span class="field-hint">Vergrößert die Bedienoberfläche (nicht die Webseiten). Gut für größere Bildschirme/Abstände.</span>
+                <span class="field-hint">Vergrößert die Bedienoberfläche. Gut für größere Bildschirme/Abstände.</span>
               </div>
             </div>
             <div class="field-row">
@@ -1476,21 +1406,11 @@
               <input id="startMinimized" type="checkbox">
               <span>Beim Start minimiert im Tray starten</span>
             </label>
-            <label class="check-row">
-              <input id="startDashboard" type="checkbox">
-              <span>Beim Start das Dashboard zeigen (statt der letzten Webseite)</span>
-            </label>
-            <label class="check-row">
-              <input id="autoRestoreSession" type="checkbox">
-              <span>Beim Start automatisch die letzte Sitzung wiederherstellen (überschreibt Dashboard-Start)</span>
-            </label>
             <div class="field">
               <label for="startView">Startansicht</label>
               <select id="startView">
                 <option value="dashboard">Dashboard</option>
-                <option value="today">Heute (nur Prioritäten)</option>
                 <option value="inventory">Inventar</option>
-                <option value="last">Letzte Webseite / Sitzung</option>
               </select>
             </div>
             <div class="field">
@@ -1513,7 +1433,7 @@
             </label>
             <label class="check-row">
               <input id="gameModeOptimize" type="checkbox">
-              <span>Spielmodus: Beim Spielstart Webseiten entladen (RAM sparen)</span>
+              <span>Spielmodus: Beim Spielstart Hintergrundarbeit drosseln (RAM sparen)</span>
             </label>
             <label class="check-row">
               <input id="refocusGameOnHide" type="checkbox">
@@ -1522,10 +1442,6 @@
             <label class="check-row">
               <input id="disableGpu" type="checkbox">
               <span>Hardware-Beschleunigung deaktivieren (Neustart nötig – hilft bei grafikbezogenen Abstürzen / Bluescreens)</span>
-            </label>
-            <label class="check-row">
-              <input id="adBlock" type="checkbox">
-              <span>Werbe- und Tracker-Domains blockieren</span>
             </label>
             <label class="check-row">
               <input id="resetAlarm" type="checkbox">
@@ -1546,11 +1462,7 @@
             </div>
             <label class="check-row">
               <input id="lowPower" type="checkbox">
-              <span>Low-Power-Modus (spart Akku: Hintergrund gedrosselt, kein Seiten-Vorladen – Neustart nötig)</span>
-            </label>
-            <label class="check-row">
-              <input id="globalSiteHotkeys" type="checkbox">
-              <span>Globale Seiten-Kürzel (Strg+Alt+1…8): Kategorien systemweit öffnen – auch mitten im Spiel</span>
+              <span>Low-Power-Modus (spart Akku: Hintergrund gedrosselt, keine Hintergrundaktualisierung – Neustart nötig)</span>
             </label>
 
             <div class="field-actions-row">
@@ -1635,16 +1547,9 @@
               </div>
             </div>
             <div id="profileList" class="custom-list"></div>
-            <span class="field-hint">Profile sind vollständige Snapshots (Einstellungen, Seiten, Erinnerungen …). Umschalten lädt die Oberfläche neu – auch im Tray-Menü verfügbar.</span>
+            <span class="field-hint">Profile sind vollständige Snapshots (Einstellungen, Erinnerungen …). Umschalten lädt die Oberfläche neu – auch im Tray-Menü verfügbar.</span>
 
             </details>
-            <details class="settings-group">
-              <summary>Kategorie-Reihenfolge</summary>
-            <div id="categoryOrderList" class="order-list"></div>
-            <span class="field-hint">Reihenfolge der Reiter mit den Pfeilen anpassen. Fehlende Einträge hängen automatisch hinten an – der Standard bleibt so erreichbar.</span>
-
-            </details>
-
             <div class="field-actions-row">
               <button id="launchGameBtn" class="btn primary" data-icon="play">Destiny 2 starten</button>
               <button id="openConfigFolderBtn" class="btn ghost" data-icon="external">Konfigurationsordner öffnen</button>
@@ -1943,9 +1848,8 @@
               <summary>Controller</summary>
             <div class="field-actions-row">
               <button id="controllerTestOpenBtnDiag" class="btn ghost" data-icon="gamepad">Controller-Test öffnen</button>
-              <button id="webDevToolsBtn" class="btn ghost" data-icon="external">DevTools der aktiven Seite</button>
             </div>
-            <span class="field-hint">Live-Anzeige aller Tasten, Sticks und Trigger – auch ohne geöffnete Einstellungen. DevTools öffnen die Entwicklerkonsole der aktiven Webseite (abgelöst).</span>
+            <span class="field-hint">Live-Anzeige aller Tasten, Sticks und Trigger – auch ohne geöffnete Einstellungen.</span>
 
             </details>
             <details class="settings-group">
@@ -1974,15 +1878,6 @@
 
             </details>
             <details class="settings-group">
-              <summary>Seiten-Fehler-Radar</summary>
-            <p class="panel-hint">Fehlgeschlagene Ladevorgänge pro Webseite in dieser Sitzung.</p>
-            <div id="errorRadar" class="history-list">—</div>
-            <div class="field-actions-row">
-              <button id="errorRadarBtn" class="btn ghost" data-icon="reload">Radar aktualisieren</button>
-            </div>
-
-            </details>
-            <details class="settings-group">
               <summary>Benachrichtigungen</summary>
             <div class="field-actions-row">
               <button id="notifyRefreshBtn" class="btn ghost" data-icon="reload">Historie aktualisieren</button>
@@ -2001,7 +1896,7 @@
             <div class="field-actions-row">
               <button id="factoryResetBtn" class="btn danger" data-icon="trash">Auf Werkseinstellungen zurücksetzen</button>
             </div>
-            <span class="field-hint">Setzt die gesamte Konfiguration zurück (Seiten, Einstellungen, Erinnerungen). Nach Bestätigung startet die Oberfläche neu.</span>
+            <span class="field-hint">Setzt die gesamte Konfiguration zurück (Einstellungen, Erinnerungen, Loadouts). Nach Bestätigung startet die Oberfläche neu.</span>
 
             </details>
             <details class="settings-group">
@@ -2038,10 +1933,10 @@
             <p class="small-note" id="aboutHotkeys">—</p>
 
             <h4>Rechtliches</h4>
-            <p class="small-note">Dieses Tool ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zu Bungie. Destiny 2 und alle zugehörigen Inhalte sind Eigentum von Bungie, Inc. Die verlinkten Webseiten gehören ihren jeweiligen Betreibern.</p>
+            <p class="small-note">Dieses Tool ist ein inoffizielles Community-Projekt und steht in keiner Verbindung zu Bungie. Destiny 2 und alle zugehörigen Inhalte sind Eigentum von Bungie, Inc.</p>
 
             <h4>Danke</h4>
-            <p class="small-note">Gebaut für schnelle Blicke zwischen zwei Raids - mit Tabs, Drop-Downs, Overlay und Controller.</p>
+            <p class="small-note">Gebaut für schnelle Blicke zwischen zwei Raids – mit Dashboard, Inventar, Werkzeugen, Overlay und Controller.</p>
           </section>
         </div>
       </div>
@@ -2081,20 +1976,11 @@
             <div class="key-table">
               <div><kbd>Alt+D</kbd><span>Overlay ein-/ausblenden</span></div>
               <div><kbd>Alt+Shift+D</kbd><span>Maus durchlassen</span></div>
-              <div><kbd>Alt+1 … 8</kbd><span>Kategorie wechseln</span></div>
-              <div><kbd>F5</kbd><span>Seite neu laden</span></div>
-              <div><kbd>Strg+Q</kbd><span>Zuletzt genutzte Seite</span></div>
-              <div><kbd>Strg+Tab</kbd><span>Nächste Kategorie</span></div>
-              <div><kbd>Strg+Shift+T</kbd><span>Geschlossene Seite wiederherstellen</span></div>
-              <div><kbd>Strg+F</kbd><span>Seite durchsuchen</span></div>
-              <div><kbd>Strg+L</kbd><span>Adressleiste fokussieren</span></div>
               <div><kbd>Strg+K</kbd><span>Befehlspalette öffnen</span></div>
-              <div><kbd>Strg+M</kbd><span>Minimodus (nur Webseite)</span></div>
-              <div><kbd>Strg+Alt+S</kbd><span>Split-View (2 Seiten nebeneinander)</span></div>
               <div><kbd>Strg+Alt+D</kbd><span>Dashboard umschalten (global)</span></div>
-              <div><kbd>Strg+Alt+1 … 8</kbd><span>Kategorie aus dem Spiel öffnen</span></div>
+              <div><kbd>Strg+Alt+I</kbd><span>Inventar öffnen</span></div>
+              <div><kbd>Strg+Alt+1 … 5</kbd><span>Werkzeugansicht öffnen</span></div>
               <div><kbd>Esc</kbd><span>Dialog schließen / Overlay ausblenden</span></div>
-              <div><kbd>Strg</kbd> + <kbd>Mausrad</kbd><span>Seite zoomen</span></div>
               <div><kbd>Alt</kbd> + <kbd>Mausrad</kbd><span>Overlay-Deckkraft ändern</span></div>
             </div>
           </div>
@@ -2103,24 +1989,14 @@
             <div class="key-table">
               <div><kbd>A</kbd><span>Klicken</span></div>
               <div><kbd>B</kbd><span>Zurück / ausblenden</span></div>
-              <div><kbd>X</kbd><span>Neu laden</span></div>
+              <div><kbd>X</kbd><span>Aktualisieren</span></div>
               <div><kbd>Y</kbd><span>Präzisionsmodus</span></div>
-              <div><kbd>LB</kbd><kbd>RB</kbd><span>Kategorie</span></div>
-              <div><kbd>D←</kbd><kbd>D→</kbd><span>Webseite</span></div>
+              <div><kbd>LB</kbd><kbd>RB</kbd><span>Tab / Ansicht wechseln</span></div>
               <div><kbd>D↑</kbd><kbd>D↓</kbd><span>Scrollen</span></div>
               <div><kbd>L3</kbd><kbd>R3</kbd><span>Overlay ein-/ausblenden</span></div>
               <div><kbd>Guide</kbd><span>Overlay ein-/ausblenden (wenn verfügbar)</span></div>
             </div>
           </div>
-        </section>
-
-        <section class="help-section">
-          <h3>Minimodus &amp; Split-View</h3>
-          <ul>
-            <li><strong>Minimodus</strong> (<kbd>Strg+M</kbd>, 📥-Knopf oder Palette): blendet alle Leisten aus und zeigt nur die Webseite — ideal über dem Spiel. Zurück über <kbd>Strg+M</kbd> oder den kleinen ✕-Chip oben rechts.</li>
-            <li><strong>Split-View</strong> (<kbd>Strg+Alt+S</kbd>, 🗀-Knopf oder Palette): die aktuelle Seite wird links gepinnt, die nächste Auswahl öffnet rechts — zwei Seiten gleichzeitig. Beendet denselben Knopf.</li>
-            <li>Split-View braucht zwei offene Seiten. Der gepinnte Frame bleibt von „Andere entladen“ und der Cache-Räumung verschont.</li>
-          </ul>
         </section>
 
         <section class="help-section">
@@ -2200,7 +2076,7 @@
 
   <div id="commandPalette" class="command-palette hidden" role="dialog" aria-modal="true" aria-label="Befehlspalette">
     <div class="command-palette-card">
-      <input id="commandPaletteInput" type="search" placeholder="Befehl, Seite oder Einstellung suchen …" autocomplete="off" aria-label="Befehl suchen">
+      <input id="commandPaletteInput" type="search" placeholder="Befehl oder Einstellung suchen …" autocomplete="off" aria-label="Befehl suchen">
       <div id="commandPaletteResults" class="command-palette-results"></div>
       <div class="command-palette-hint">Strg+K öffnet · Esc schließt · Enter führt aus</div>
     </div>
