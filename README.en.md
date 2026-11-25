@@ -13,12 +13,15 @@ Electron itself.
 
 The ready-to-run Windows builds are available under **Releases**:
 
-- **`Destiny 2 Tool by FreakItOut 1.0.0.exe`** – portable version, no
+- **`Destiny.2.Tool.by.FreakItOut.1.0.0.exe`** – portable version, no
   installation required.
-- **`Destiny 2 Tool by FreakItOut Setup 1.0.0.exe`** – installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.0.0.exe`** – installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optional Stream Deck plugin.
 - **`streamdeck-profile.json`** – matching Stream Deck profile.
 - **`SHA256SUMS.txt`** – checksums for all files.
+
+GitHub replaces spaces in release file names with dots; the checksums in
+`SHA256SUMS.txt` refer to the original names.
 
 More documents: [German README](README.md) · [Changelog](CHANGELOG.en.md) ·
 [German changelog](CHANGELOG.md).

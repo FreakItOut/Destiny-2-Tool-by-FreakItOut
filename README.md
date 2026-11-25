@@ -13,12 +13,15 @@ Laufzeit-Abhängigkeiten außer Electron selbst.
 
 Die fertigen Windows-Builds liegen unter **Releases**:
 
-- **`Destiny 2 Tool by FreakItOut 1.0.0.exe`** – portable Version, keine
+- **`Destiny.2.Tool.by.FreakItOut.1.0.0.exe`** – portable Version, keine
   Installation nötig.
-- **`Destiny 2 Tool by FreakItOut Setup 1.0.0.exe`** – Installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.0.0.exe`** – Installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optionales Stream-Deck-Plugin.
 - **`streamdeck-profile.json`** – passende Stream-Deck-Belegung.
 - **`SHA256SUMS.txt`** – Prüfsummen aller Dateien.
+
+GitHub ersetzt Leerzeichen in Release-Dateinamen durch Punkte; die
+Prüfsummen in `SHA256SUMS.txt` beziehen sich auf die Originalnamen.
 
 Weitere Dokumente: [Anleitung](ANLEITUNG.md) · [Changelog](CHANGELOG.md) ·
 [English README](README.en.md).

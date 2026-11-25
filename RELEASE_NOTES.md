@@ -14,11 +14,15 @@ Steuerung und Stream-Deck-Anbindung.
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny 2 Tool by FreakItOut 1.0.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny 2 Tool by FreakItOut Setup 1.0.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.0.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.0.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `SHA256SUMS.txt` | Prüfsummen aller Dateien |
+
+GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
+`SHA256SUMS.txt` beziehen sich auf die Originalnamen
+(`Destiny 2 Tool by FreakItOut 1.0.0.exe`).
 
 ### Voraussetzungen
 
@@ -57,11 +61,15 @@ Stream Deck integration.
 
 | File | Content |
 | --- | --- |
-| `Destiny 2 Tool by FreakItOut 1.0.0.exe` | Portable version, no installation required |
-| `Destiny 2 Tool by FreakItOut Setup 1.0.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.0.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.0.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `SHA256SUMS.txt` | Checksums for all files |
+
+GitHub replaces spaces in file names with dots. The checksums in
+`SHA256SUMS.txt` refer to the original names
+(`Destiny 2 Tool by FreakItOut 1.0.0.exe`).
 
 ### Requirements
 
