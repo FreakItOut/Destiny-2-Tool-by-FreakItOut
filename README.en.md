@@ -13,9 +13,9 @@ than Electron itself.
 
 The ready-to-run Windows builds are available under **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.4.0.exe`** – portable version, no
+- **`Destiny.2.Tool.by.FreakItOut.1.5.0.exe`** – portable version, no
   installation required.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.4.0.exe`** – installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.5.0.exe`** – installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optional Stream Deck plugin.
 - **`streamdeck-profile.json`** – matching Stream Deck profile.
 - **`SHA256SUMS.txt`** – checksums for all files.
@@ -40,6 +40,14 @@ repository.
 - **Native views instead of websites** – dashboard, inventory/loadouts and
   the tool centre are native views; no third-party pages are embedded any
   more.
+- **Focus dashboard** – only the most important cards by default; “Show all”
+  reveals the rest and the choice is saved.
+- **Simple settings** – everyday options first, expert areas (Steam Input,
+  security, diagnostics) behind “Advanced”.
+- **Loadout queue** – apply multiple loadouts in sequence with conflict
+  detection (exotics, class, missing items).
+- **90-day history** – activity analytics stores daily aggregates locally and
+  shows the longer trend.
 - **Overlay on top of the game** – borderless, always-on-top window; size,
   position, monitor and opacity are configurable.
 - **Global hotkeys** – work even while Destiny 2 has focus. Defaults:

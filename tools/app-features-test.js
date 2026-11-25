@@ -115,6 +115,13 @@ const analyticsJs = read('renderer/js/dashboard-analytics.js');
 check('Dashboard hat Aktivitäts-Analyse',
   dashboardJs.includes('dashAnalyticsBody') && dashboardJs.includes('buildActivityAnalytics') &&
   analyticsJs.includes('buildActivityAnalytics') && index.includes('dashboard-analytics.js') && index.includes('dashAnalytics'));
+check('Dashboard hat Fokusmodus',
+  dashboardJs.includes('dashboardFocus') && index.includes('data-dash-action="focus"') && index.includes('data-dash-focus="hide"'));
+check('Einstellungen haben Einfach/Erweitert',
+  index.includes('settingsAdvancedBtn') && settings.includes('settings-simple') && index.includes('data-settings-advanced'));
+check('Loadout-Warteschlange und Konflikte',
+  inventory.includes('queueLoadout') && inventory.includes('loadoutConflicts') && inventory.includes('data-loadout-queue'));
+check('SBOM-Werkzeug vorhanden', fs.existsSync(path.join(ROOT, 'tools', 'make-sbom.js')));
 check('Destiny-2-Beenden vollständig entfernt', !/quitGame|game:quit|overlayQuitGameBtn/.test(app + index + main + preload + config + settings));
 check('Händler-Verfügbarkeit erklärt', tools.includes('dim-vendors-hint') && tools.includes('Xûr erscheint Freitag bis Dienstag'));
 check('Inventar nutzt Fenster-/Chunk-Rendering', inventory.includes('chunkedLists') && inventory.includes('content-visibility: auto') && inventory.includes('data-inv-chunk'));

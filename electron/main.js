@@ -14629,6 +14629,19 @@ async function runSmoke() {
     // Oberfläche: Einstellungen öffnen, Tab wechseln und schließen.
     const ui = await win.webContents.executeJavaScript(`(async () => {
       const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const dashboardPanel = document.querySelector('#dashboardPanel');
+      const focusBtn = document.querySelector('[data-dash-action="focus"]');
+      let focusToggleOk = false;
+      if (focusBtn && dashboardPanel) {
+        const before = dashboardPanel.classList.contains('dash-focus');
+        focusBtn.click();
+        await wait(60);
+        const after = dashboardPanel.classList.contains('dash-focus');
+        focusBtn.click();
+        await wait(60);
+        focusToggleOk = before !== after;
+      }
+      const shellButtonsOk = ['inventoryBtn', 'toolsBtn', 'checklistBtn', 'overlayBtn', 'settingsBtn', 'helpBtn'].every((id) => Boolean(document.getElementById(id)));
       document.querySelector('#settingsBtn').click();
       await wait(80);
       const modal = document.querySelector('#settingsModal');
@@ -14694,6 +14707,8 @@ async function runSmoke() {
         opened,
         tabActive,
         panelActive,
+        focusToggleOk,
+        shellButtonsOk,
         added,
         gearBadge,
         removed,
@@ -14738,6 +14753,8 @@ async function runSmoke() {
       ui.opened &&
         ui.tabActive &&
         ui.panelActive &&
+        ui.focusToggleOk &&
+        ui.shellButtonsOk &&
         ui.closed &&
         ui.profileSaved &&
         ui.backupOk &&

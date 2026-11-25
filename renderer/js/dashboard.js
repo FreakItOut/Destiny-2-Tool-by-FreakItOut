@@ -919,6 +919,52 @@ export function createDashboard(ctx) {
   }
 
   // ---------- Aktivitäts-Analyse: KPIs, 14 Tage, Heatmap, Kategorien ----
+  function analyticsDayKey(ms) {
+    const date = new Date(ms);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+
+  function analyticsHistoryDays() {
+    const history = getConfig().analyticsHistory || {};
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const shiftDays = (ms, delta) => {
+      const date = new Date(ms);
+      date.setDate(date.getDate() + delta);
+      return date.getTime();
+    };
+    const days = [];
+    for (let index = 89; index >= 0; index -= 1) {
+      const start = shiftDays(todayStart, -index);
+      const entry = history[analyticsDayKey(start)] || {};
+      days.push({
+        key: analyticsDayKey(start),
+        count: Number(entry.count) || 0,
+        minutes: Number(entry.minutes) || 0
+      });
+    }
+    const max = Math.max(1, ...days.map((day) => day.count));
+    return { days, max, recorded: Object.keys(history).length };
+  }
+
+  function recordAnalyticsHistory(stats) {
+    if (!stats || !Array.isArray(stats.recentDays)) return;
+    const history = { ...(getConfig().analyticsHistory || {}) };
+    let changed = false;
+    for (const day of stats.recentDays) {
+      const prev = history[day.key];
+      if (!prev || Number(prev.count) !== day.count || Number(prev.minutes) !== day.minutes) {
+        history[day.key] = { count: day.count, minutes: day.minutes };
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    const keys = Object.keys(history).sort().slice(-180);
+    const trimmed = {};
+    for (const key of keys) trimmed[key] = history[key];
+    setConfig({ analyticsHistory: trimmed });
+  }
+
   function analyticsKpi(value, label, hint) {
     return `<div class="dash-kpi"${hint ? ` title="${esc(hint)}"` : ''}><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
   }
@@ -953,6 +999,11 @@ export function createDashboard(ctx) {
     const top = stats.top
       .map((entry) => `<div class="dash-row"><strong>${esc(entry.name)}</strong><span>${entry.count}× · ${entry.minutes} Min</span></div>`)
       .join('');
+    const trend = analyticsHistoryDays();
+    const trendBars = trend.days.map((day) => {
+      const percent = Math.round((day.count / trend.max) * 100);
+      return `<i${day.count ? '' : ' data-empty="1"'} style="height:${percent}%" title="${esc(day.key)} · ${day.count} Aktivitäten · ${day.minutes} Min"></i>`;
+    }).join('');
     return `<div class="dash-analytics-kpis">${kpis}</div>` +
       `<div class="dash-analytics-grid">` +
         `<div class="dash-analytics-block"><strong>Letzte 14 Tage</strong><div class="dash-bars">${bars}</div></div>` +
@@ -962,6 +1013,8 @@ export function createDashboard(ctx) {
         `</div>` +
       `</div>` +
       `<div class="dash-analytics-block"><strong>Aktivitäten 30 Tage</strong><div class="dash-cat-list">${categories || '<span class="dash-muted">Noch keine Kategorien.</span>'}</div></div>` +
+      `<div class="dash-analytics-block"><strong>90-Tage-Verlauf</strong><div class="dash-trend">${trendBars}</div>` +
+        `<span class="dash-muted">${trend.recorded > 1 ? `${trend.recorded} Tage lokal gespeichert.` : 'Der Verlauf wird ab jetzt lokal gesammelt.'}</span></div>` +
       `<div class="dash-analytics-block"><strong>Top-Aktivitäten</strong>${top || '<span class="dash-muted">Noch keine Aktivitäten.</span>'}</div>`;
   }
 
@@ -977,6 +1030,7 @@ export function createDashboard(ctx) {
     try {
       const entries = await loadActivityFeed(force);
       const stats = window.D2DashboardAnalytics.buildActivityAnalytics(entries);
+      recordAnalyticsHistory(stats);
       if (meta) meta.textContent = stats.hasData ? `${stats.last30} in 30 Tagen` : '';
       body.innerHTML = stats.hasData
         ? analyticsHtml(stats)
@@ -1261,6 +1315,12 @@ export function createDashboard(ctx) {
       case 'onboarding':
         if (ctx.openOnboarding) ctx.openOnboarding();
         return;
+      case 'focus': {
+        const nextFocus = !(getConfig().dashboardFocus !== false);
+        setConfig({ dashboardFocus: nextFocus });
+        renderDashboard();
+        return;
+      }
       case 'refresh':
         milestonesLoadedAt = 0;
         newsLoadedAt = 0;
@@ -1649,6 +1709,13 @@ export function createDashboard(ctx) {
   function renderDashboard() {
     const tour = qs('#dashTour');
     if (tour) tour.classList.toggle('hidden', getConfig().tourDone === true);
+    const focus = getConfig().dashboardFocus !== false;
+    if (dashboardPanel) dashboardPanel.classList.toggle('dash-focus', focus);
+    const focusBtn = qs('[data-dash-action="focus"]');
+    if (focusBtn) {
+      focusBtn.classList.toggle('active', focus);
+      focusBtn.textContent = focus ? 'Alle anzeigen' : 'Fokus';
+    }
     const hidden = new Set((getConfig().dashboardHidden || []));
     if (dashboardPanel) {
       for (const element of dashboardPanel.querySelectorAll('.dash-card, .dash-fold')) {

@@ -10,7 +10,7 @@ const crypto = require('node:crypto');
 const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
 const files = fs.existsSync(DIST)
-  ? fs.readdirSync(DIST).filter((name) => /\.(exe|streamDeckPlugin)$/i.test(name) || name === 'streamdeck-profile.json')
+  ? fs.readdirSync(DIST).filter((name) => /\.(exe|streamDeckPlugin)$/i.test(name) || name === 'streamdeck-profile.json' || name === 'sbom.cdx.json')
   : [];
 if (!files.length) {
   console.error('Keine Build-Artefakte in dist gefunden.');

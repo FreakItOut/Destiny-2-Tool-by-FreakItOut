@@ -67,6 +67,8 @@ try {
     }
     run('Testversion aktualisieren', STD_ROOT, 'node tools/update-testversion.js', 300000);
   }
+  run('SBOM erzeugen', STD_ROOT, 'node tools/make-sbom.js', 60000);
+  run('Prüfsummen aktualisieren', STD_ROOT, 'node tools/make-checksums.js', 60000);
   run('Release-Check', STD_ROOT, 'node tools/release-check.js', 120000);
 
   const appVersion = JSON.parse(fs.readFileSync(path.join(STD_ROOT, 'package.json'), 'utf8')).version;

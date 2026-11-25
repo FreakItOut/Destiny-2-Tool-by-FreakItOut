@@ -6,6 +6,37 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.0] – 2026-11-25
+
+### Hinzugefügt
+
+- **Dashboard-Fokusmodus** – standardmäßig nur Hüter, Prioritäten, Analyse und
+  Wochen-Checkliste; „Alle anzeigen“ schaltet die restlichen Karten frei.
+  Die Wahl wird gespeichert.
+- **Einfach-/Erweitert-Modus in den Einstellungen** – Steam Input, Sicherheit
+  und Diagnose erscheinen nur noch im Erweitert-Modus; die Overlay-Leiste
+  bleibt alltagstauglich sichtbar.
+- **Loadout-Warteschlange** – mehrere Loadouts nacheinander anwenden, inkl.
+  Fortschritt und Überspringen blockierender Konflikte.
+- **Konflikterkennung vor dem Anwenden** – mehrere Exoten, falsche Klasse und
+  fehlende Items werden vor dem Anlegen gemeldet.
+- **90-Tage-Aktivitätsverlauf** – tägliche Aggregate werden lokal gespeichert
+  und als Verlauf im Analyse-Bereich angezeigt.
+- **SBOM** – CycloneDX-Datei (`dist/sbom.cdx.json`) und Prüfsummen-Eintrag.
+- **Werkzeuge-Knopf** in der App-Leiste.
+- **Smoke-Test** prüft jetzt Fokusmodus und die schlanke Shell.
+
+### Behoben
+
+- **Kalendertage über Zeitumstellung** – Aktivitätsserien und Heatmap nutzen
+  Kalendertage statt 24-Stunden-Schritte.
+
+### Geändert
+
+- **Kompaktere App-Leiste** ohne Beschriftung, geringere Höhe.
+- **CSP** erlaubt Verbindungen nur noch zu Bungie statt zu allen HTTPS-Zielen.
+- Version **1.5.0**; App-Features **77**, E2E **482**, Verify **48**.
+
 ## [1.4.0] – 2026-11-25
 
 ### Entfernt

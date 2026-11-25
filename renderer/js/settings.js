@@ -338,6 +338,30 @@ export function initSettings({
     }
   }
 
+  // Einfach-/Erweitert-Modus: hält die Einstellungen alltagstauglich.
+  const settingsAdvancedBtn = qs('#settingsAdvancedBtn');
+  let settingsAdvanced = false;
+  try { settingsAdvanced = window.localStorage.getItem('d2tool.settingsAdvanced') === '1'; } catch (error) { /* egal */ }
+  function applySettingsAdvanced() {
+    if (modal) modal.classList.toggle('settings-simple', !settingsAdvanced);
+    if (settingsAdvancedBtn) {
+      settingsAdvancedBtn.classList.toggle('active', settingsAdvanced);
+      settingsAdvancedBtn.textContent = settingsAdvanced ? 'Einfach' : 'Erweitert';
+    }
+    if (!settingsAdvanced) {
+      const activeTab = tabs.find((button) => button.classList.contains('active'));
+      if (activeTab && activeTab.hasAttribute('data-settings-advanced')) setTab('overlay');
+    }
+  }
+  if (settingsAdvancedBtn) {
+    settingsAdvancedBtn.addEventListener('click', () => {
+      settingsAdvanced = !settingsAdvanced;
+      try { window.localStorage.setItem('d2tool.settingsAdvanced', settingsAdvanced ? '1' : '0'); } catch (error) { /* egal */ }
+      applySettingsAdvanced();
+    });
+  }
+  applySettingsAdvanced();
+
   function updateRangeLabels() {
     const config = cfg();
     qs('#overlayOpacityValue').textContent = `${Math.round(config.overlay.opacity * 100)} %`;
@@ -1012,6 +1036,7 @@ export function initSettings({
     isOpen = true;
     document.body.classList.add('settings-open');
     setTab(['overlay', 'overlaybar', 'controller', 'steam', 'web', 'custom', 'display', 'behavior', 'security', 'bungie', 'diag', 'about'].includes(tab) ? tab : 'overlay');
+    applySettingsAdvanced();
     modalOpen(modal);
     if (settingsSearchInput) {
       settingsSearchInput.value = '';

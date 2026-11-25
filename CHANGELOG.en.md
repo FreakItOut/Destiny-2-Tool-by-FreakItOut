@@ -6,6 +6,36 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] – 2026-11-25
+
+### Added
+
+- **Dashboard focus mode** – by default only Guardian, priorities, analytics
+  and the weekly checklist; “Show all” reveals the remaining cards. The
+  choice is saved.
+- **Simple/advanced settings** – Steam Input, security and diagnostics only
+  appear in advanced mode; the overlay bar stays available by default.
+- **Loadout queue** – apply multiple loadouts in sequence, with progress and
+  skipping of blocking conflicts.
+- **Conflict detection before applying** – multiple exotics, wrong class and
+  missing items are reported before applying.
+- **90-day activity history** – daily aggregates are stored locally and shown
+  as a trend in the analytics section.
+- **SBOM** – CycloneDX file (`dist/sbom.cdx.json`) and checksum entry.
+- **Tools button** in the app bar.
+- **Smoke test** now checks focus mode and the slim shell.
+
+### Fixed
+
+- **Calendar days across daylight saving** – activity streaks and the heatmap
+  use calendar days instead of 24-hour steps.
+
+### Changed
+
+- **More compact app bar** without a label and with reduced height.
+- **CSP** only allows connections to Bungie instead of all HTTPS targets.
+- Version **1.5.0**; app features **77**, E2E **482**, verify **48**.
+
 ## [1.4.0] – 2026-11-25
 
 ### Removed

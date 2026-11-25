@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.4.0
+# Destiny 2 Tool by FreakItOut 1.5.0
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,48 +6,47 @@
 
 ## Deutsch
 
-Version 1.4.0 macht Schluss mit den eingebetteten Webseiten: Die App zeigt nur
-noch Dashboard, Inventar & Loadouts und die Werkzeuge – aufgeräumter, schneller
-und ohne fremde Seiten.
+Version 1.5.0 macht die App alltagstauglicher: fokussiertes Dashboard,
+einfachere Einstellungen, Loadout-Warteschlange mit Konflikterkennung und ein
+längerer Aktivitätsverlauf.
 
-### Neu in 1.4.0
+### Neu in 1.5.0
 
-- **Webseiten komplett entfernt** – Reiter, Kategorien, Favoriten,
-  Seitenauswahl, Adressleiste, Find-in-Page und die Webview-Fläche sind weg.
-  Die App startet direkt im Dashboard.
-- **Schlanke Bedienleiste** – nur noch Inventar, Checkliste, Overlay, Notizen,
-  Tasten-Legende, Einstellungen und Hilfe.
-- **Aufgeräumte Einstellungen** – „Webseiten“ und „Eigene Seiten“ sind aus der
-  Navigation entfernt; deren Panels werden nicht mehr angezeigt.
-- **Overlay ohne Seitennavigation** – keine Kategorie-/Seitenauswahl und keine
-  Zurück-/Vorwärts-/Neu-laden-Knöpfe für Webseiten mehr.
-- **Entfernt:** Minimodus, Split-View, Bild-in-Bild, Seiten-Zoom,
-  Adressleisten- und Find-Kürzel sowie der `/action/mini`-Endpunkt.
-- **Sicherer:** `webviewTag` ist deaktiviert und die CSP erlaubt keine
-  eingebetteten Frames mehr.
-- **Direkte Aktionen:** Reset-Chip öffnet das Dashboard, Xûr-Chip die
-  Händleransicht; DIM-Links öffnen im Standardbrowser.
+- **Fokus-Dashboard** – standardmäßig nur Hüter, Prioritäten, Analyse und
+  Wochen-Checkliste. „Alle anzeigen“ holt die restlichen Karten; die Wahl
+  wird gespeichert.
+- **Einfach-/Erweitert-Modus** – Steam Input, Sicherheit und Diagnose sind
+  nur noch im Erweitert-Modus sichtbar. Die Overlay-Leiste bleibt normal
+  erreichbar.
+- **Loadout-Warteschlange** – mehrere Loadouts nacheinander anwenden, inkl.
+  Fortschritt und automatischem Überspringen blockierender Konflikte.
+- **Konflikterkennung** – mehrere Exoten, falsche Klasse und fehlende Items
+  werden vor dem Anwenden gemeldet.
+- **90-Tage-Verlauf** – die Aktivitäts-Analyse speichert tägliche Aggregate
+  lokal und zeigt den längeren Trend.
+- **SBOM** – CycloneDX-Datei für Releases (`dist/sbom.cdx.json`).
+- **Werkzeuge-Knopf** direkt in der App-Leiste.
+- **Sicherer:** CSP-Verbindungen nur noch zu Bungie; kompaktere Leiste.
 
-### Enthalten aus 1.3.0
+### Enthalten aus 1.4.0
 
-- Dashboard-Analytik mit 7/30-Tage-KPIs, 14-Tage-Balken, 12-Wochen-Heatmap
-  und Kategorien.
-- Inventar-Virtualisierung mit 120er-Blöcken für große Tresorlisten.
-- Stream Deck mit Verbindungs-Action, Encodern, Rezepten und Profil-Modus.
+- Webseiten vollständig entfernt (native Ansichten, keine Webviews).
+- Dashboard-Analytik, Inventar-Virtualisierung und Stream Deck.
 
 ### Downloads
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.4.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.4.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
+| `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
 | `SHA256SUMS.txt` | Prüfsummen aller Dateien |
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.4.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.0.exe`).
 
 ### Voraussetzungen
 
@@ -80,48 +79,45 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.4.0 removes the embedded websites: the app now shows only the
-dashboard, inventory & loadouts and the tools – cleaner, faster and without
-third-party pages.
+Version 1.5.0 makes the app more usable day to day: a focused dashboard,
+simpler settings, a loadout queue with conflict detection and a longer
+activity history.
 
-### New in 1.4.0
+### New in 1.5.0
 
-- **Websites fully removed** – tabs, categories, favourites, page picker,
-  address bar, find-in-page and the webview area are gone. The app starts
-  directly on the dashboard.
-- **Slim app bar** – only inventory, checklist, overlay, notes, key legend,
-  settings and help.
-- **Cleaner settings** – “Websites” and “Custom pages” are removed from the
-  navigation; their panels are no longer shown.
-- **Overlay without site navigation** – no category/page picker and no
-  back/forward/reload buttons for websites.
-- **Removed:** mini mode, split view, picture-in-picture, page zoom, address
-  bar and find shortcuts, and the `/action/mini` endpoint.
-- **Safer:** `webviewTag` is disabled and the CSP no longer allows embedded
-  frames.
-- **Direct actions:** the reset chip opens the dashboard, the Xûr chip the
-  vendor view; DIM links open in the default browser.
+- **Focus dashboard** – only Guardian, priorities, analytics and the weekly
+  checklist by default. “Show all” reveals the rest; the choice is saved.
+- **Simple/advanced mode** – Steam Input, security and diagnostics only show
+  in advanced mode. The overlay bar stays available normally.
+- **Loadout queue** – apply multiple loadouts in sequence, with progress and
+  automatic skipping of blocking conflicts.
+- **Conflict detection** – multiple exotics, wrong class and missing items are
+  reported before applying.
+- **90-day history** – activity analytics stores daily aggregates locally and
+  shows the longer trend.
+- **SBOM** – CycloneDX file for releases (`dist/sbom.cdx.json`).
+- **Tools button** directly in the app bar.
+- **Safer:** CSP connections only to Bungie; more compact bar.
 
-### Included from 1.3.0
+### Included from 1.4.0
 
-- Dashboard analytics with 7/30-day KPIs, 14-day bars, a 12-week heatmap and
-  categories.
-- Inventory virtualization with 120-item chunks for large vault lists.
-- Stream Deck with connection action, encoders, recipes and profile mode.
+- Websites fully removed (native views, no webviews).
+- Dashboard analytics, inventory virtualization and Stream Deck.
 
 ### Downloads
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.4.0.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.4.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
+| `sbom.cdx.json` | Software bill of materials (CycloneDX) |
 | `SHA256SUMS.txt` | Checksums for all files |
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.4.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.0.exe`).
 
 ### Requirements
 

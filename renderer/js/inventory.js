@@ -6692,6 +6692,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       })() + '</div>' +
       '<div class="inv-dw-card-actions">' +
       '<button type="button" class="btn primary small" data-loadout-apply="' + esc(lo.id) + '">Anwenden</button>' +
+      '<button type="button" class="btn ghost small" data-loadout-queue="' + esc(lo.id) + '" title="In die Warteschlange legen">＋ Queue</button>' +
       '<button type="button" class="btn ghost small" data-loadout-apply-missing="' + esc(lo.id) + '" title="Nur Teile anlegen, die noch nicht ausgerüstet sind">Nur Fehlende</button>' +
       '<button type="button" class="btn ghost small" data-loadout-edit="' + esc(lo.id) + '">Bearbeiten</button>' +
       '<button type="button" class="btn ghost small" data-loadout-versions="' + esc(lo.id) + '" title="Bis zu 5 gesicherte Stände">Versionen</button>' +
@@ -7865,6 +7866,83 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     return pool[0];
   }
 
+  // Konfliktprüfung vor dem Anwenden: Exoten, Klasse, fehlende Teile.
+  function loadoutConflicts(loadout, characterId) {
+    const conflicts = [];
+    const character = (data.characters || []).find((entry) => entry.id === characterId) || {};
+    const characterClass = Number(character.classType);
+    const entries = (loadout.items || []).map((item) => {
+      const found = item.instanceId ? locateItem(item.instanceId, characterId) : null;
+      return { item, found, actual: (found && found.item) || item };
+    });
+    const exotics = entries.filter((entry) => Number(entry.actual.rarity) === 6);
+    if (exotics.length > 1) {
+      conflicts.push({ text: `${exotics.length} Exoten im Set – Destiny erlaubt nur einen.`, blocking: true });
+    }
+    if (Number.isInteger(characterClass) && characterClass >= 0 && characterClass <= 2) {
+      const wrongClass = entries.filter((entry) => {
+        const cls = Number(entry.actual.classType);
+        return Number.isInteger(cls) && cls >= 0 && cls <= 2 && cls !== characterClass;
+      });
+      if (wrongClass.length) {
+        conflicts.push({ text: `${wrongClass.length} Teil(e) für eine andere Klasse.`, blocking: true });
+      }
+    }
+    const missing = entries.filter((entry) => entry.item.instanceId && (!entry.found || entry.found.loc === 'unknown'));
+    if (missing.length) {
+      conflicts.push({ text: `${missing.length} Item(s) nicht im Inventar gefunden.`, blocking: false });
+    }
+    return conflicts;
+  }
+
+  // Loadout-Warteschlange: mehrere Loadouts nacheinander anwenden.
+  const loadoutQueue = [];
+  let loadoutQueueRunning = false;
+  function queueLoadout(loadoutId) {
+    const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((entry) => entry.id === loadoutId);
+    if (!loadout) return;
+    if (loadoutQueue.includes(loadoutId)) {
+      toast(`„${loadout.name}“ ist bereits in der Warteschlange.`, 'info', 2000);
+      return;
+    }
+    loadoutQueue.push(loadoutId);
+    toast(`„${loadout.name}“ in Warteschlange (${loadoutQueue.length}).`, 'info', 2000);
+    processLoadoutQueue();
+  }
+  async function processLoadoutQueue() {
+    if (loadoutQueueRunning) return;
+    loadoutQueueRunning = true;
+    let done = 0;
+    let failed = 0;
+    while (loadoutQueue.length) {
+      const id = loadoutQueue.shift();
+      const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((entry) => entry.id === id);
+      if (!loadout || !loadout.characterId) {
+        failed += 1;
+        continue;
+      }
+      const blocking = loadoutConflicts(loadout, loadout.characterId).filter((entry) => entry.blocking);
+      if (blocking.length) {
+        failed += 1;
+        toast(`„${loadout.name}“ übersprungen: ${blocking[0].text}`, 'warning', 3600);
+        continue;
+      }
+      try {
+        await applyLoadout(id, { skipConfirm: true, fromQueue: true });
+        done += 1;
+      } catch (error) {
+        failed += 1;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 350));
+    }
+    loadoutQueueRunning = false;
+    toast(
+      `Warteschlange fertig: ${done} angewendet${failed ? `, ${failed} übersprungen` : ''}.`,
+      failed ? 'warning' : 'success',
+      3800
+    );
+  }
+
   async function applyLoadout(loadoutId, options = {}) {
     const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((entry) => entry.id === loadoutId);
     if (!loadout || !data) return;
@@ -7892,6 +7970,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const perks = (loadout.artifactPerks || []).length;
     const missingMods = (loadout.mods || []).filter((mod) => !findPlugInfo(mod.h) && !mod.n);
     const energy = loadoutDryRunEnergy(loadout, characterId);
+    const conflicts = loadoutConflicts(loadout, characterId);
     const lines = [
       `Items: ${items.length} (${already} bereits angelegt${missing.length ? `, ${missing.length} nicht gefunden` : ''})`,
       mods ? `Mods: ${mods}${missingMods.length ? ` · ${missingMods.length} ohne Daten` : ''}` : '',
@@ -7924,10 +8003,14 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     if (missing.length) {
       lines.push('', `Fehlend: ${missing.slice(0, 4).map((item) => item.name).join(', ')}${missing.length > 4 ? ' …' : ''}`);
     }
+    if (conflicts.length) {
+      lines.push('', 'Konflikte:');
+      for (const conflict of conflicts) lines.push(`${conflict.blocking ? '⛔' : '⚠'} ${conflict.text}`);
+    }
     const confirmed = options.skipConfirm === true ? true : await confirmAction({
       title: options.missingOnly ? `Loadout „${loadout.name}“ ergänzen` : `Loadout „${loadout.name}“ anlegen`,
       lines,
-      confirmLabel: 'Anlegen'
+      confirmLabel: conflicts.some((entry) => entry.blocking) ? 'Trotzdem anlegen' : 'Anlegen'
     });
     if (!confirmed) return;
 
@@ -9667,6 +9750,8 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         await applyLoadout(String(applyMissingBtn.dataset.loadoutApplyMissing || ''), { missingOnly: true });
         return;
       }
+      const queueBtn = event.target.closest('[data-loadout-queue]');
+      if (queueBtn) { queueLoadout(String(queueBtn.dataset.loadoutQueue || '')); return; }
       const applyBtn = event.target.closest('[data-loadout-apply]');
       if (applyBtn) { applyBtn.disabled = true; await applyLoadout(applyBtn.dataset.loadoutApply); return; }
       const editBtn = event.target.closest('[data-loadout-edit]');
@@ -9980,6 +10065,19 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         return;
       }
       applyLoadout(loadout.id);
+    },
+    queueLoadoutById(id) {
+      const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((entry) => entry.id === String(id || ''));
+      if (!loadout) { toast('Loadout nicht gefunden.', 'info', 2200); return; }
+      if (!data) {
+        waitForInventory(15000).then((ready) => {
+          if (ready) queueLoadout(loadout.id);
+          else toast('Warteschlange braucht das Inventar.', 'warning', 3000);
+        });
+        if (!loading) refresh();
+        return;
+      }
+      queueLoadout(loadout.id);
     },
     applyLoadoutMissingById(id) {
       const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((entry) => entry.id === String(id || ''));

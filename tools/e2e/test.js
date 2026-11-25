@@ -353,8 +353,7 @@ const api = {
   }),
   bungieSeasonChallenges: async () => ({ ok: true, seasonName: 'Test-Saison', completed: 1, items: [{ name: 'Saison-Ziel Test', progress: 2, completion: 5, complete: false }] }),
   bungieActivitySummary: async () => {
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
+    const base = new Date();
     const defs = [
       { name: 'Test-Aktivität', mode: 'Nightfall', modeType: 15, modeCategory: 1 },
       { name: 'Test-Raid', mode: 'Raid', modeType: 4, modeCategory: 1, activityType: '608898761' },
@@ -371,7 +370,7 @@ const api = {
       entries.push({
         activityId: `e2e-act-${index}`,
         ...def,
-        date: new Date(now - index * day).toISOString(),
+        date: (() => { const date = new Date(base); date.setDate(date.getDate() - index); return date.toISOString(); })(),
         durationSeconds: 600 + index * 30,
         completed: true,
         kills: 20 + index,

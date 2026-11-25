@@ -1165,14 +1165,12 @@ body.mode-overlay .web-area {
 #legacyBrowser { display: none !important; }
 .settings-panel[data-settings-panel="web"],
 .settings-panel[data-settings-panel="custom"] { display: none !important; }
-.app-toolbar { min-height: 46px; padding: 6px 14px; }
-.app-toolbar-title {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-}
-.app-toolbar .toolbar-actions { flex-wrap: wrap; }
+#settingsModal.settings-simple .settings-tab[data-settings-advanced],
+#settingsModal.settings-simple .settings-panel[data-settings-advanced] { display: none !important; }
+.settings-search-row { display: flex; align-items: center; gap: 8px; }
+.settings-search-row input { flex: 1 1 auto; }
+.app-toolbar { min-height: 40px; padding: 4px 12px; }
+.app-toolbar .toolbar-actions { flex-wrap: wrap; margin-left: 0; width: 100%; justify-content: flex-end; }
 .app-toolbar .btn { height: 30px; padding: 0 11px; }
 
 .nav-group {
@@ -3056,6 +3054,9 @@ body.inventory-open #toolbar { display: none !important; }
 .dash-card > strong { display: block; font-size: 24px; color: var(--accent); font-variant-numeric: tabular-nums; }
 .dash-card small { color: var(--muted); font-size: 11px; }
 .dash-card.dash-wide { grid-column: 1 / -1; }
+/* Fokusmodus: nur die Karten für den Alltag, alles andere auf Wunsch. */
+.dashboard.dash-focus .dash-card[data-dash-focus="hide"] { display: none !important; }
+.dashboard .dash-card [data-dash-action="focus"].active { background: var(--accent); color: var(--accent-contrast); }
 .dash-card .btn.small { padding: 2px 8px; font-size: 11px; }
 .dash-body { display: flex; flex-direction: column; gap: 4px; }
 .dash-row { display: flex; gap: 10px; align-items: center; font-size: 12.5px; }
@@ -3159,6 +3160,20 @@ body.inventory-open #toolbar { display: none !important; }
   color: var(--muted);
 }
 .dash-heatmap-legend i { width: 10px; height: 10px; }
+.dash-trend {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 46px;
+  margin: 4px 0 5px;
+}
+.dash-trend i {
+  flex: 1 1 0;
+  min-height: 2px;
+  border-radius: 1px 1px 0 0;
+  background: linear-gradient(180deg, #7fb2ff, #2f5fa8);
+}
+.dash-trend i[data-empty="1"] { background: rgba(255, 255, 255, 0.07); }
 .dash-cat-list { display: flex; flex-direction: column; gap: 5px; }
 .dash-cat {
   display: grid;

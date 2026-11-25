@@ -362,6 +362,13 @@ if (inventoryBtnApp) {
   window.__d2InventoryButtonHandled = true;
   inventoryBtnApp.addEventListener('click', () => toggleInventoryPage());
 }
+const toolsBtnApp = qs('#toolsBtn');
+if (toolsBtnApp) {
+  toolsBtnApp.addEventListener('click', () => {
+    showInventoryPage();
+    try { inventory.openTools('overview'); } catch (error) { /* egal */ }
+  });
+}
 const overlayLoadouts = createOverlayLoadouts({
   getCfg: () => cfg,
   escapeHtml,

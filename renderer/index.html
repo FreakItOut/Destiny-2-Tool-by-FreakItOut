@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' file: blob:; font-src 'self' data:; connect-src 'self' https:; frame-src 'none'; child-src 'none'; media-src 'self' data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self' file: blob:; font-src 'self' data:; connect-src 'self' https://www.bungie.net https://bungie.net; frame-src 'none'; child-src 'none'; media-src 'self' data:;">
   <title>Destiny 2 Tool by FreakItOut</title>
   <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="dashboard.css">
@@ -152,9 +152,9 @@
     </div>
 
     <div class="toolbar app-toolbar" id="toolbar">
-      <span class="app-toolbar-title">Kommandostand</span>
       <div class="toolbar-actions">
         <button id="inventoryBtn" class="btn ghost" data-icon="backpack" title="Inventar &amp; Loadouts (Bungie-Anmeldung nötig)">Inventar</button>
+        <button id="toolsBtn" class="btn ghost" data-icon="chart" title="Werkzeugzentrale: Übersicht, Builds, Sammlung, Woche, Händler">Werkzeuge</button>
         <button id="checklistBtn" class="btn ghost" data-icon="sort" title="Wöchentliche Challenge-Checkliste">Checkliste</button>
         <button id="overlayBtn" class="btn primary" data-icon="layers">Overlay</button>
         <button id="toolbarNotesBtn" class="icon-btn" data-icon="note" title="Notizen / Raid-Callouts" aria-label="Notizen"></button>
@@ -247,6 +247,7 @@
                 <button type="button" class="btn ghost small" data-dash-action="tools">🧭 Werkzeuge</button>
                 <button type="button" class="btn ghost small" data-dash-action="refresh">↻ Daten neu laden</button>
                 <button type="button" class="btn ghost small" data-dash-more>Mehr anzeigen</button>
+                <button type="button" class="btn ghost small" data-dash-action="focus">Fokus</button>
                 <select class="dash-profile-select" data-dash-preset aria-label="Dashboard-Layout">
                   <option value="all">Layout: Alles</option>
                   <option value="beginner">Layout: Anfänger</option>
@@ -258,7 +259,7 @@
             </div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashTour">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashTour">
             <h4>Erste Schritte <button type="button" class="btn ghost small" data-dash-tour-close>Verstanden</button></h4>
             <div id="dashTourBody" class="dash-body">
               <div class="dash-priority info"><span class="dash-priority-icon">🎒</span><div class="dash-priority-text"><strong>Inventar öffnen</strong><small>Tresor, Beutetaschen, Godrolls und Loadouts.</small></div><button type="button" class="btn ghost small" data-dash-action="inventory">Öffnen</button></div>
@@ -272,27 +273,27 @@
             <div id="dashPriorityBody" class="dash-priority-list"></div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashCharacters">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashCharacters">
             <h4>Hüter <span id="dashCharacterMeta" class="dash-h4-meta"></span></h4>
             <div id="dashCharactersBody" class="dash-char-grid"></div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashChampions">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashChampions">
             <h4>Champion-Check <span id="dashChampionMeta" class="dash-h4-meta"></span></h4>
             <div id="dashChampionBody" class="dash-body"></div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashMatrix">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashMatrix">
             <h4>Charakter-Matrix <span id="dashMatrixMeta" class="dash-h4-meta"></span></h4>
             <div id="dashMatrixBody" class="dash-body"></div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashSince">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashSince">
             <h4>Seit gestern <span id="dashSinceMeta" class="dash-h4-meta"></span></h4>
             <div id="dashSinceBody" class="dash-body"></div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashPostGame">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashPostGame">
             <h4>Letzte Aktivitäten <span id="dashPostGameMeta" class="dash-h4-meta"></span>
               <button type="button" class="btn ghost small" data-dash-postgame-refresh>Neu laden</button>
             </h4>
@@ -306,17 +307,17 @@
             <div id="dashAnalyticsBody" class="dash-body dash-analytics"></div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashSeason">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashSeason">
             <h4>Saison-Ziele <span id="dashSeasonMeta" class="dash-h4-meta"></span></h4>
             <div id="dashSeasonBody" class="dash-body"></div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashPower">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashPower">
             <h4>Power &amp; Infusion <span id="dashPowerMeta" class="dash-h4-meta"></span></h4>
             <div id="dashPowerBody" class="dash-body"></div>
           </section>
 
-          <section class="dash-card dash-wide" id="dashTriumph">
+          <section class="dash-card dash-wide" data-dash-focus="hide" id="dashTriumph">
             <h4>Triumph-Fortschritt <span id="dashTriumphMeta" class="dash-h4-meta"></span></h4>
             <div id="dashTriumphBody" class="dash-body"></div>
           </section>
@@ -330,7 +331,7 @@
               <div id="dashWeekProgress" class="dash-progress-wrap"></div>
               <div id="dashChecklistBody" class="dash-body dash-list"></div>
             </section>
-            <section class="dash-card" id="dashCollection">
+            <section class="dash-card" data-dash-focus="hide" id="dashCollection">
               <h4>Sammlung &amp; Vorrat</h4>
               <div id="dashCollectionBody" class="dash-body"></div>
               <div class="dash-subhead">Heutige Erinnerungen</div>
@@ -339,11 +340,11 @@
           </div>
 
           <div class="dash-columns">
-            <section class="dash-card" id="dashNews">
+            <section class="dash-card" data-dash-focus="hide" id="dashNews">
               <h4>Bungie-News <button id="dashNewsRefresh" class="btn ghost small">↻</button></h4>
               <div id="dashNewsBody" class="dash-body dash-list"></div>
             </section>
-            <section class="dash-card" id="dashBungieStatus">
+            <section class="dash-card" data-dash-focus="hide" id="dashBungieStatus">
               <h4>Bungie-Status
                 <span class="dash-h4-actions">
                   <button type="button" class="btn ghost small" data-dash-status="check">Prüfen</button>
@@ -352,7 +353,7 @@
               </h4>
               <div id="dashBungieStatusBody" class="dash-body"></div>
             </section>
-            <section class="dash-card" id="dashDataStatus">
+            <section class="dash-card" data-dash-focus="hide" id="dashDataStatus">
               <h4>Datenstatus <button type="button" class="btn ghost small" data-dash-status="ics">Kalender exportieren</button> <button type="button" class="btn ghost small" data-dash-status="refresh">Jetzt aktualisieren</button></h4>
               <div id="dashDataStatusBody" class="dash-body"></div>
             </section>
@@ -479,6 +480,7 @@
       </header>
       <div class="settings-search-row">
         <input id="settingsSearch" type="search" placeholder="Einstellungen durchsuchen (z. B. „trigger“, „alarm“, „zoom“) …">
+        <button id="settingsAdvancedBtn" type="button" class="btn ghost small" title="Erweiterte Einstellungen ein-/ausblenden">Erweitert</button>
       </div>
 
       <div class="settings-body">
@@ -486,14 +488,14 @@
           <button class="settings-tab active" data-settings-tab="overlay" data-icon="layers">Overlay</button>
           <button class="settings-tab" data-settings-tab="overlaybar" data-icon="columns">Overlay-Leiste</button>
           <button class="settings-tab" data-settings-tab="controller" data-icon="gamepad">Controller</button>
-          <button class="settings-tab" data-settings-tab="steam" data-icon="gamepad">Steam Input</button>
+          <button class="settings-tab" data-settings-tab="steam" data-settings-advanced data-icon="gamepad">Steam Input</button>
           <button class="settings-tab" data-settings-tab="web" data-icon="monitor" hidden>Webseiten</button>
           <button class="settings-tab" data-settings-tab="custom" data-icon="star" hidden>Eigene Seiten</button>
           <button class="settings-tab" data-settings-tab="display" data-icon="eye">Darstellung</button>
           <button class="settings-tab" data-settings-tab="behavior" data-icon="settings">Verhalten</button>
-          <button class="settings-tab" data-settings-tab="security" data-icon="lock">Sicherheit</button>
+          <button class="settings-tab" data-settings-tab="security" data-settings-advanced data-icon="lock">Sicherheit</button>
           <button class="settings-tab" data-settings-tab="bungie" data-icon="target">Bungie</button>
-          <button class="settings-tab" data-settings-tab="diag" data-icon="chart">Diagnose</button>
+          <button class="settings-tab" data-settings-tab="diag" data-settings-advanced data-icon="chart">Diagnose</button>
           <button class="settings-tab" data-settings-tab="about" data-icon="info">Über</button>
         </nav>
 
@@ -1074,7 +1076,7 @@
             </details>
           </section>
 
-          <section class="settings-panel" data-settings-panel="steam">
+          <section class="settings-panel" data-settings-panel="steam" data-settings-advanced>
             <h3>Steam Input &amp; Fokus</h3>
             <p class="panel-hint">Steam Input kann den Controller im Overlay auf Tastatur/Maus umschalten. So bekommt Destiny 2 keine Gamepad-Eingaben, während das Overlay fokussiert ist. Das Tool bleibt dabei vollständig extern – es wird nichts in das Spiel injiziert.</p>
 
@@ -1562,7 +1564,7 @@
             </div>
           </section>
 
-          <section class="settings-panel" data-settings-panel="security">
+          <section class="settings-panel" data-settings-panel="security" data-settings-advanced>
             <h3>Sicherheit</h3>
             <p class="panel-hint">Zugriffsschutz, lokale Schnittstellen und Sicherungen der Konfiguration.</p>
             <details class="settings-group" open>
@@ -1814,7 +1816,7 @@
             </details>
           </section>
 
-          <section class="settings-panel" data-settings-panel="diag">
+          <section class="settings-panel" data-settings-panel="diag" data-settings-advanced>
             <h3>Diagnose</h3>
 
             <details class="settings-group" open>

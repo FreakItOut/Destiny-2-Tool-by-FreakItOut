@@ -65,6 +65,13 @@
     return `${date.getFullYear()}-${month}-${day}`;
   }
 
+  // Kalendertage statt 24h-Schritten: bleibt über Sommer-/Winterzeit stabil.
+  function shiftDays(ms, delta) {
+    const date = new Date(ms);
+    date.setDate(date.getDate() + delta);
+    return date.getTime();
+  }
+
   function dayLabel(ms) {
     const date = new Date(ms);
     return `${date.getDate()}.${date.getMonth() + 1}.`;
@@ -112,7 +119,7 @@
     }
 
     const inWindow = (days) => {
-      const start = today - (days - 1) * DAY_MS;
+      const start = shiftDays(today, -(days - 1));
       return items.filter((item) => item.time >= start);
     };
     const last7 = inWindow(7);
@@ -130,7 +137,7 @@
 
     const recentDays = [];
     for (let index = 13; index >= 0; index -= 1) {
-      const start = today - index * DAY_MS;
+      const start = shiftDays(today, -index);
       const bucket = dayMap.get(dayKey(start)) || { count: 0, minutes: 0 };
       recentDays.push({
         key: dayKey(start),
@@ -145,11 +152,11 @@
     // Heatmap: 12 volle Wochen, Montag als erste Zeile. Die letzte
     // Woche endet am Sonntag; zukünftige Tage bleiben leer.
     const weekday = (new Date(today).getDay() + 6) % 7;
-    const heatStart = today - (weekday + 11 * 7) * DAY_MS;
+    const heatStart = shiftDays(today, -(weekday + 11 * 7));
     const heatDays = [];
     let heatMax = 1;
     for (let index = 0; index < 84; index += 1) {
-      const start = heatStart + index * DAY_MS;
+      const start = shiftDays(heatStart, index);
       const key = dayKey(start);
       const bucket = dayMap.get(key) || { count: 0, minutes: 0 };
       heatMax = Math.max(heatMax, bucket.count);
@@ -166,7 +173,7 @@
 
     let streak = 0;
     for (let index = 0; index < 366; index += 1) {
-      const count = (dayMap.get(dayKey(today - index * DAY_MS)) || {}).count || 0;
+      const count = (dayMap.get(dayKey(shiftDays(today, -index))) || {}).count || 0;
       if (count > 0) streak += 1;
       else if (index === 0) continue;
       else break;

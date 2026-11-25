@@ -1,6 +1,14 @@
 'use strict';
 // Automatisch erzeugt von tools/make-i18n.js.
 window.__I18N_EN__ = {
+  "Trotzdem anlegen": "Apply anyway",
+  "Konflikte:": "Conflicts:",
+  "＋ Queue": "+ Queue",
+  "In die Warteschlange legen": "Add to queue",
+  "Warteschlange fertig": "Queue finished",
+  "Der Verlauf wird ab jetzt lokal gesammelt.": "History is now collected locally.",
+  "Tage lokal gespeichert.": "days stored locally.",
+  "Erweiterte Einstellungen ein-/ausblenden": "Show/hide advanced settings",
   "Keine Internetverbindung – Daten werden aktualisiert, sobald du wieder online bist.": "No internet connection – data will be refreshed as soon as you are back online.",
   "Im Overlay kannst du mit dem Controller arbeiten oder das Overlay mit der Maus durchlassen, um weiterzuspielen.": "In the overlay you can use the controller or let the mouse through to keep playing.",
   "Profile sind vollständige Snapshots (Einstellungen, Erinnerungen …). Umschalten lädt die Oberfläche neu – auch im Tray-Menü verfügbar.": "Profiles are complete snapshots (settings, reminders …). Switching reloads the interface – also available from the tray menu.",

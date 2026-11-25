@@ -1,6 +1,6 @@
 {
   "name": "frakitouts-destiny-2-tool",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Destiny 2 Tool by FreakItOut – Webseiten-Overlay mit Tastatur- und Controller-Steuerung",
   "main": "electron/main.js",
   "author": "FreakItOut",
@@ -76,6 +76,7 @@
     "plugin:pack": "node tools/make-streamdeck-plugin.js",
     "plugin:profile": "node tools/make-streamdeck-profile.js",
     "checksums": "node tools/make-checksums.js",
+    "sbom": "node tools/make-sbom.js",
     "test:package": "node tools/portable-smoke-test.js",
     "test:plugin-package": "node tools/make-streamdeck-plugin.js && node tools/make-streamdeck-profile.js && node tools/streamdeck-plugin-package-test.js",
     "test:i18n-placeholders": "node tools/i18n-placeholder-test.js",

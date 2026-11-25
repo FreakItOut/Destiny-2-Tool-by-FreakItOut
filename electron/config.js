@@ -329,6 +329,8 @@ const DEFAULTS = {
   dashboardHidden: [],
   dashboardOrder: [],
   dashboardPreset: 'all',
+  dashboardFocus: true,
+  analyticsHistory: {},
   quickActionsHidden: [],
   // Automatisches, mit Windows safeStorage verschlüsseltes Backup.
   backup: { autoEncrypted: true },
@@ -1002,6 +1004,18 @@ function normalize(raw) {
   merged.dashboardHidden = (Array.isArray(merged.dashboardHidden) ? merged.dashboardHidden : []).map((id) => String(id || '').slice(0, 40)).filter(Boolean).slice(0, 20);
   merged.dashboardOrder = (Array.isArray(merged.dashboardOrder) ? merged.dashboardOrder : []).map((id) => String(id || '').slice(0, 40)).filter(Boolean).slice(0, 30);
   merged.dashboardPreset = ['all', 'beginner', 'pro', 'pvp', 'raid', 'custom'].includes(String(merged.dashboardPreset)) ? String(merged.dashboardPreset) : 'all';
+  merged.dashboardFocus = merged.dashboardFocus !== false;
+  const analyticsSource = isPlainObject(merged.analyticsHistory) ? merged.analyticsHistory : {};
+  const analyticsKeys = Object.keys(analyticsSource).filter((key) => /^\d{4}-\d{2}-\d{2}$/.test(key)).sort().slice(-180);
+  merged.analyticsHistory = {};
+  for (const key of analyticsKeys) {
+    const entry = analyticsSource[key];
+    if (!isPlainObject(entry)) continue;
+    merged.analyticsHistory[key] = {
+      count: Math.max(0, Math.round(Number(entry.count) || 0)),
+      minutes: Math.max(0, Math.round(Number(entry.minutes) || 0))
+    };
+  }
   merged.quickActionsHidden = (Array.isArray(merged.quickActionsHidden) ? merged.quickActionsHidden : []).map((id) => String(id || '').slice(0, 40)).filter(Boolean).slice(0, 20);
   if (!isPlainObject(merged.backup)) merged.backup = { autoEncrypted: true };
   merged.backup = { autoEncrypted: merged.backup.autoEncrypted !== false };
