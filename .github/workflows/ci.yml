@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Installieren
+        run: npm ci
+
+      - name: Syntax/Struktur prüfen
+        run: npm run check
+
+      - name: Übersetzungen prüfen
+        run: npm run test:i18n
+
+      - name: OAuth-Tests (Fake-Bungie)
+        run: npm run test:oauth
+
+      - name: Konfigurations-Persistenz
+        run: npm run test:config
+
+      - name: Smoke-Test
+        run: npm run smoke
+
+      - name: E2E (Standard-Edition)
+        run: npm run e2e
+        env:
+          D2_E2E_SKIP_LE: "1"
+
+      - name: Veröffentlichungs-Prüfung (nur Standard-Edition)
+        run: npm run release:check
+
+      - name: Build (portable + Installer)
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run dist
