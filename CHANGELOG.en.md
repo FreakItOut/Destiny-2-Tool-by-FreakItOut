@@ -6,6 +6,27 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] – 2026-11-25
+
+### Added
+
+- **Dashboard analytics** – new “Activity analytics” card with 7/30-day KPIs
+  (activities, raids/dungeons, Grandmaster, PvP incl. Trials, K/D, streak,
+  play time), a 14-day bar chart, a 12-week heatmap, category distribution
+  and top activities.
+- **Longer activity history** – Bungie history is now loaded for all
+  characters with up to 100 entries each (deduplicated, sorted by date) and
+  enriched with mode type, activity type and mode category. “Last activities”
+  still shows the six most recent.
+- **Shared fetch** – analytics and the activity list share cache and request;
+  “Reload” refreshes both cards.
+- **Tests** – new analytics test (27 checks) and five E2E checks for KPIs,
+  bars, heatmap and categories.
+
+### Changed
+
+- Version **1.3.0**; E2E now has **482 steps**, app features **73**.
+
 ## [1.2.0] – 2026-11-25
 
 ### Added

@@ -6,6 +6,27 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.3.0] – 2026-11-25
+
+### Hinzugefügt
+
+- **Dashboard-Analytik** – neue Karte „Aktivitäts-Analyse“ mit KPIs für
+  7/30 Tage (Aktivitäten, Raids/Dungeons, Großmeister, PvP inkl. Prüfungen,
+  K/D, Serie, Spielzeit), 14-Tage-Balkendiagramm, 12-Wochen-Heatmap,
+  Kategorienverteilung und Top-Aktivitäten.
+- **Längerer Aktivitätsverlauf** – die Bungie-Historie wird jetzt für alle
+  Charaktere mit bis zu 100 Einträgen je Charakter geladen (dedupliziert,
+  nach Datum sortiert) und um Modus-Typ, Aktivitätstyp und Modus-Kategorie
+  ergänzt. „Letzte Aktivitäten“ zeigt weiterhin die jüngsten sechs.
+- **Gemeinsamer Abruf** – Analyse und Aktivitätenliste teilen sich Cache und
+  Request; „Neu laden“ aktualisiert beide Karten.
+- **Tests** – neuer Analytik-Test (27 Prüfungen) und fünf E2E-Prüfungen für
+  KPIs, Balken, Heatmap und Kategorien.
+
+### Geändert
+
+- Version **1.3.0**; E2E umfasst jetzt **482 Schritte**, App-Features **73**.
+
 ## [1.2.0] – 2026-11-25
 
 ### Hinzugefügt

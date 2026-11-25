@@ -4655,6 +4655,9 @@ async function loadActivityDefs(apiKey) {
     try {
       const cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
       if (cached && cached.activities && cached.modes) {
+        // Ältere Caches kennen modeCategories noch nicht; die
+        // Klassifizierung fällt dann auf Typen und Namen zurück.
+        if (!cached.modeCategories) cached.modeCategories = {};
         bungieActivityDefs = cached;
         return bungieActivityDefs;
       }
@@ -4689,6 +4692,8 @@ async function loadActivityDefs(apiKey) {
     };
   }
   const modes = {};
+  // 0 = keine Angabe, 1 = PvE, 2 = PvP, 3 = PvE-competitive (Gambit).
+  const modeCategories = {};
   for (const [hash, def] of Object.entries(modeDefs || {})) {
     const display = def && def.displayProperties ? def.displayProperties : {};
     const name = String(display.name || '');
@@ -4697,9 +4702,14 @@ async function loadActivityDefs(apiKey) {
     // activityDetails.mode liefert den Enum-Wert (DestinyActivityModeType),
     // nicht den Definitions-Hash. Beide Schlüssel aufnehmen.
     const modeType = Number(def && def.modeType);
-    if (Number.isFinite(modeType) && modeType > 0) modes[String(modeType)] = name;
+    const category = Number(def && def.activityModeCategory) || 0;
+    if (Number.isFinite(modeType) && modeType > 0) {
+      modes[String(modeType)] = name;
+      if (category) modeCategories[String(modeType)] = category;
+    }
+    if (category) modeCategories[hash] = category;
   }
-  bungieActivityDefs = { activities, modes };
+  bungieActivityDefs = { activities, modes, modeCategories };
   try {
     fs.mkdirSync(path.dirname(cachePath), { recursive: true });
     fs.writeFileSync(cachePath, JSON.stringify(bungieActivityDefs), 'utf8');
@@ -6762,41 +6772,66 @@ async function fetchActivitySummary(force) {
     const resolved = await resolveDestinyMemberWithCharacters();
     if (!resolved) return { ok: false, error: 'Kein Destiny-Konto mit Charakterdaten gefunden.' };
     const characters = (resolved.response && resolved.response.characters && resolved.response.characters.data) || {};
-    const character = Object.values(characters)
-      .sort((a, b) => Date.parse(String(b.dateLastPlayed || '')) - Date.parse(String(a.dateLastPlayed || '')))[0];
-    if (!character) return { ok: false, error: 'Kein Charakter gefunden.' };
+    const characterList = Object.values(characters)
+      .filter((entry) => entry && entry.characterId)
+      .sort((a, b) => Date.parse(String(b.dateLastPlayed || '')) - Date.parse(String(a.dateLastPlayed || '')));
+    if (!characterList.length) return { ok: false, error: 'Kein Charakter gefunden.' };
+    const defs = await loadActivityDefs(bungieApiKey().trim())
+      .catch(() => ({ activities: {}, modes: {}, modeCategories: {} }));
     // Stats-Endpunkte liegen unter /Account/ (nicht /Profile/) – mit
     // /Profile/ antwortet Bungie nur mit einer HTML-404-Seite.
-    const history = await bungieAuthedFetchJson(
-      `https://www.bungie.net/Platform/Destiny2/${resolved.member.membershipType}/Account/${resolved.member.membershipId}/Character/${character.characterId}/Stats/Activities/?count=6&page=0&mode=0`
-    );
-    const entries = ((history && history.Response && history.Response.activities) || []).slice(0, 6);
-    const defs = await loadActivityDefs(bungieApiKey().trim()).catch(() => ({ activities: {}, modes: {} }));
-    const recent = [];
-    for (const entry of entries) {
-      const details = entry && entry.activityDetails || {};
-      const hash = Math.round(Number(details.referenceId || details.directorActivityHash) || 0);
-      const values = (entry && entry.values) || {};
-      const statValue = (key) => Number(values[key] && values[key].basic && values[key].basic.value) || 0;
-      const rawValue = (key) => (values[key] && values[key].basic ? values[key].basic.value : null);
-      const duration = statValue('activityDurationSeconds');
-      const completedValue = rawValue('completed');
-      const name = (defs.activities[String(hash)] && defs.activities[String(hash)].name) || `Aktivität ${hash}`;
-      const mode = defs.modes[String(details.mode)] || '';
-      recent.push({
-        // Bei Stats/Activities heißt die Instanz "instanceId"; der
-        // frühere Code las ein nicht vorhandenes "activityId".
-        activityId: String(details.instanceId || entry.activityId || ''),
-        name,
-        mode,
-        date: String(entry.period || ''),
-        durationSeconds: duration,
-        completed: completedValue === true || /completed/i.test(String(rawValue('completionReason') || details.completionReason || '')),
-        kills: statValue('kills'),
-        deaths: statValue('deaths'),
-        assists: statValue('assists')
+    // 100 Einträge je Charakter reichen für Heatmap und 30-Tage-Charts.
+    const fetchHistory = async (character) => {
+      const history = await bungieAuthedFetchJson(
+        `https://www.bungie.net/Platform/Destiny2/${resolved.member.membershipType}/Account/${resolved.member.membershipId}/Character/${character.characterId}/Stats/Activities/?count=100&page=0&mode=0`
+      );
+      const entries = (history && history.Response && history.Response.activities) || [];
+      return entries.map((entry) => {
+        const details = entry && entry.activityDetails || {};
+        const hash = Math.round(Number(details.referenceId || details.directorActivityHash) || 0);
+        const values = (entry && entry.values) || {};
+        const statValue = (key) => Number(values[key] && values[key].basic && values[key].basic.value) || 0;
+        const rawValue = (key) => (values[key] && values[key].basic ? values[key].basic.value : null);
+        const modeType = Math.round(Number(details.mode) || 0);
+        const name = (defs.activities[String(hash)] && defs.activities[String(hash)].name) || `Aktivität ${hash}`;
+        return {
+          // Bei Stats/Activities heißt die Instanz "instanceId"; der
+          // frühere Code las ein nicht vorhandenes "activityId".
+          activityId: String(details.instanceId || entry.activityId || ''),
+          name,
+          mode: defs.modes[String(modeType)] || '',
+          modeType,
+          modeCategory: Number((defs.modeCategories || {})[String(modeType)] || 0),
+          activityHash: hash,
+          activityType: String((defs.activities[String(hash)] && defs.activities[String(hash)].type) || ''),
+          characterId: String(character.characterId || ''),
+          classType: Number(character.classType) || 0,
+          date: String(entry.period || ''),
+          durationSeconds: statValue('activityDurationSeconds'),
+          completed: rawValue('completed') === true || /completed/i.test(String(rawValue('completionReason') || details.completionReason || '')),
+          kills: statValue('kills'),
+          deaths: statValue('deaths'),
+          assists: statValue('assists')
+        };
       });
+    };
+    const settled = await Promise.allSettled(characterList.map((character) => fetchHistory(character)));
+    const recent = [];
+    const seen = new Set();
+    for (const result of settled) {
+      if (result.status !== 'fulfilled') continue;
+      for (const entry of result.value) {
+        const key = entry.activityId || `${entry.date}|${entry.name}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        recent.push(entry);
+      }
     }
+    if (!recent.length) {
+      const failure = settled.find((result) => result.status === 'rejected');
+      return { ok: false, error: (failure && failure.reason && (failure.reason.message || String(failure.reason))) || 'Keine Aktivitäten im Verlauf gefunden.' };
+    }
+    recent.sort((a, b) => Date.parse(String(b.date || '')) - Date.parse(String(a.date || '')));
     // PGCR nur als Rückfall, wenn die Statistikwerte fehlen.
     const missingKda = recent[0] && !recent[0].kills && !recent[0].deaths && !recent[0].assists;
     if (recent[0] && recent[0].activityId && missingKda) {

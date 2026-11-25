@@ -13,9 +13,9 @@ Laufzeit-Abhängigkeiten außer Electron selbst.
 
 Die fertigen Windows-Builds liegen unter **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.2.0.exe`** – portable Version, keine
+- **`Destiny.2.Tool.by.FreakItOut.1.3.0.exe`** – portable Version, keine
   Installation nötig.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.2.0.exe`** – Installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.3.0.exe`** – Installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optionales Stream-Deck-Plugin.
 - **`streamdeck-profile.json`** – passende Stream-Deck-Belegung.
 - **`SHA256SUMS.txt`** – Prüfsummen aller Dateien.
@@ -229,6 +229,9 @@ Leisten-Elemente lassen sich als **Layout-Profil** speichern (Einstellungen
   Xûr-Historie mit „neu“/„nicht mehr im Angebot“.
 - **Wochen-Dashboard:** Gruppierung nach GM/Nightfall, Raid, Dungeon, Trials,
   Eisenbanner, Saison; Erinnerung pro Aktivität.
+- **Aktivitäts-Analyse:** KPIs für 7/30 Tage (Aktivitäten, Raids/Dungeons, GM,
+  PvP, K/D, Serie, Spielzeit), 14-Tage-Balken, 12-Wochen-Heatmap, Kategorien
+  und Top-Aktivitäten. Teilt sich den Abruf mit „Letzte Aktivitäten“.
 - **Overlay:** Stat-HUD zeigt optional aktuelle Aktivität und Champion-Fähigkeiten.
 - **Sicherheit:** verschlüsseltes Konfig-Backup (Passwort, AES-256-GCM),
   API-Status (Anfragen/429/Queue), automatischer Renderer-Neustart.

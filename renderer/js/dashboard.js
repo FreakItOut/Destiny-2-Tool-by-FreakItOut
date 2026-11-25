@@ -889,31 +889,39 @@ export function createDashboard(ctx) {
 
   let seasonGoalsState = null;
   let seasonGoalsLoading = false;
-  let postGameState = null;
-  let postGameLoading = false;
+
+  // „Letzte Aktivitäten“ und die Analyse teilen sich einen Abruf.
+  let activityFeed = { at: 0, entries: null };
+  let activityFeedPromise = null;
+  async function loadActivityFeed(force) {
+    if (!ctx.api || typeof ctx.api.bungieActivitySummary !== 'function') {
+      throw new Error('Aktivitäts-Zusammenfassung ist in dieser Version nicht verfügbar.');
+    }
+    if (!force && activityFeed.entries && Date.now() - activityFeed.at < 2 * 60 * 1000) return activityFeed.entries;
+    if (!activityFeedPromise) {
+      activityFeedPromise = ctx.api.bungieActivitySummary(force === true)
+        .then((result) => {
+          if (!result || !result.ok) throw new Error((result && result.error) || 'Keine Aktivitäten verfügbar.');
+          activityFeed = { at: Date.now(), entries: Array.isArray(result.entries) ? result.entries : [] };
+          return activityFeed.entries;
+        })
+        .finally(() => {
+          activityFeedPromise = null;
+        });
+    }
+    return activityFeedPromise;
+  }
 
   async function renderPostGame(force) {
     const body = qs('#dashPostGameBody');
     const meta = qs('#dashPostGameMeta');
-    if (!body || postGameLoading) return;
-    if (!force && postGameState && Date.now() - postGameState.at < 2 * 60 * 1000) return;
-    if (!ctx.api || typeof ctx.api.bungieActivitySummary !== 'function') {
-      body.innerHTML = '<span class="dash-muted">Aktivitäts-Zusammenfassung ist in dieser Version nicht verfügbar.</span>';
-      return;
-    }
-    postGameLoading = true;
-    if (!postGameState) body.innerHTML = '<span class="dash-muted">Lade letzte Aktivitäten …</span>';
+    if (!body) return;
+    if (!activityFeed.entries) body.innerHTML = '<span class="dash-muted">Lade letzte Aktivitäten …</span>';
     try {
-      const result = await ctx.api.bungieActivitySummary(force === true);
-      if (!result || !result.ok) {
-        body.innerHTML = '<span class="dash-muted">' + esc((result && result.error) || 'Keine Aktivitäten verfügbar.') + '</span>';
-        return;
-      }
-      const entries = Array.isArray(result.entries) ? result.entries : [];
-      postGameState = { at: Date.now(), entries };
+      const entries = await loadActivityFeed(force);
       if (meta) meta.textContent = entries.length ? `${entries.length} Aktivitäten` : '';
       body.innerHTML = entries.length
-        ? entries.map((entry) => {
+        ? entries.slice(0, 6).map((entry) => {
           const date = entry.date ? new Date(entry.date).toLocaleString(LOCALE(), { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : '';
           const duration = Number(entry.durationSeconds) ? `${Math.round(Number(entry.durationSeconds) / 60)} Min` : '';
           const kda = (Number(entry.kills) || Number(entry.deaths) || Number(entry.assists))
@@ -925,8 +933,74 @@ export function createDashboard(ctx) {
         : '<span class="dash-muted">Keine Aktivitäten im Verlauf gefunden.</span>';
     } catch (error) {
       body.innerHTML = '<span class="dash-muted">' + esc(error.message || String(error)) + '</span>';
-    } finally {
-      postGameLoading = false;
+    }
+  }
+
+  // ---------- Aktivitäts-Analyse: KPIs, 14 Tage, Heatmap, Kategorien ----
+  function analyticsKpi(value, label, hint) {
+    return `<div class="dash-kpi"${hint ? ` title="${esc(hint)}"` : ''}><b>${esc(value)}</b><span>${esc(label)}</span></div>`;
+  }
+
+  function analyticsHtml(stats) {
+    const categoryMax = Math.max(1, ...stats.allCategories.map((entry) => entry.count));
+    const kpis = [
+      analyticsKpi(stats.last7, 'Aktivitäten 7 Tage', `${stats.minutes7} Minuten in 7 Tagen`),
+      analyticsKpi(stats.raidDungeon30, 'Raids & Dungeons', 'in den letzten 30 Tagen'),
+      analyticsKpi(stats.grandmaster30, 'Großmeister', 'in den letzten 30 Tagen'),
+      analyticsKpi(stats.pvp30, 'PvP-Matches', 'inkl. Prüfungen, letzte 30 Tage'),
+      analyticsKpi(stats.kd7.toFixed(2), 'K/D (7 Tage)', `${stats.kills7} Kills · ${stats.deaths7} Tode`),
+      analyticsKpi(stats.streak, 'Tage in Folge', 'mit mindestens einer Aktivität'),
+      analyticsKpi(`${stats.minutes7} Min`, 'Spielzeit 7 Tage', `${stats.minutes30} Minuten in 30 Tagen`)
+    ].join('');
+    const bars = stats.recentDays.map((day) => {
+      const percent = Math.round((day.count / stats.recentMax) * 100);
+      return `<span class="dash-bar"${day.count ? '' : ' data-empty="1"'} title="${esc(day.title)}">` +
+        `<i style="height:${percent}%"></i><small>${esc(day.label)}</small></span>`;
+    }).join('');
+    const heat = stats.heatDays.map((day) =>
+      `<i data-level="${day.level}"${day.future ? ' data-future="1"' : ''} title="${esc(day.title)}"></i>`
+    ).join('');
+    const categories = stats.allCategories
+      .filter((entry) => entry.count > 0)
+      .map((entry) => {
+        const percent = Math.max(2, Math.round((entry.count / categoryMax) * 100));
+        return `<div class="dash-cat"><span>${esc(entry.label)}</span>` +
+          `<span class="dash-cat-bar"><i style="width:${percent}%"></i></span>` +
+          `<b>${entry.count}</b></div>`;
+      }).join('');
+    const top = stats.top
+      .map((entry) => `<div class="dash-row"><strong>${esc(entry.name)}</strong><span>${entry.count}× · ${entry.minutes} Min</span></div>`)
+      .join('');
+    return `<div class="dash-analytics-kpis">${kpis}</div>` +
+      `<div class="dash-analytics-grid">` +
+        `<div class="dash-analytics-block"><strong>Letzte 14 Tage</strong><div class="dash-bars">${bars}</div></div>` +
+        `<div class="dash-analytics-block"><strong>Wochen-Heatmap</strong>` +
+          `<div class="dash-heatmap" role="img" aria-label="Aktivitäten der letzten 12 Wochen">${heat}</div>` +
+          `<div class="dash-heatmap-legend">Wenig <i data-level="1"></i><i data-level="2"></i><i data-level="3"></i><i data-level="4"></i> Viel</div>` +
+        `</div>` +
+      `</div>` +
+      `<div class="dash-analytics-block"><strong>Aktivitäten 30 Tage</strong><div class="dash-cat-list">${categories || '<span class="dash-muted">Noch keine Kategorien.</span>'}</div></div>` +
+      `<div class="dash-analytics-block"><strong>Top-Aktivitäten</strong>${top || '<span class="dash-muted">Noch keine Aktivitäten.</span>'}</div>`;
+  }
+
+  async function renderAnalytics(force) {
+    const body = qs('#dashAnalyticsBody');
+    const meta = qs('#dashAnalyticsMeta');
+    if (!body) return;
+    if (!window.D2DashboardAnalytics) {
+      body.innerHTML = '<span class="dash-muted">Analyse ist in dieser Version nicht verfügbar.</span>';
+      return;
+    }
+    if (!activityFeed.entries) body.innerHTML = '<span class="dash-muted">Lade Aktivitäts-Analyse …</span>';
+    try {
+      const entries = await loadActivityFeed(force);
+      const stats = window.D2DashboardAnalytics.buildActivityAnalytics(entries);
+      if (meta) meta.textContent = stats.hasData ? `${stats.last30} in 30 Tagen` : '';
+      body.innerHTML = stats.hasData
+        ? analyticsHtml(stats)
+        : '<span class="dash-muted">Noch keine Aktivitäten im Verlauf gefunden.</span>';
+    } catch (error) {
+      body.innerHTML = '<span class="dash-muted">' + esc(error.message || String(error)) + '</span>';
     }
   }
   async function renderSeasonGoals(force) {
@@ -1338,6 +1412,12 @@ export function createDashboard(ctx) {
     dashboardPanel.addEventListener('click', (event) => {
       if (event.target.closest('[data-dash-postgame-refresh]')) {
         renderPostGame(true);
+        renderAnalytics(false);
+        return;
+      }
+      if (event.target.closest('[data-dash-analytics-refresh]')) {
+        renderAnalytics(true);
+        renderPostGame(false);
         return;
       }
       if (event.target.closest('[data-dash-more]')) {
@@ -1745,6 +1825,7 @@ export function createDashboard(ctx) {
     renderCharacterMatrix();
     renderSeasonGoals(false);
     renderPostGame(false);
+    renderAnalytics(false);
     renderDashboardNews(false);
     renderStatusCards();
   }

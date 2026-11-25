@@ -110,6 +110,11 @@ check('Werkzeugkarten ohne Lazy-Paint-Höhensprung', dashboardCss.includes('cont
 check('Scroll-Restore statt Browser-Anchoring', /overflow-anchor:\s*none/.test(styles));
 check('Kein Lazy-Paint mit falschen Höhen', !/content-visibility:\s*auto/.test(dashboardCss + toolsCss + styles));
 check('Sticky-Navigation ohne Backdrop-Blur', !/\.inv-tools-nav\s*\{[^}]*backdrop-filter\s*:/s.test(toolsCss));
+const dashboardJs = read('renderer/js/dashboard.js');
+const analyticsJs = read('renderer/js/dashboard-analytics.js');
+check('Dashboard hat Aktivitäts-Analyse',
+  dashboardJs.includes('dashAnalyticsBody') && dashboardJs.includes('buildActivityAnalytics') &&
+  analyticsJs.includes('buildActivityAnalytics') && index.includes('dashboard-analytics.js') && index.includes('dashAnalytics'));
 check('Destiny-2-Beenden vollständig entfernt', !/quitGame|game:quit|overlayQuitGameBtn/.test(app + index + main + preload + config + settings));
 check('Händler-Verfügbarkeit erklärt', tools.includes('dim-vendors-hint') && tools.includes('Xûr erscheint Freitag bis Dienstag'));
 check('Inventar nutzt Fenster-/Chunk-Rendering', inventory.includes('chunkedLists') && inventory.includes('content-visibility: auto') && inventory.includes('data-inv-chunk'));

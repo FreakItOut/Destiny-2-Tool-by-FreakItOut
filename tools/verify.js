@@ -34,6 +34,7 @@ const ALL = [
   { script: 'test:api-contract', label: 'API-Contract', timeout: 120000 },
   { script: 'test:fixtures', label: 'Bungie-Fixtures', timeout: 120000 },
   { script: 'test:large-vault', label: 'Große Tresore', timeout: 180000 },
+  { script: 'test:dashboard-analytics', label: 'Dashboard-Analytik', timeout: 120000 },
   { script: 'test:i18n-qa', label: 'i18n-QA', timeout: 120000 },
   { script: 'test:app-features', label: 'App-Features', timeout: 120000 },
   { script: 'test:gamepad-ui', label: 'Controller-Auswahl', timeout: 120000 },

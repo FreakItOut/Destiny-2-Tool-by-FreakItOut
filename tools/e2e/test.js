@@ -352,7 +352,35 @@ const api = {
     ]
   }),
   bungieSeasonChallenges: async () => ({ ok: true, seasonName: 'Test-Saison', completed: 1, items: [{ name: 'Saison-Ziel Test', progress: 2, completion: 5, complete: false }] }),
-  bungieActivitySummary: async () => ({ ok: true, entries: [{ name: 'Test-Aktivität', mode: 'Nightfall', date: '2026-11-20T20:00:00Z', durationSeconds: 900, completed: true, kills: 42, deaths: 1, assists: 7 }] }),
+  bungieActivitySummary: async () => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    const defs = [
+      { name: 'Test-Aktivität', mode: 'Nightfall', modeType: 15, modeCategory: 1 },
+      { name: 'Test-Raid', mode: 'Raid', modeType: 4, modeCategory: 1, activityType: '608898761' },
+      { name: 'Test-Dungeon', mode: 'Dungeon', modeType: 82, modeCategory: 1, activityType: '2889152536' },
+      { name: 'Großmeister-Nightfall', mode: 'Nightfall', modeType: 15, modeCategory: 1 },
+      { name: 'Test-Nightfall', mode: 'Nightfall', modeType: 15, modeCategory: 1 },
+      { name: 'Schmelztiegel', mode: 'Schmelztiegel', modeType: 5, modeCategory: 2 },
+      { name: 'Gambit', mode: 'Gambit', modeType: 48, modeCategory: 3 },
+      { name: 'Prüfungen', mode: 'Prüfungen', modeType: 84, modeCategory: 2 }
+    ];
+    const entries = [];
+    for (let index = 0; index < 40; index += 1) {
+      const def = defs[index % defs.length];
+      entries.push({
+        activityId: `e2e-act-${index}`,
+        ...def,
+        date: new Date(now - index * day).toISOString(),
+        durationSeconds: 600 + index * 30,
+        completed: true,
+        kills: 20 + index,
+        deaths: 2,
+        assists: 5
+      });
+    }
+    return { ok: true, entries };
+  },
   bungieCraftables: async () => ({ ok: true, craftables: payload.craftables }),
   actionsRecent: async () => ({ ok: true, items: [{ at: Date.now(), kind: 'transfer', detail: { itemId: 'i-1' } }] }),
   bungieClan: async () => ({ ok: true, clan: { name: 'Test-Clan', motto: 'Hallo', memberCount: 2 }, members: [{ name: 'Hüter#1' }, { name: 'Hüter#2' }] }),
@@ -1926,6 +1954,24 @@ async function run() {
   check('Dashboard ohne entfernte Wochenkarte', !/Fehlt noch diese Woche/.test(dashText()));
   check('Dashboard lädt Saison-Ziele initial', /Saison-Ziel Test/.test(dashText()), dashText().slice(0, 260));
   check('Dashboard zeigt letzte Aktivitäten', /Letzte Aktivitäten/.test(dashText()) && /Test-Aktivität/.test(dashText()), dashText().slice(0, 300));
+  const analyticsBody = dashPanel && dashPanel.querySelector('#dashAnalyticsBody');
+  const analyticsText = () => (analyticsBody && analyticsBody.textContent) || '';
+  check('Dashboard zeigt Aktivitäts-Analyse',
+    /Aktivitäten 7 Tage/.test(analyticsText()) && /Raids & Dungeons/.test(analyticsText()) && /Tage in Folge/.test(analyticsText()),
+    analyticsText().slice(0, 200));
+  check('Aktivitäts-Analyse zeigt 14-Tage-Balken',
+    Boolean(analyticsBody) && analyticsBody.querySelectorAll('.dash-bar').length === 14,
+    analyticsBody ? analyticsBody.querySelectorAll('.dash-bar').length : -1);
+  check('Aktivitäts-Analyse zeigt 12-Wochen-Heatmap',
+    Boolean(analyticsBody) && analyticsBody.querySelectorAll('.dash-heatmap i').length === 84,
+    analyticsBody ? analyticsBody.querySelectorAll('.dash-heatmap i').length : -1);
+  check('Aktivitäts-Analyse zeigt Kategorien',
+    Boolean(analyticsBody) && analyticsBody.querySelectorAll('.dash-cat').length >= 5,
+    analyticsBody ? analyticsBody.querySelectorAll('.dash-cat').length : -1);
+  const analyticsKpis = analyticsBody ? [...analyticsBody.querySelectorAll('.dash-kpi b')].map((el) => el.textContent) : [];
+  check('Aktivitäts-Analyse berechnet KPIs',
+    analyticsKpis[0] === '7' && analyticsKpis[1] === '8' && analyticsKpis[2] === '4' && analyticsKpis[3] === '7' && analyticsKpis[5] === '40',
+    analyticsKpis.join(','));
   check('Dashboard hat Digest und Support', Boolean(dashPanel.querySelector('[data-dash-digest]')) && Boolean(dashPanel.querySelector('[data-dash-support]')));
   check('Klasse heißt Warlock statt Beschwörer', !/Beschwörer/.test(document.body.textContent || ''));
   const enDict = window.__I18N_EN__ || {};

@@ -74,6 +74,12 @@
         </h4>
         <div id="dashPostGameBody" class="dash-body"></div>
       </section>
+      <section class="dash-card dash-wide" id="dashAnalytics">
+        <h4>Aktivitäts-Analyse <span id="dashAnalyticsMeta" class="dash-h4-meta"></span>
+          <button type="button" class="btn ghost small" data-dash-analytics-refresh>Neu laden</button>
+        </h4>
+        <div id="dashAnalyticsBody" class="dash-body dash-analytics"></div>
+      </section>
       <section class="dash-card dash-wide" id="dashTriumph">
         <h4>Triumph-Fortschritt <span id="dashTriumphMeta" class="dash-h4-meta"></span></h4>
         <div id="dashTriumphBody" class="dash-body"></div>
@@ -143,6 +149,7 @@
   <script>window.__D2_E2E = true;</script>
   <script src="/renderer/js/i18n-en.js"></script>
   <script src="/renderer/js/i18n.js"></script>
+  <script src="/renderer/js/dashboard-analytics.js"></script>
   <script type="module" src="./test.js"></script>
 </body>
 </html>
