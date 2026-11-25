@@ -1,8 +1,8 @@
 {
   "SDKVersion": 2,
   "UUID": "com.freakitout.d2tool",
-  "Name": "Destiny 2 Tool",
-  "Version": "1.0.0",
+  "Name": "Destiny 2 Tool by FreakItOut",
+  "Version": "1.1.0",
   "Author": "FreakItOut",
   "Description": "Stream-Deck-Steuerung für Destiny 2 Tool by FreakItOut",
   "Category": "Destiny 2 Tool",
@@ -205,7 +205,7 @@
       "UUID": "com.freakitout.d2tool.champion",
       "Name": "Champion-Deckung",
       "Icon": "imgs/action",
-      "Tooltip": "Zeigt die Champion-Abdeckung des aktiven H?ters",
+      "Tooltip": "Zeigt die Champion-Abdeckung des aktiven Hüters",
       "Controllers": [
         "Keypad"
       ],
@@ -251,9 +251,9 @@
     },
     {
       "UUID": "com.freakitout.d2tool.vendor.watch",
-      "Name": "H?ndler-Beobachtung",
+      "Name": "Händler-Beobachtung",
       "Icon": "imgs/action",
-      "Tooltip": "?ffnet die H?ndler-Beobachtung",
+      "Tooltip": "Öffnet die Händler-Beobachtung",
       "Controllers": [
         "Keypad"
       ],
@@ -269,7 +269,7 @@
       "UUID": "com.freakitout.d2tool.routine",
       "Name": "Wochen-Routine",
       "Icon": "imgs/action",
-      "Tooltip": "Postfach, H?ndler und Wochenseite nacheinander",
+      "Tooltip": "Postfach, Händler und Wochenseite nacheinander",
       "Controllers": [
         "Keypad"
       ],
@@ -285,7 +285,7 @@
       "UUID": "com.freakitout.d2tool.session.goal",
       "Name": "Session-Ziel",
       "Icon": "imgs/action",
-      "Tooltip": "Zeigt und erh?ht ein Session-Ziel",
+      "Tooltip": "Zeigt und erhöht ein Session-Ziel",
       "Controllers": [
         "Keypad"
       ],
@@ -299,9 +299,9 @@
     },
     {
       "UUID": "com.freakitout.d2tool.reset.dial",
-      "Name": "Reset/X?r-Dial",
+      "Name": "Reset/Xûr-Dial",
       "Icon": "imgs/action",
-      "Tooltip": "Reset- und X?r-Countdown per Drehregler",
+      "Tooltip": "Reset- und Xûr-Countdown per Drehregler",
       "Controllers": [
         "Encoder"
       ],
@@ -322,9 +322,9 @@
     },
     {
       "UUID": "com.freakitout.d2tool.activity",
-      "Name": "Aktivit?t",
+      "Name": "Aktivität",
       "Icon": "imgs/action",
-      "Tooltip": "Aktuelle Aktivit?t und fehlende Champions",
+      "Tooltip": "Aktuelle Aktivität und fehlende Champions",
       "Controllers": [
         "Keypad"
       ],
@@ -356,7 +356,7 @@
       "UUID": "com.freakitout.d2tool.notifications",
       "Name": "Benachrichtigungen",
       "Icon": "imgs/action",
-      "Tooltip": "?ffnet Dashboard und Benachrichtigungen",
+      "Tooltip": "Öffnet Dashboard und Benachrichtigungen",
       "Controllers": [
         "Keypad"
       ],
@@ -404,7 +404,7 @@
       "UUID": "com.freakitout.d2tool.emergency",
       "Name": "Notfall-Stopp",
       "Icon": "imgs/action",
-      "Tooltip": "Schlie?t Overlay und bricht Aktionen ab",
+      "Tooltip": "Schließt Overlay und bricht Aktionen ab",
       "Controllers": [
         "Keypad"
       ],
@@ -436,7 +436,7 @@
       "UUID": "com.freakitout.d2tool.cockpit",
       "Name": "Cockpit",
       "Icon": "imgs/action",
-      "Tooltip": "Stream-Deck+-Cockpit f?r Status und Aktionen",
+      "Tooltip": "Stream-Deck+-Cockpit für Status und Aktionen",
       "Controllers": [
         "Encoder"
       ],
@@ -452,6 +452,91 @@
         "TriggerDescription": {
           "Rotate": "Status wechseln",
           "Push": "Aktion ausf?hren"
+        }
+      }
+    },
+    {
+      "UUID": "com.freakitout.d2tool.health",
+      "Name": "Verbindung",
+      "Icon": "imgs/action",
+      "Tooltip": "Prüft API, Token und App-Version",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true
+    },
+    {
+      "UUID": "com.freakitout.d2tool.loadout.dial",
+      "Name": "Loadout wählen",
+      "Icon": "imgs/action",
+      "Tooltip": "Drehen: Loadout wählen, drücken: anwenden",
+      "Controllers": [
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Loadout wechseln",
+          "Push": "Loadout anwenden"
+        }
+      }
+    },
+    {
+      "UUID": "com.freakitout.d2tool.vendor.dial",
+      "Name": "Händler wählen",
+      "Icon": "imgs/action",
+      "Tooltip": "Drehen: Händler wählen, drücken: öffnen",
+      "Controllers": [
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Händler wechseln",
+          "Push": "Händler öffnen"
+        }
+      }
+    },
+    {
+      "UUID": "com.freakitout.d2tool.checklist.dial",
+      "Name": "Checkliste wählen",
+      "Icon": "imgs/action",
+      "Tooltip": "Drehen: offenen Punkt wählen, drücken: abhaken",
+      "Controllers": [
+        "Encoder"
+      ],
+      "States": [
+        {
+          "Image": "imgs/key",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "SupportedInMultiActions": true,
+      "Encoder": {
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Punkt wechseln",
+          "Push": "Punkt abhaken"
         }
       }
     }

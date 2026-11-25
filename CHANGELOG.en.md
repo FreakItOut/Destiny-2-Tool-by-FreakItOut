@@ -6,6 +6,36 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] – 2026-11-25
+
+### Added
+
+- **Stream Deck: connection action** – checks API, token and app version,
+  shows status as icon/title and opens diagnostics on failure.
+- **Stream Deck: encoders for loadouts, vendors and checklist** – rotate to
+  select, press to apply/open/tick.
+- **Stream Deck: routine recipes** – standard, postmaster, week, vendor and
+  raid prep selectable in the property inspector.
+- **Stream Deck: profile mode** – automatic profile switching by exact
+  activity or category (PvE/PvP/Gambit).
+- **Stream Deck: toggle icons** – overlay and read-only show their state as a
+  coloured icon instead of text only.
+- **Stream Deck: connection test** shows app and plugin version.
+- **Vendor page** explains why vendors are missing (Xûr Fri–Tue, Iron Banner/
+  Trials only in their week).
+
+### Fixed
+
+- **Umlauts/mojibake** in the Stream Deck manifest, property inspector and
+  plugin labels (“Händler”, “Aktivität”, “Xûr”, “Öffnet”, “Schließt” …).
+- **Mojibake in app strings** (e.g. “Größe”, “regelmäßig”, “öffentlich”)
+  caused by a faulty string repair.
+- **Version parity** between app and Stream Deck plugin is now checked.
+
+### Changed
+
+- Version **1.1.0**; Stream Deck now includes **30 actions**.
+
 ## [1.0.0] – 2026-11-25
 
 First public release.

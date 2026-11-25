@@ -3408,9 +3408,9 @@ export function initSettings({
       const minute = Math.min(59, Math.max(0, Number(match[2])));
       const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       const label = text
-        .replace(/^(\s*[A-Za-zÄÖÜäöü]{2}\s*:)?/, '')
+        .replace(/^(\s*[A-Za-zäöüÄÖÜ]{2}\s*:)?/, '')
         .replace(/(\d{1,2}:\d{2})/g, '')
-        .replace(/[:\-–·]+/g, ' ')
+        .replace(/[:\-–—]+/g, ' ')
         .trim()
         .slice(0, 60) || 'Wochenplan';
       if (existing.concat(next).some((reminder) => reminder.time === time && Number(reminder.weekday) === weekday)) {

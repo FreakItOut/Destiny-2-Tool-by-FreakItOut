@@ -3842,7 +3842,7 @@ body.tv-mode {
 body.tv-mode #app { padding: var(--tv-overscan) calc(var(--tv-overscan) * 1.5); box-sizing: border-box; }
 body.tv-mode .titlebar { gap: 10px; }
 
-/* Mindestschriftgröße für Kleinsttexte. Die Klassen im Projekt sind
+/* Mindestschriftgräöe für Kleinsttexte. Die Klassen im Projekt sind
    sprechend benannt (muted/meta/hint/sub/small), daher greift die
    Sammelregel fast überall - ohne große Überschriften zu plätten. */
 body.tv-mode :where(small, figcaption, [class*="muted"], [class*="meta"], [class*="hint"], [class*="small"], [class*="tiny"], [class*="micro"], [class*="record"] [class*="card"] small) {

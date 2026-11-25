@@ -93,10 +93,10 @@ try {
   if (process.argv.includes('--smoke')) return;
 
   // Portabler Betrieb: Daten neben der EXE ablegen, statt in %APPDATA%.
-  // Erkennung Ã¼ber:
+  // Erkennung über:
   //   1. PORTABLE_EXECUTABLE_DIR (Electron-Builder-Portable-Launcher)
   //   2. "portable"-Markerdatei neben der EXE
-  //   3. Beschreibbares EXE-Verzeichnis (fÃ¼r manuell kopierte portable EXEs)
+  //   3. Beschreibbares EXE-Verzeichnis (für manuell kopierte portable EXEs)
   let portableDir = process.env.PORTABLE_EXECUTABLE_DIR;
 
   if (!portableDir) {
@@ -9745,7 +9745,7 @@ async function performBungieTokenRefresh() {
   if (!refreshToken) {
     return {
       ok: false,
-      error: 'Kein Refresh-Token vorhanden – die Bungie-App ist vermutlich als „Öffentlicher Client“ registriert. Bungie stellt dann keinen Refresh-Token aus, deshalb ist nach ca. 1 Stunde eine neue Anmeldung nötig. Abhilfe: im Bungie-Portal „Vertraulich“ wählen, das Client-Secret hier eintragen und einmal neu anmelden.'
+      error: 'Kein Refresh-Token vorhanden – die Bungie-App ist vermutlich als „öffentlicher Client“ registriert. Bungie stellt dann keinen Refresh-Token aus, deshalb ist nach ca. 1 Stunde eine neue Anmeldung nötig. Abhilfe: im Bungie-Portal „Vertraulich“ wählen, das Client-Secret hier eintragen und einmal neu anmelden.'
     };
   }
   if (!apiKey || !clientId) return { ok: false, error: 'Bungie-Anmeldung unvollständig (API-Key/Client-ID fehlen).' };
@@ -10136,7 +10136,7 @@ function bungieOAuthStatus() {
       apiKeyLength: keyInfo.length,
       apiKeyError: keyInfo.error,
       tokenReadable,
-      // „Öffentliche“ App: angemeldet, aber Bungie hat keinen
+      // „öffentliche“ App: angemeldet, aber Bungie hat keinen
       // Refresh-Token ausgestellt → nach ~1 Stunde neue Anmeldung.
       publicClient: loggedIn && !hasRefreshToken,
       hasInventoryScope: scopes ? /ReadDestinyInventoryAndVault/i.test(scopes) : null,

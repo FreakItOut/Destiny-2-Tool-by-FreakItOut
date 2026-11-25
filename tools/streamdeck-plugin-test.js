@@ -52,6 +52,13 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   check('Plugin Status-Felder erweitert', pluginSource.includes("case 'champion'") && pluginSource.includes("case 'data'") && pluginSource.includes("case 'security'") && pluginSource.includes("case 'backup'") && pluginSource.includes("case 'session'"));
   check('Plugin Routine und Profilwechsel', pluginSource.includes('runRoutine') && pluginSource.includes('maybeSwitchProfile'));
   check('Property Inspector neue Felder', piSource.includes('id="slot"') && piSource.includes('id="mode"') && piSource.includes('id="autoProfile"') && piSource.includes('id="goal"'));
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  check('Plugin-Version passt zur App-Version', Boolean(manifest && manifest.Version === pkg.version), `${manifest && manifest.Version} / ${pkg.version}`);
+  check('Manifest ohne Mojibake', Boolean(manifest && manifest.Actions.every((action) => !/[?]/.test(`${action.Name || ''} ${action.Tooltip || ''}`) && !/[Ãâ]/.test(`${action.Name || ''} ${action.Tooltip || ''}`))));
+  check('Neue Actions vorhanden', Boolean(manifest && ['health', 'loadout.dial', 'vendor.dial', 'checklist.dial'].every((key) => manifest.Actions.some((action) => action.UUID === `com.freakitout.d2tool.${key}`))));
+  check('Plugin Health/Dials/Rezepte', ['checkHealth', 'dialKind', 'rotateDial', 'applyDialItem', 'RECIPES'].every((name) => pluginSource.includes(name)));
+  check('Plugin Toggle-Icons', pluginSource.includes('setToggleIcon') && pluginSource.includes('refreshOverlayIcons'));
+  check('Property Inspector Profilmodus/Rezept', piSource.includes('id="profileMode"') && piSource.includes('id="recipe"') && piSource.includes("profileMode: qs('profileMode')"));
 
   const server = new WebSocketServer({ port: 0, host: '127.0.0.1' });
   await new Promise((resolve, reject) => {

@@ -34,7 +34,7 @@ function send(payload) {
   try { socket.send(JSON.stringify(payload)); } catch (error) { /* Stream Deck weg */ }
 }
 
-const DEFAULT_GLOBAL = { apiUrl: 'http://127.0.0.1:7331', token: '', lang: 'de', theme: 'dark', autoProfile: false, profilePrefix: '' };
+const DEFAULT_GLOBAL = { apiUrl: 'http://127.0.0.1:7331', token: '', lang: 'de', theme: 'dark', autoProfile: false, profilePrefix: '', profileMode: 'activity' };
 const DEFAULT_SETTINGS = {
   view: 'overview',
   loadout: '',
@@ -45,6 +45,7 @@ const DEFAULT_SETTINGS = {
   slot: 0,
   mode: 'streamer',
   goal: '',
+  recipe: 'standard',
   autoProfile: false,
   profilePrefix: ''
 };
@@ -54,22 +55,36 @@ const LABELS = {
   reset: 'Reset', weekly: 'Weekly', xur: 'Xûr', focus: 'Fokus', controller: 'Controller',
   activity: 'Aktivität', game: 'Spiel', godrolls: 'Godrolls', loadouts: 'Loadouts',
   loadout: 'Loadout', nightfall: 'Nightfall', season: 'Saison', crafting: 'Crafting',
-  'xur-wishlist': 'Xûr-Wunschliste', champion: 'Champion', data: 'Daten', security: 'Sicherheit', backup: 'Backup', session: 'Session-Ziel', watch: 'Beobachtung'
+  'xur-wishlist': 'Xûr-Wunschliste', champion: 'Champion', data: 'Daten', security: 'Sicherheit', backup: 'Backup', session: 'Session-Ziel', watch: 'Beobachtung',
+  health: 'Verbindung'
 };
 const LABELS_EN = {
   postmaster: 'Postmaster', vault: 'Vault', checklist: 'Checklist', week: 'Week',
   reset: 'Reset', weekly: 'Weekly', xur: 'Xûr', focus: 'Focus', controller: 'Controller',
   activity: 'Activity', game: 'Game', godrolls: 'Godrolls', loadouts: 'Loadouts',
   loadout: 'Loadout', nightfall: 'Nightfall', season: 'Season', crafting: 'Crafting',
-  'xur-wishlist': 'Xûr wishlist', champion: 'Champion', data: 'Data', security: 'Security', backup: 'Backup', session: 'Session goal', watch: 'Watch'
+  'xur-wishlist': 'Xûr wishlist', champion: 'Champion', data: 'Data', security: 'Security', backup: 'Backup', session: 'Session goal', watch: 'Watch',
+  health: 'Connection'
 };
 const titleState = new Map();
 const VIEWS = ['overview', 'builds', 'week', 'collection', 'vendor'];
+const RECIPES = {
+  standard: [['Postfach', '/action/postmaster/collect-safe'], ['Inventar', '/action/refresh-inventory'], ['Woche', '/action/view?view=week']],
+  postmaster: [['Postfach', '/action/postmaster/collect-safe'], ['Inventar', '/action/refresh-inventory']],
+  weekly: [['Inventar', '/action/refresh-inventory'], ['Woche', '/action/view?view=week']],
+  vendor: [['Händler', '/action/vendors?wishlist=1'], ['Wunschliste', '/action/refresh-wishlist']],
+  raid: [['Inventar', '/action/refresh-inventory'], ['Builds', '/action/view?view=builds']]
+};
 const CLEAR_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2n0kAAAAASUVORK5CYII=';
 const contexts = new Map();
 const timers = new Map();
 const keyTimers = new Map();
 const badgeState = new Map();
+const dialStates = new Map();
+let pluginVersion = '';
+try {
+  pluginVersion = String(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'manifest.json'), 'utf8')).Version || '');
+} catch (error) { /* Version ist optional */ }
 let globalSettings = { ...DEFAULT_GLOBAL };
 let latestState = null;
 let settingsGoal = '';
@@ -227,6 +242,109 @@ function setTitle(context, key, value, extra = '') {
   send({ event: 'setTitle', context, payload: { title, target: 0 } });
 }
 
+function setToggleIcon(context, on, label) {
+  const color = on ? '#5fe0a0' : '#7f8ea3';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144"><rect width="144" height="144" rx="20" fill="#0b1018"/><circle cx="72" cy="52" r="24" fill="${color}"/><text x="72" y="108" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="600" fill="#e8ecf2" text-anchor="middle">${label}</text></svg>`;
+  send({ event: 'setImage', context, payload: { image: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`, target: 0 } });
+}
+
+async function checkHealth(context) {
+  const [health, version] = await Promise.all([request('/health'), request('/version')]);
+  const ok = health.status === 200 && (!health.body || health.body.ok !== false);
+  const appVersion = (version.body && version.body.version) || (health.body && health.body.version) || '';
+  setTitle(context, 'health', ok ? `ok${appVersion ? ` · v${appVersion}` : ''}${pluginVersion ? ` · P${pluginVersion}` : ''}` : 'Fehler');
+  setToggleIcon(context, ok, ok ? 'OK' : '!');
+  send({ event: ok ? 'showOk' : 'showAlert', context });
+}
+
+function dialKind(action) {
+  if (String(action).endsWith('.loadout.dial')) return 'loadout';
+  if (String(action).endsWith('.vendor.dial')) return 'vendor';
+  if (String(action).endsWith('.checklist.dial')) return 'checklist';
+  return '';
+}
+
+function showDialItem(context, action) {
+  const state = dialStates.get(context);
+  const kind = dialKind(action);
+  const label = kind === 'loadout' ? 'Loadout' : kind === 'vendor' ? 'Händler' : 'Checkliste';
+  if (!state || !state.items.length) {
+    send({ event: 'setTitle', context, payload: { title: `${label}\nleer`, target: 0 } });
+    return;
+  }
+  const index = Math.max(0, Math.min(state.items.length - 1, state.index));
+  const item = state.items[index];
+  const text = String(item.name || item.text || label).slice(0, 28);
+  send({ event: 'setTitle', context, payload: { title: `${label} ${index + 1}/${state.items.length}\n${text}`, target: 0 } });
+}
+
+async function loadDialItems(context, action) {
+  const kind = dialKind(action);
+  if (!kind) return;
+  let items = [];
+  if (kind === 'loadout') {
+    const result = await request('/loadouts');
+    items = ((result.body && result.body.loadouts) || []).map((entry) => ({ id: entry.id, name: entry.name }));
+  } else if (kind === 'vendor') {
+    const result = await request('/vendors');
+    for (const group of ((result.body && result.body.groups) || [])) {
+      for (const vendor of (group.vendors || [])) {
+        if (vendor && vendor.hash) items.push({ id: String(vendor.hash), name: vendor.name || `Händler ${vendor.hash}` });
+      }
+    }
+  } else if (kind === 'checklist') {
+    const result = await request('/checklist');
+    items = ((result.body && result.body.items) || []).filter((item) => item.done !== true).map((item) => ({ id: item.id, name: item.text }));
+  }
+  dialStates.set(context, { kind, items, index: 0 });
+  showDialItem(context, action);
+}
+
+function rotateDial(context, action, ticks) {
+  const state = dialStates.get(context);
+  if (!state) {
+    loadDialItems(context, action).catch(() => {});
+    return;
+  }
+  if (!state.items.length) {
+    showDialItem(context, action);
+    return;
+  }
+  const step = ticks > 0 ? 1 : -1;
+  state.index = (state.index + step + state.items.length) % state.items.length;
+  showDialItem(context, action);
+}
+
+async function applyDialItem(context, action) {
+  const state = dialStates.get(context);
+  const kind = dialKind(action);
+  const item = state && state.items[state.index];
+  if (!item) {
+    send({ event: 'showAlert', context });
+    return;
+  }
+  let path = '';
+  if (kind === 'loadout') path = `/action/loadout?${encodeLoadout(item.id || item.name)}`;
+  else if (kind === 'vendor') path = `/action/vendor?hash=${encodeURIComponent(item.id)}`;
+  else if (kind === 'checklist') path = `/action/checklist/toggle?id=${encodeURIComponent(item.id)}`;
+  if (!path) return;
+  const result = await request(path);
+  if (result.body && result.body.ok === false) {
+    send({ event: 'showAlert', context });
+    return;
+  }
+  send({ event: 'showOk', context });
+  if (kind === 'checklist') setTimeout(() => loadDialItems(context, action).catch(() => {}), 500);
+}
+
+function activityCategory(activity) {
+  const text = String(activity || '').toLowerCase();
+  if (/gambit/.test(text)) return 'Gambit';
+  if (/pr(ü|u)fung|trials|schmelztiegel|crucible|pvp|eisenbanner|iron banner|competitive/.test(text)) return 'PvP';
+  if (/raid|schlachtzug|dungeon|kerker|nightfall|gro(ß|s)meister|grandmaster|\bgm\b|strike|vorhut|saison|season/.test(text)) return 'PvE';
+  return 'PvE';
+}
+
 async function updateStatus(context, settings = null) {
   const local = settings || settingsFor(context);
   const action = String(entryFor(context).action || '');
@@ -259,6 +377,10 @@ async function updateStatus(context, settings = null) {
     return;
   }
   setTitle(context, key, statusValue(key, latestState));
+  if (action.endsWith('.security')) {
+    const readOnly = Boolean(latestState.security && latestState.security.readOnly);
+    if (local.showBadge !== true) setToggleIcon(context, readOnly, readOnly ? 'READ-ONLY' : 'OFFEN');
+  }
   if (local.showBadge === true) {
     const globalOptions = currentGlobal();
     const badge = await requestBinary(`/badge/${encodeURIComponent(key)}.svg?size=144&theme=${globalOptions.theme}&lang=${globalOptions.lang}`);
@@ -276,7 +398,8 @@ function maybeSwitchProfile(state) {
   if (!state || globalSettings.autoProfile !== true || !lastDevice) return;
   const activity = String(state.activity || '').trim();
   if (!activity) return;
-  const profile = `${globalSettings.profilePrefix || ''}${activity}`.slice(0, 60);
+  const name = globalSettings.profileMode === 'category' ? activityCategory(activity) : activity;
+  const profile = `${globalSettings.profilePrefix || ''}${name}`.slice(0, 60);
   if (!profile || profile === lastProfile) return;
   lastProfile = profile;
   send({ event: 'switchToProfile', context: args.pluginUUID, payload: { device: lastDevice, profile } });
@@ -286,9 +409,20 @@ function isStatusAction(action) {  return /\.(status|status\.encoder|champion|da
 }
 
 function refreshAllStatus() {
+  refreshOverlayIcons(latestState);
   for (const [context, entry] of contexts) {
     if (isStatusAction(entry.action)) {
       updateStatus(context, settingsFor(context)).catch(() => {});
+    }
+  }
+}
+
+function refreshOverlayIcons(state) {
+  if (!state) return;
+  const visible = Boolean(state.overlay && state.overlay.visible);
+  for (const [context, entry] of contexts) {
+    if (String(entry.action || '').endsWith('.overlay')) {
+      setToggleIcon(context, visible, visible ? 'AN' : 'AUS');
     }
   }
 }
@@ -422,6 +556,14 @@ function encodeLoadout(value) {
 async function callAction(context, action, settings) {
   const local = settings || settingsFor(context);
   let path = local.path || '';
+  if (action.endsWith('.health')) {
+    await checkHealth(context);
+    return;
+  }
+  if (dialKind(action)) {
+    await applyDialItem(context, action);
+    return;
+  }
   if (action.endsWith('.status') || action.endsWith('.status.encoder')) {
     await updateStatus(context, local);
     return;
@@ -440,7 +582,7 @@ async function callAction(context, action, settings) {
     return;
   }
   if (action.endsWith('.routine')) {
-    await runRoutine(context);
+    await runRoutine(context, local.recipe);
     return;
   }
   if (action.endsWith('.champion')) path = '/action/view?view=builds';
@@ -471,17 +613,21 @@ async function callAction(context, action, settings) {
     return;
   }
   send({ event: 'showOk', context });
+  if (action.endsWith('.overlay')) {
+    request('/state').then((state) => {
+      if (!state.body) return;
+      latestState = state.body;
+      const visible = Boolean(state.body.overlay && state.body.overlay.visible);
+      setToggleIcon(context, visible, visible ? 'AN' : 'AUS');
+    }).catch(() => {});
+  }
   if (isStatusAction(action)) {
     setTimeout(() => updateStatus(context, local), 500);
   }
 }
 
-async function runRoutine(context) {
-  const steps = [
-    ['Postfach', '/action/postmaster/collect-safe'],
-    ['Inventar', '/action/refresh-inventory'],
-    ['Woche', '/action/view?view=week']
-  ];
+async function runRoutine(context, recipe = 'standard') {
+  const steps = RECIPES[recipe] || RECIPES.standard;
   for (let index = 0; index < steps.length; index += 1) {
     const [label, path] = steps[index];
     send({ event: 'setTitle', context, payload: { title: `${index + 1}/${steps.length} ${label}`, target: 0 } });
@@ -524,7 +670,8 @@ async function propertyInspectorRequest(context, payload) {
       lang: payload.settings && payload.settings.lang === 'en' ? 'en' : 'de',
       theme: payload.settings && payload.settings.theme === 'light' ? 'light' : 'dark',
       autoProfile: payload.settings && payload.settings.autoProfile === true,
-      profilePrefix: String((payload.settings && payload.settings.profilePrefix) || '').slice(0, 60)
+      profilePrefix: String((payload.settings && payload.settings.profilePrefix) || '').slice(0, 60),
+      profileMode: payload.settings && payload.settings.profileMode === 'category' ? 'category' : 'activity'
     };
     log('global-settings-saved', { apiUrl: settings.apiUrl, lang: settings.lang, theme: settings.theme });
     globalSettings = settings;
@@ -540,12 +687,18 @@ async function propertyInspectorRequest(context, payload) {
       apiUrl: String(payload.settings.apiUrl || globalSettings.apiUrl).slice(0, 300),
       token: String(payload.settings.token || globalSettings.token || '').slice(0, 120)
     } : currentGlobal();
-    const result = await request('/health', 'GET', null, settings);
+    const [health, version] = await Promise.all([
+      request('/health', 'GET', null, settings),
+      request('/version', 'GET', null, settings)
+    ]);
     sendToPropertyInspector(context, {
       type: 'test-result',
-      ok: result.status === 200 && result.body && result.body.ok === true,
-      status: result.status,
-      body: result.body
+      ok: health.status === 200 && (!health.body || health.body.ok !== false),
+      status: health.status,
+      version: (version.body && version.body.version) || (health.body && health.body.version) || '',
+      apiVersion: version.body && version.body.apiVersion,
+      pluginVersion,
+      body: health.body
     });
     return;
   }
@@ -614,6 +767,21 @@ socket.on('message', (raw) => {
     if (isStatusAction(entry.action)) {
       updateStatus(context, entry.settings);
     }
+    if (entry.action && entry.action.endsWith('.health')) {
+      checkHealth(context).catch(() => {});
+    }
+    if (dialKind(entry.action)) {
+      loadDialItems(context, entry.action).catch(() => {});
+    }
+    if (entry.action && entry.action.endsWith('.overlay')) {
+      if (latestState) refreshOverlayIcons(latestState);
+      else request('/state').then((result) => {
+        if (result.body) {
+          latestState = result.body;
+          refreshOverlayIcons(latestState);
+        }
+      }).catch(() => {});
+    }
   } else if (message.event === 'willDisappear') {
     contexts.delete(context);
     const timer = timers.get(context);
@@ -665,7 +833,9 @@ socket.on('message', (raw) => {
     const ticks = Number(message.payload && message.payload.ticks) || 0;
     const direction = ticks > 0 ? 'next' : 'prev';
     const action = String(message.action || entry.action || '');
-    if (action.endsWith('.status.encoder') || action.endsWith('.reset.dial') || action.endsWith('.cockpit')) {
+    if (dialKind(action)) {
+      rotateDial(context, action, ticks);
+    } else if (action.endsWith('.status.encoder') || action.endsWith('.reset.dial') || action.endsWith('.cockpit')) {
       cycleStatusKey(context, ticks, settingsFor(context));
     } else {
       const path = action.endsWith('.view.next') ? `/action/view/${direction}` : `/action/loadout/${direction}`;

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Sicherheitslücke melden / Report a vulnerability
+    url: https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut/security/advisories/new
+    about: Bitte keine Sicherheitslücken als öffentliches Issue posten.
+  - name: Anleitung / Guide
+    url: https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut#readme
+    about: Installation, Overlay, Controller und Stream Deck.

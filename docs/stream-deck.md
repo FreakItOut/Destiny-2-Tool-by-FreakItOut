@@ -386,3 +386,46 @@ Ohne Plugin funktioniert alles genauso über normale Website-/HTTP-Aktionen.
   mit JSON erscheinen. Für stille Aufrufe ein HTTP-Request-Werkzeug verwenden.
 - **API-Konsole und Token-Verwaltung:** in den Einstellungen unter Schnittstellen.
 - **Setup:** `docs/api-changelog.md` und `docs/stream-deck.md` beschreiben Versionen und Einrichtung.
+
+## Neue Actions & Rezepte (1.1)
+
+Das Plugin umfasst jetzt **30 Actions** (SDK 2) und ist versionsgleich mit der App.
+
+### Verbindung
+
+Die Action **Verbindung** prüft API, Token und App-Version. Sie zeigt
+`OK · v1.1.0 · P1.1.0` oder `Fehler` und löst bei Fehlern einen Alarm aus.
+Der Property Inspector hat zusätzlich **Testen** mit App-/Plugin-Version.
+
+### Encoder
+
+| Action | Drehen | Drücken |
+| --- | --- | --- |
+| **Loadout wählen** | Loadout auswählen | Loadout anwenden |
+| **Händler wählen** | Händler auswählen | Händler öffnen |
+| **Checkliste wählen** | offenen Punkt auswählen | Punkt abhaken |
+
+Die Encoder laden ihre Liste beim Erscheinen über `/loadouts`, `/vendors`
+bzw. `/checklist` und zeigen `Name + Index/Anzahl`.
+
+### Routine-Rezepte
+
+Die Action **Wochen-Routine** bietet im Property Inspector Rezepte:
+
+- **Standard** – Postfach sicher sammeln, Inventar aktualisieren, Woche öffnen
+- **Postfach** – sammeln + Inventar aktualisieren
+- **Woche** – Inventar aktualisieren + Woche öffnen
+- **Händler** – Händler mit Wunschroll-Filter + Wunschliste neu laden
+- **Raid-Prep** – Inventar aktualisieren + Builds öffnen
+
+### Profil-Modus
+
+Unter **Profil automatisch nach Aktivität wechseln** lässt sich wählen:
+
+- **Aktivität** – exakter Aktivitätsname (bisheriges Verhalten)
+- **Kategorie** – `PvE`, `PvP` oder `Gambit` (Präfix bleibt davor)
+
+### Toggle-Icons
+
+**Overlay** und **Sicherheit/Read-only** zeigen ihren Zustand als farbiges
+Icon (AN/AUS bzw. READ-ONLY/OFFEN), auch wenn kein Badge aktiv ist.

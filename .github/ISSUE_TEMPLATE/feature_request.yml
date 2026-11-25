@@ -1,0 +1,36 @@
+name: Verbesserung vorschlagen
+description: Eine Idee oder Erweiterung für App, Werkzeuge oder Stream Deck vorschlagen.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: area
+    attributes:
+      label: Bereich
+      description: z. B. Stream Deck, Inventar, Händler, Overlay, Dashboard
+      placeholder: "Stream Deck"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Wunsch
+      description: Was fehlt oder was ist umständlich?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Vorschlag
+      description: Wie könnte es aussehen? Skizzen willkommen.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativen (optional)
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Bestätigung
+      options:
+        - label: Keine echten Zugangsdaten oder persönlichen Daten eingefügt.
+          required: true

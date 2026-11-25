@@ -13,9 +13,9 @@ Laufzeit-Abhängigkeiten außer Electron selbst.
 
 Die fertigen Windows-Builds liegen unter **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.0.0.exe`** – portable Version, keine
+- **`Destiny.2.Tool.by.FreakItOut.1.1.0.exe`** – portable Version, keine
   Installation nötig.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.0.0.exe`** – Installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.1.0.exe`** – Installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optionales Stream-Deck-Plugin.
 - **`streamdeck-profile.json`** – passende Stream-Deck-Belegung.
 - **`SHA256SUMS.txt`** – Prüfsummen aller Dateien.
@@ -238,7 +238,8 @@ Leisten-Elemente lassen sich als **Layout-Profil** speichern (Einstellungen
   Diagnose-Export/das Kopier-Paket schwärzt alle Zugangsdaten.
 - **Stream Deck:** lokale HTTP-API mit Token, Nur-Lese-/benannten Tokens,
   Kurz-URLs, Live-Keys, SVG-Badges, SSE, Jobs und optionalem Plugin;
-  Doku unter `docs/stream-deck.md`.
+  **30 Actions**, darunter Verbindungs-Check, Encoder für Loadouts/Händler/
+  Checkliste und Routine-Rezepte; Doku unter `docs/stream-deck.md`.
 - **Command Palette:** `Strg+K` sucht Befehle, Werkzeugseiten, Einstellungen
   und Schnellaktionen ohne Maus.
 - **Datenstatus:** Kopfzeilen-Chip zeigt Snapshot-Alter, Offline-Stand und

@@ -11,9 +11,11 @@ const ROOT = path.resolve(__dirname, '..');
 const DIST = path.join(ROOT, 'dist');
 const TARGET = path.join(DIST, 'streamdeck-profile.json');
 
+const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+
 const profile = {
   name: 'Destiny 2 Tool – Beispielbelegung',
-  version: '1.0.0',
+  version: pkg.version,
   plugin: 'com.freakitout.d2tool',
   global: {
     apiUrl: 'http://127.0.0.1:7331',
@@ -33,12 +35,15 @@ const profile = {
     { position: 8, action: 'com.freakitout.d2tool.overlay', settings: { longPath: '/action/click-through' } },
     { position: 9, action: 'com.freakitout.d2tool.postmaster', settings: {} },
     { position: 10, action: 'com.freakitout.d2tool.xur', settings: {} },
-    { position: 11, action: 'com.freakitout.d2tool.status.encoder', settings: { key: 'postmaster' } }
+    { position: 11, action: 'com.freakitout.d2tool.status.encoder', settings: { key: 'postmaster' } },
+    { position: 12, action: 'com.freakitout.d2tool.health', settings: {} },
+    { position: 13, action: 'com.freakitout.d2tool.routine', settings: { recipe: 'standard' } },
+    { position: 14, action: 'com.freakitout.d2tool.postmaster.safe', settings: {} }
   ],
   notes: [
     'Token in den globalen Plugin-Einstellungen eintragen.',
     'Status-Keys können per Langdruck aktualisiert werden.',
-    'Der Encoder wechselt den Status-Key.',
+    'Encoder: Status, Loadout, Händler und Checkliste.',
     'Diese Datei ist eine Belegungsvorlage, kein installierbares Stream-Deck-Profil.'
   ]
 };

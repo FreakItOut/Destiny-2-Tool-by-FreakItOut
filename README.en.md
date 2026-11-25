@@ -13,9 +13,9 @@ Electron itself.
 
 The ready-to-run Windows builds are available under **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.0.0.exe`** – portable version, no
+- **`Destiny.2.Tool.by.FreakItOut.1.1.0.exe`** – portable version, no
   installation required.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.0.0.exe`** – installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.1.0.exe`** – installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optional Stream Deck plugin.
 - **`streamdeck-profile.json`** – matching Stream Deck profile.
 - **`SHA256SUMS.txt`** – checksums for all files.
@@ -230,8 +230,9 @@ Up to 8 profiles.
 - **API key and client secret** are stored encrypted; the diagnostic export
   and the copy package redact all credentials.
 - **Stream Deck:** local HTTP API with token, read-only/named tokens, short
-  URLs, live keys, SVG badges, SSE, jobs and an optional plugin; docs under
-  `docs/stream-deck.md`.
+  URLs, live keys, SVG badges, SSE, jobs and an optional plugin; **30
+  actions**, including a connection check, encoders for loadouts/vendors/
+  checklist and routine recipes; docs under `docs/stream-deck.md`.
 - **Command palette:** `Ctrl+K` searches commands, tool pages, settings and
   quick actions without a mouse.
 - **Data status:** header chip shows snapshot age, offline state and Bungie

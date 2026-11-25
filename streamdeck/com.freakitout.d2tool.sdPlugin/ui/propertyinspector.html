@@ -43,6 +43,11 @@
   <label class="check" style="margin-top:8px"><input id="autoProfile" type="checkbox"><span>Profil automatisch nach Aktivität wechseln</span></label>
   <label>Profil-Präfix</label>
   <input id="profilePrefix" placeholder="z. B. D2 " autocomplete="off">
+  <label>Profil-Modus</label>
+  <select id="profileMode">
+    <option value="activity">Aktivität (exakter Name)</option>
+    <option value="category">Kategorie (PvE/PvP/Gambit)</option>
+  </select>
   <p id="globalStatus" class="hint">Nicht verbunden.</p>
   <div class="hint">Der Token bleibt lokal in den Stream-Deck-Einstellungen und wird nur als Header gesendet.</div>
 
@@ -109,6 +114,16 @@
       <option value="controller">Controller</option>
     </select>
   </div>
+  <div id="recipeRow">
+    <label>Routine</label>
+    <select id="recipe">
+      <option value="standard">Standard (Postfach, Inventar, Woche)</option>
+      <option value="postmaster">Postfach + Inventar</option>
+      <option value="weekly">Woche + Inventar</option>
+      <option value="vendor">Händler + Wunschliste</option>
+      <option value="raid">Raid-Prep (Inventar + Builds)</option>
+    </select>
+  </div>
   <div id="badgeRow" class="check">
     <input id="showBadge" type="checkbox">
     <label for="showBadge" style="margin:0">Badge-Bild verwenden</label>
@@ -129,8 +144,8 @@
     let actionUuid = '';
     let piUuid = '';
     let optionsLoaded = false;
-    const keyFields = ['view', 'loadout', 'key', 'path', 'longPath', 'showBadge', 'goal', 'slot', 'mode'];
-    const globalFields = ['apiUrl', 'token', 'lang', 'theme', 'autoProfile', 'profilePrefix'];
+    const keyFields = ['view', 'loadout', 'key', 'path', 'longPath', 'showBadge', 'goal', 'slot', 'mode', 'recipe'];
+    const globalFields = ['apiUrl', 'token', 'lang', 'theme', 'autoProfile', 'profilePrefix', 'profileMode'];
 
     function qs(id) { return document.getElementById(id); }
 
@@ -141,7 +156,8 @@
         lang: qs('lang').value,
         theme: qs('theme').value,
         autoProfile: qs('autoProfile').checked === true,
-        profilePrefix: qs('profilePrefix').value.trim()
+        profilePrefix: qs('profilePrefix').value.trim(),
+        profileMode: qs('profileMode').value === 'category' ? 'category' : 'activity'
       };
     }
 
@@ -163,6 +179,7 @@
       if (settings.theme != null) qs('theme').value = settings.theme === 'light' ? 'light' : 'dark';
       if (settings.autoProfile != null) qs('autoProfile').checked = settings.autoProfile === true;
       if (settings.profilePrefix != null) qs('profilePrefix').value = settings.profilePrefix || '';
+      if (settings.profileMode != null) qs('profileMode').value = settings.profileMode === 'category' ? 'category' : 'activity';
     }
 
     function applyKeySettings(settings) {
@@ -186,6 +203,7 @@
       qs('goalRow').hidden = !(value.endsWith('.session.goal') || value.endsWith('.status'));
       qs('slotRow').hidden = !value.endsWith('.loadout.slot');
       qs('modeRow').hidden = !value.endsWith('.modes');
+      qs('recipeRow').hidden = !value.endsWith('.routine');
     }
 
     function postPerKey() {
@@ -263,7 +281,9 @@
           if (payload.type === 'options') fillOptions(payload);
           if (payload.type === 'test-result') {
             const status = qs('globalStatus');
-            status.textContent = payload.ok ? `Verbunden · HTTP ${payload.status}` : `Nicht verbunden · ${(payload.body && payload.body.error) || payload.status || 'Fehler'}`;
+            status.textContent = payload.ok
+              ? `Verbunden · HTTP ${payload.status}${payload.version ? ` · App v${payload.version}` : ''}${payload.pluginVersion ? ` · Plugin v${payload.pluginVersion}` : ''}`
+              : `Nicht verbunden · ${(payload.body && payload.body.error) || payload.status || 'Fehler'}`;
             status.className = payload.ok ? 'hint status-ok' : 'hint status-error';
           }
           if (payload.type === 'global-saved') {

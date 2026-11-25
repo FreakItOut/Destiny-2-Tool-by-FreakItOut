@@ -1,0 +1,66 @@
+name: Fehler melden
+description: Einen reproduzierbaren Fehler in App, Inventar, Werkzeugen oder Stream Deck melden.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bitte keine API-Keys, OAuth-Tokens, Client-Secrets oder `config.json`-Inhalte einfügen.
+        Sicherheitslücken bitte über SECURITY.md melden.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: z. B. 1.1.0 (Einstellungen → Über)
+      placeholder: "1.1.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows-Version
+      placeholder: "Windows 11 24H2"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Bereich
+      options:
+        - App / Oberfläche
+        - Inventar & Loadouts
+        - Werkzeuge / Dashboard
+        - Händler / Xûr
+        - Overlay / Controller
+        - Stream Deck / lokale API
+        - Bungie-Anmeldung / OAuth
+        - Sonstiges
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zur Reproduktion
+      description: Was hast du gemacht, was ist passiert, was war erwartet?
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Screenshots (optional)
+      description: Bitte alle Zugangsdaten schwärzen.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Bestätigung
+      options:
+        - label: Ich habe keine echten Zugangsdaten oder persönlichen Daten eingefügt.
+          required: true
+        - label: Das Problem tritt mit der aktuellen Version auf.
+          required: true

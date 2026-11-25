@@ -87,6 +87,10 @@ function syncPackageJson() {
   le.scripts = std.scripts;
   le.dependencies = std.dependencies;
   le.devDependencies = std.devDependencies;
+  le.version = std.version;
+  le.repository = std.repository;
+  le.homepage = std.homepage;
+  le.bugs = std.bugs;
   le.build = { ...std.build, appId: le.build && le.build.appId ? le.build.appId : LE_BRAND.appId, productName: le.build && le.build.productName ? le.build.productName : LE_BRAND.productName };
   fs.writeFileSync(lePath, `${JSON.stringify(le, null, 2)}\n`, 'utf8');
 }

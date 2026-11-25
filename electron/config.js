@@ -5,7 +5,7 @@
 // ============================================================
 // Alles liegt in einer JSON-Datei im Benutzerprofil. Die Datei wird
 // atomar geschrieben (tmp + rename), damit ein Absturz mitten im
-// Speichern keine halbe Datei hinterlÃ¤sst.
+// Speichern keine halbe Datei hinterlässt.
 // ============================================================
 
 const fs = require('node:fs');
@@ -29,11 +29,11 @@ const DEFAULTS = {
     anchor: 'center',
     autoHideSeconds: 0,
     notes: '',
-    // Mehrere Notiz-BlÃ¤tter (Raid-Callouts, Farming, ...).
+    // Mehrere Notiz-Blätter (Raid-Callouts, Farming, ...).
     notesList: [],
     notesActive: '',
     // Optional: Notizen als .md-Dateien in einem Ordner (z. B. in
-    // Dropbox/OneDrive). Leer = BlÃ¤tter in der Konfiguration.
+    // Dropbox/OneDrive). Leer = Blätter in der Konfiguration.
     notesFolder: '',
     // Welche Elemente die Overlay-Leiste zeigt (alle an = Standard).
     showItems: {
@@ -94,7 +94,7 @@ const DEFAULTS = {
     // Einzelne Taste, die das Overlay ein-/ausblendet.
     // 0 = keine, 16 = Guide, 8 = View, 9 = Menu.
     // XInput meldet den Guide-Knopf bei Xbox-360-Pads leider nicht -
-    // deshalb lÃ¤sst sich hier jede Taste wÃ¤hlen.
+    // deshalb lässt sich hier jede Taste wählen.
     toggleButton: 0,
     invertDpadScroll: false,
     // Scrollen mit dem zweiten Stick: Geschwindigkeit, Richtung und
@@ -111,14 +111,14 @@ const DEFAULTS = {
     // Controller-Profil automatisch je Bereich anwenden
     // (Inventar = präziser, Dashboard/Einstellungen = Standard).
     autoAreaProfile: false,
-    // Rauschfilter fÃ¼r die Analog-Sticks. Manche Controller
-    // (gÃ¼nstige Xbox-360-Kopien) liefern stark schwankende Werte.
+    // Rauschfilter für die Analog-Sticks. Manche Controller
+    // (günstige Xbox-360-Kopien) liefern stark schwankende Werte.
     // 0 = aus, 1 = normal, 2 = stark.
     stickFilter: 1,
     // Ab welchem Trigger-Druckwert LT/RT scrollen (0-1).
     triggerThreshold: 0.35,
     // Defekte Achsen automatisch erkennen und abschalten.
-    // Standard: aus - lieber dem Nutzer die Kalibrierung Ã¼berlassen.
+    // Standard: aus - lieber dem Nutzer die Kalibrierung überlassen.
     detectBrokenAxis: false,
     // Diagnosemodus: Rohreports und XInput-Masken werden ins Log
     // geschrieben. Hilfreich bei Controller-Problemen.
@@ -138,9 +138,9 @@ const DEFAULTS = {
     // oben, das Tool rechnet mit negativ. Wird beim Start einmalig
     // normalisiert (Kalibrierung/Umkehr-Schalter werden übernommen).
     axesNormalized: false,
-    // Welcher Stick steuert den Cursor? "auto" wÃ¤hlt den stÃ¤rkeren
-    // Ausschlag - bei einem defekten zweiten Stick fÃ¼hrt das dazu,
-    // dass der Cursor von allein weglÃ¤uft. Standard: nur der linke.
+    // Welcher Stick steuert den Cursor? "auto" wählt den stärkeren
+    // Ausschlag - bei einem defekten zweiten Stick führt das dazu,
+    // dass der Cursor von allein wegläuft. Standard: nur der linke.
     stickChoice: 'left',    // Achsen umkehren.
     invertX: false,
     invertY: false,
@@ -157,29 +157,29 @@ const DEFAULTS = {
       siteNext: 15,
       settings: 8,
       hide: 9,
-      // Neue Aktionen: standardmÃ¤ÃŸig nicht belegt (-1).
+      // Neue Aktionen: standardmäßig nicht belegt (-1).
       notes: -1,
       pip: -1,
       unloadOthers: -1,
       hud: -1
     },
     // Feinsteuerung pro Webseite: siteId -> Deadzone (0.05-0.6).
-    // Praktisch fÃ¼r DIM (kleine Deadzone fÃ¼r den prÃ¤zisen Cursor)
-    // gegenÃ¼ber normalen Seiten. Fehlt eine Seite, gilt die globale
+    // Praktisch für DIM (kleine Deadzone für den präzisen Cursor)
+    // gegenüber normalen Seiten. Fehlt eine Seite, gilt die globale
     // Deadzone (gamepad.deadzone).
     siteDeadzones: {},
-    // Cursor-Magnet-Snap: der Controller-Cursor wird in die NÃ¤he
-    // klickbarer OberflÃ¤chenelemente gezogen (nur Tool-UI, Webseiten
-    // sind dafÃ¼r unsichtbar).
+    // Cursor-Magnet-Snap: der Controller-Cursor wird in die Nähe
+    // klickbarer Oberflächenelemente gezogen (nur Tool-UI, Webseiten
+    // sind dafür unsichtbar).
     cursorSnap: true,
     // XInput-Bridge: liest den Controller direkt unter Windows und
-    // funktioniert dadurch auch ohne Fensterfokus (wichtig fÃ¼r das
-    // Overlay Ã¼ber dem Spiel).
+    // funktioniert dadurch auch ohne Fensterfokus (wichtig für das
+    // Overlay über dem Spiel).
     xinput: true,
     // Overlay-Einzeltaste: kurzer Druck schaltet das Overlay, Halten
-    // (>= 0,6 s) Ã¶ffnet die Einstellungen. Abschaltbar.
+    // (>= 0,6 s) öffnet die Einstellungen. Abschaltbar.
     toggleLongPressSettings: true,
-    // Das Overlay holt sich aktiv den Fensterfokus. NÃ¶tig, damit
+    // Das Overlay holt sich aktiv den Fensterfokus. Nötig, damit
     // Klicks im Overlay sofort greifen; der Controller funktioniert
     // dank XInput-Bridge auch ohne Fokus.
     stealFocus: true
@@ -203,19 +203,19 @@ const DEFAULTS = {
     testOpenWindowOnHotkey: false,
     // Nach dem Start automatisch die letzte Sitzung wiederherstellen.
     autoRestoreSession: false,
-    // Minimodus: nur die Webseite sichtbar (Strg+M / Palette / âœ•-Chip).
+    // Minimodus: nur die Webseite sichtbar (Strg+M / Palette / ✕-Chip).
     overlayMini: false,
-    // Click-Through automatisch zurÃ¼ckholen nach X Minuten (0 = aus).
+    // Click-Through automatisch zurückholen nach X Minuten (0 = aus).
     clickThroughAutoReset: 0,
     adBlock: true,
     readerMode: false,
     siteUsage: {},
     firstRunDone: false,
     gameLaunchUrl: 'steam://rungameid/1085660',
-    // Grafikdiagnose: Bei AbstÃ¼rzen im Zusammenhang mit Grafiktreibern
+    // Grafikdiagnose: Bei Abstürzen im Zusammenhang mit Grafiktreibern
     // (z. B. Video-TDR-Fehler) hilft es, die GPU-Beschleunigung von
     // Chromium abzuschalten. disableGpuAuto wird nach wiederholten
-    // GPU-ProzessabstÃ¼rzen automatisch gesetzt.
+    // GPU-Prozessabstürzen automatisch gesetzt.
     disableGpu: false,
     disableGpuAuto: false,
     gpuCrashCount: 0,
@@ -225,7 +225,7 @@ const DEFAULTS = {
     alarmSound: false,
     // Optional: eigene Sound-Datei (.wav/.mp3/.ogg) statt Standard-Beep.
     alarmSoundPath: '',
-    // Globale Seiten-KÃ¼rzel (Strg+Alt+1..8): Ã¶ffnen Kategorien systemweit.
+    // Globale Seiten-Kürzel (Strg+Alt+1..8): öffnen Kategorien systemweit.
     globalSiteHotkeys: false,
     // LT/RT-Verhalten: 'scroll' = Standard (schnell scrollen), oder
     // ein Action-Key aus den Belegungen (z. B. 'pip', 'notes').
@@ -234,16 +234,16 @@ const DEFAULTS = {
     // Kurze Vibration bei Kategorie-/Seitenwechsel.
     hapticSwitch: false,
     // Low-Power-Modus (Laptops): Hintergrund-Timer werden nicht mehr
-    // von der Drosselung befreit, Webseiten-Vorladen aus. Neustart nÃ¶tig.
+    // von der Drosselung befreit, Webseiten-Vorladen aus. Neustart nötig.
     lowPower: false,
     // Ruhemodus: bis zu diesem Zeitpunkt (ms-Epochenzeit) werden
-    // OberflÃ¤chen-Toasts und AlarmtÃ¶ne unterdrÃ¼ckt; Tray-Benachrich-
+    // Oberflächen-Toasts und Alarmtöne unterdrückt; Tray-Benachrich-
     // tigungen erscheinen weiterhin. 0 = aus.
     quietUntil: 0,
     // Tasten-Legende (HUD) im Fenster/Overlay anzeigen.
     showBindingHud: false,
     // Beim Start die native Dashboard-Seite zeigen statt der zuletzt
-    // genutzten Webseite (ein Klick auf eine Kategorie lÃ¤dt die Seite).
+    // genutzten Webseite (ein Klick auf eine Kategorie lädt die Seite).
     startOnDashboard: true
   },
   web: {
@@ -257,32 +257,32 @@ const DEFAULTS = {
     autoRefresh: {},
     // Seiten-Zoom pro Webseite: siteId -> Faktor (0.5-2).
     siteZoom: {},
-    // Lesemodus pro Webseite: siteId -> true/false (Ãœberschreibt den
+    // Lesemodus pro Webseite: siteId -> true/false (Überschreibt den
     // globalen Schalter; fehlt der Eintrag, gilt der globale Modus).
     readerSites: {},
     // Blocker-Ausnahmen pro Webseite: siteId -> true = Blocker AUS
-    // fÃ¼r diese Seite (AdBlock bzw. Cookie-Banner-Blocker).
+    // für diese Seite (AdBlock bzw. Cookie-Banner-Blocker).
     adBlockOffSites: {},
     cookieOffSites: {}
   },
-  // WÃ¶chentliche Challenge-Checkliste (auto-Reset am Dienstag-Reset).
+  // Wöchentliche Challenge-Checkliste (auto-Reset am Dienstag-Reset).
   checklist: {
     items: [],
     week: ''
   },
-  // PersÃ¶nliche Erinnerungen: Zeit + Text + Wiederholung.
+  // Persönliche Erinnerungen: Zeit + Text + Wiederholung.
   reminders: {
     list: []
   },
-  // Konfig-Profile: vollstÃ¤ndige Snapshots zum Umschalten
+  // Konfig-Profile: vollständige Snapshots zum Umschalten
   // (z. B. "Gaming-PC" / "Laptop").
   profiles: {
     items: [],
     active: ''
   },
-  // Reihenfolge der Kategorien (Kategorie-IDs; fehlende hÃ¤ngen hinten).
+  // Reihenfolge der Kategorien (Kategorie-IDs; fehlende hängen hinten).
   categoryOrder: [],
-  // Zuletzt offene Seiten fÃ¼r die Sitzungs-Wiederherstellung.
+  // Zuletzt offene Seiten für die Sitzungs-Wiederherstellung.
   session: {
     siteIds: []
   },
@@ -291,7 +291,7 @@ const DEFAULTS = {
   lastCategory: 'today',
   lastSite: {},
   // Eigene Akzentfarbe ('' = Kategorie-Farben verwenden) und
-  // OberflÃ¤chen-Zoom (0.8-1.4).
+  // Oberflächen-Zoom (0.8-1.4).
   appearance: {
     accent: '',
     uiScale: 1,
@@ -374,7 +374,7 @@ const DEFAULTS = {
     digestSchedule: { enabled: false, weekday: 2, time: '18:05' },
     digestLastSent: ''
   },
-  // Bild-in-Bild-Fenster: letzte Position/GrÃ¶ÃŸe.
+  // Bild-in-Bild-Fenster: letzte Position/Größe.
   pip: {
     bounds: null
   },
@@ -396,7 +396,7 @@ const DEFAULTS = {
     // Optionales Wochenziel in Minuten (0 = aus).
     weeklyGoal: 0
   },
-  // Bungie-API (optional): Key + Bungie-Name fÃ¼r die Ã¶ffentlichen
+  // Bungie-API (optional): Key + Bungie-Name für die öffentlichen
   // Profildaten (Lichtlevel, Klasse, zuletzt gespielt) im Dashboard.
   // origin: die Website/Origin, auf die der Key im Entwicklerportal
   // registriert ist ('' = Standard https://localhost).
@@ -525,8 +525,8 @@ function mergeKnown(base, patch) {
     const patchValue = patch[key];
     if (isPlainObject(baseValue)) {
       if (!isPlainObject(patchValue)) continue;
-      // Objekte ohne feste SchlÃ¼ssel (z. B. lastSite) Ã¼bernehmen
-      // die EintrÃ¤ge des Patches vollstÃ¤ndig. Sonst wÃ¼rden neue
+      // Objekte ohne feste Schlüssel (z. B. lastSite) übernehmen
+      // die Einträge des Patches vollständig. Sonst würden neue
       // Kategorien beim Speichern verloren gehen.
       if (Object.keys(baseValue).length === 0) out[key] = clone(patchValue);
       else out[key] = mergeKnown(baseValue, patchValue);
@@ -554,7 +554,7 @@ function validGameUrl(value) {
     const url = new URL(value);
     if (['steam:', 'com.epicgames.launcher:', 'https:', 'http:'].includes(url.protocol)) return value;
   } catch (error) {
-    // ungÃ¼ltig
+    // ungültig
   }
   return DEFAULTS.behavior.gameLaunchUrl;
 }
@@ -630,7 +630,7 @@ function normalize(raw) {
   merged.overlay.autoHideSeconds = Math.round(clamp(merged.overlay.autoHideSeconds, 0, 300, 0));
   if (!['none', 'fast', 'normal'].includes(merged.overlay.animation)) merged.overlay.animation = DEFAULTS.overlay.animation;
 
-  // Notiz-BlÃ¤tter: Liste von {id, name, text}. Bei Migration aus der
+  // Notiz-Blätter: Liste von {id, name, text}. Bei Migration aus der
   // alten einzelnen Notiz (overlay.notes) entsteht ein Blatt "Notizen".
   const rawNotes = Array.isArray(merged.overlay.notesList) ? merged.overlay.notesList : [];
   const nextNotes = [];
@@ -654,7 +654,7 @@ function normalize(raw) {
     ? notesActive
     : (nextNotes[0] ? nextNotes[0].id : '');
   // Notizen-Ordner: nur plausible Windows-Pfade zulassen (Auswahl
-  // erfolgt Ã¼ber den Ordner-Dialog, hier nur Grobreinigung).
+  // erfolgt über den Ordner-Dialog, hier nur Grobreinigung).
   merged.overlay.notesFolder = String(merged.overlay.notesFolder || '').slice(0, 260);
 
   const combo = Array.isArray(merged.gamepad.combo)
@@ -744,7 +744,7 @@ function normalize(raw) {
   merged.gamepad.xinput = merged.gamepad.xinput !== false;
   merged.gamepad.stealFocus = merged.gamepad.stealFocus !== false;
 
-  // Deadzone-Profile pro Webseite: Zahl 0.05-0.6, maximal 60 EintrÃ¤ge.
+  // Deadzone-Profile pro Webseite: Zahl 0.05-0.6, maximal 60 Einträge.
   const deadzones = merged.gamepad.siteDeadzones && typeof merged.gamepad.siteDeadzones === 'object'
     ? merged.gamepad.siteDeadzones
     : {};
@@ -793,7 +793,7 @@ function normalize(raw) {
     }
   }
   merged.web.autoRefresh = nextAutoRefresh;
-  // Seiten-Zoom pro Webseite: Faktor 0.5-2, maximal 60 EintrÃ¤ge.
+  // Seiten-Zoom pro Webseite: Faktor 0.5-2, maximal 60 Einträge.
   const rawSiteZoom = merged.web.siteZoom && typeof merged.web.siteZoom === 'object' ? merged.web.siteZoom : {};
   const nextSiteZoom = {};
   let siteZoomCount = 0;
@@ -808,7 +808,7 @@ function normalize(raw) {
     }
   }
   merged.web.siteZoom = nextSiteZoom;
-  // Lesemodus pro Webseite: siteId -> bool, maximal 60 EintrÃ¤ge.
+  // Lesemodus pro Webseite: siteId -> bool, maximal 60 Einträge.
   const rawReaderSites = merged.web.readerSites && typeof merged.web.readerSites === 'object' ? merged.web.readerSites : {};
   const nextReaderSites = {};
   let readerSiteCount = 0;
@@ -837,7 +837,7 @@ function normalize(raw) {
   merged.web.adBlockOffSites = sanitizeBoolMap(merged.web.adBlockOffSites);
   merged.web.cookieOffSites = sanitizeBoolMap(merged.web.cookieOffSites);
 
-  // WÃ¶chentliche Challenge-Checkliste.
+  // Wöchentliche Challenge-Checkliste.
   if (!isPlainObject(merged.checklist)) merged.checklist = { items: [], week: '' };
   const rawItems = Array.isArray(merged.checklist.items) ? merged.checklist.items : [];
   const nextItems = [];
@@ -867,7 +867,7 @@ function normalize(raw) {
     week: String(merged.checklist.week || '').slice(0, 10)
   };
 
-  // PersÃ¶nliche Erinnerungen.
+  // Persönliche Erinnerungen.
   if (!isPlainObject(merged.reminders)) merged.reminders = { list: [] };
   const rawReminders = Array.isArray(merged.reminders.list) ? merged.reminders.list : [];
   const nextReminders = [];
@@ -971,7 +971,7 @@ function normalize(raw) {
   }
   merged.lastSite = lastSite;
 
-  // Eigene Akzentfarbe: nur gÃ¼ltige Hex-Farben erlauben.
+  // Eigene Akzentfarbe: nur gültige Hex-Farben erlauben.
   if (!isPlainObject(merged.appearance)) merged.appearance = { accent: '', uiScale: 1, colorblind: false, highContrast: false, uiLanguage: 'de' };
   const accent = String(merged.appearance.accent || '').trim();
   const uiScale = Number(merged.appearance.uiScale);
@@ -1087,7 +1087,7 @@ function normalize(raw) {
       : ''
   };
 
-  // Bild-in-Bild-Fenster: Position/GrÃ¶ÃŸe merken (min. GrÃ¶ÃŸe prÃ¼fen).
+  // Bild-in-Bild-Fenster: Position/Größe merken (min. Größe prüfen).
   if (!isPlainObject(merged.pip)) merged.pip = { bounds: null };
   const pipBounds = merged.pip.bounds;
   if (pipBounds && isPlainObject(pipBounds)) {
@@ -1175,8 +1175,8 @@ function normalize(raw) {
   merged.statsHud.showActivity = merged.statsHud.showActivity !== false;
   merged.statsHud.showChampions = merged.statsHud.showChampions !== false;
 
-  // Session-Statistiken: TagesschlÃ¼ssel -> Minuten, Ã¤lteste EintrÃ¤ge
-  // Ã¼ber 60 Tage hinaus verwerfen.
+  // Session-Statistiken: Tagesschlüssel -> Minuten, älteste Einträge
+  // über 60 Tage hinaus verwerfen.
   if (!isPlainObject(merged.stats)) merged.stats = { days: {}, weeklyGoal: 0 };
   const rawDays = isPlainObject(merged.stats.days) ? merged.stats.days : {};
   const dayEntries = Object.entries(rawDays)
@@ -1223,7 +1223,7 @@ function normalize(raw) {
   if (!isPlainObject(merged.bungie)) merged.bungie = { apiKey: '', playerName: '', origin: '', oauthClientId: '', oauth: {} };
   const originValue = String(merged.bungie.origin || '').trim().slice(0, 200);
   const oauth = isPlainObject(merged.bungie.oauth) ? merged.bungie.oauth : {};
-  // Loadouts (OAuth Stufe 2): gesicherte AusrÃ¼stungs-SchnappschÃ¼sse.
+  // Loadouts (OAuth Stufe 2): gesicherte Ausrüstungs-Schnappschüsse.
   const rawLoadouts = Array.isArray(merged.bungie.loadouts) ? merged.bungie.loadouts : [];
 
   const nextLoadouts = [];
@@ -1239,14 +1239,14 @@ function normalize(raw) {
         name: String((item && item.name) || '').slice(0, 60),
         typeName: String((item && item.typeName) || '').slice(0, 40),
         icon: String((item && item.icon) || '').slice(0, 120),
-        // Slot-Zuordnung fÃ¼r den Loadout-Editor (Bucket-Hash).
+        // Slot-Zuordnung für den Loadout-Editor (Bucket-Hash).
         bucket: Math.round(Number(item && item.bucket) || 0),
         classType: Number.isFinite(Number(item && item.classType)) ? Math.round(Number(item && item.classType)) : 3
       }))
       .filter((item) => item.hash > 0);
     if (!name || !items.length) continue;
     // Die Mods des Loadouts (DIM parameters.mods): eine FLACHE Liste
-    // der gewÃ¤hlten Mods â€” sie werden erst beim Anlegen eingesteckt.
+    // der gewählten Mods — sie werden erst beim Anlegen eingesteckt.
     const modList = (Array.isArray(entry.mods) ? entry.mods : []).slice(0, 20).map((mod) => {
       const rawS = Array.isArray(mod && mod.s) ? mod.s : [];
       const sb = Math.round(Number(mod && mod.sb));
@@ -1262,7 +1262,7 @@ function normalize(raw) {
           h: Math.round(Number(bonus && bonus.h) || 0),
           v: Math.round(Number(bonus && bonus.v) || 0)
         })).filter((bonus) => bonus.h > 0),
-        // Die feste Socket-Zuordnung am RÃ¼stungsteil (Bucket + Socket-Index).
+        // Die feste Socket-Zuordnung am Rüstungsteil (Bucket + Socket-Index).
         sb: Number.isFinite(sb) && sb > 0 ? sb : 0,
         si: Number.isFinite(si) && si >= 0 ? si : -1
       };
@@ -1274,7 +1274,7 @@ function normalize(raw) {
       statHash: Math.round(Number(mod && mod.statHash) || 0),
       count: Math.max(0, Math.round(Number(mod && mod.count) || 0))
     })).filter((mod) => mod.hash > 0 && mod.count > 0);
-    // Die gewÃ¤hlten Artefakt-Perks (DIM artifact perks).
+    // Die gewählten Artefakt-Perks (DIM artifact perks).
     const perkList = (Array.isArray(entry.artifactPerks) ? entry.artifactPerks : []).slice(0, 8).map((perk) => {
       const rawS = Array.isArray(perk && perk.s) ? perk.s : [];
       return {
@@ -1289,8 +1289,8 @@ function normalize(raw) {
         })).filter((bonus) => bonus.h > 0)
       };
     }).filter((perk) => perk.h > 0);
-    // Die Fokus-Ãœberschreibungen (DIM socketOverrides): pro Socket-Index
-    // der gewÃ¤hlte Plug (FÃ¤higkeit/Aspekt/Fragment).
+    // Die Fokus-Überschreibungen (DIM socketOverrides): pro Socket-Index
+    // der gewählte Plug (Fähigkeit/Aspekt/Fragment).
     const subPlugs = (Array.isArray(entry.subclassPlugs) ? entry.subclassPlugs : []).slice(0, 24).map((plug) => ({
       idx: Math.round(Number(plug && plug.idx) || 0),
       hash: Math.round(Number(plug && (plug.hash || plug.h)) || 0),
@@ -1299,7 +1299,7 @@ function normalize(raw) {
       p: String((plug && plug.p) || '').slice(0, 60),
       d: String((plug && plug.d) || '').slice(0, 400)
     })).filter((plug) => plug.hash > 0);
-    // Die Kosmetik je RÃ¼stungs-Bucket (Shader/Ornament, nur dokumentiert).
+    // Die Kosmetik je Rüstungs-Bucket (Shader/Ornament, nur dokumentiert).
     const fashion = {};
     if (isPlainObject(entry.fashion)) {
       for (const [bucketKey, value] of Object.entries(entry.fashion)) {
@@ -1347,7 +1347,7 @@ function normalize(raw) {
   // stats / tier / archetype.
   const rawItemSort = String(merged.bungie.itemSort || '').trim();
   const itemSort = ['power', 'name', 'rarity', 'stats', 'tier', 'archetype'].includes(rawItemSort) ? rawItemSort : 'power';
-  // Favoriten (DIM-Tag â˜…): instanceId- oder Hash-SchlÃ¼ssel â†’ true/false.
+  // Favoriten (DIM-Tag ★): instanceId- oder Hash-Schlüssel → true/false.
   const rawFavs = isPlainObject(merged.bungie.favs) ? merged.bungie.favs : {};
   const favs = {};
   let favCount = 0;
@@ -1426,8 +1426,8 @@ function normalize(raw) {
     // Normalisierung (also JEDES config.set) das Secret verwerfen.
     oauthClientSecretEnc: String(merged.bungie.oauthClientSecretEnc || '').slice(0, 500),
     apiKeyEnc: String(merged.bungie.apiKeyEnc || '').slice(0, 500),
-    // Godroll-Wunschliste (DIM-Format): Community-Liste fÃ¼r den
-    // â˜…-Check am Item. Leer = kein Godroll-Check.
+    // Godroll-Wunschliste (DIM-Format): Community-Liste für den
+    // ★-Check am Item. Leer = kein Godroll-Check.
     // Wunschliste(n): 48klocs-voltron (aktiv gepflegt, letzte
     // Aktualisierung Okt 2026) + Aegis-Endgame (nur A/S-Tier-Rolls).
     // Mehrere URLs kommagetrennt.
@@ -1740,7 +1740,7 @@ function get() {
 function set(patch) {
   const next = isPlainObject(patch) ? { ...patch } : {};
   // lastSite ist ein offenes Objekt (Kategorie -> Seite). Beim
-  // ZusammenfÃ¼hren mÃ¼ssen neue Kategorien erhalten bleiben.
+  // Zusammenführen müssen neue Kategorien erhalten bleiben.
   if (isPlainObject(next.lastSite)) {
     next.lastSite = { ...(isPlainObject(data.lastSite) ? data.lastSite : {}), ...next.lastSite };
   }

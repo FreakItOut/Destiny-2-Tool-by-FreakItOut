@@ -6,7 +6,7 @@ Ein Overlay-Tool für Destiny 2: Webseiten (light.gg, DIM, YouTube …) direkt �
 
 ## 1. Schnellstart
 
-1. `Destiny 2 Tool by FreakItOut Setup 1.0.0.exe` installieren **oder** die portable EXE starten.
+1. `Destiny 2 Tool by FreakItOut Setup 1.1.0.exe` installieren **oder** die portable EXE starten.
    - **Portable**: Alle Daten (Config, Notizen, Backups, Cache) landen im `Daten`-Ordner neben der EXE — ideal für USB-Sticks.
 2. In Destiny 2: *Einstellungen → Video → Fenstermodus (randlos)*. Exklusives Vollbild kann kein Overlay anzeigen (Windows-Einschränkung).
 3. Im Tool `Alt+D` drücken (oder Controller) → das Overlay erscheint über dem Spiel. Erneut drücken blendet es aus.
@@ -196,4 +196,4 @@ Kategorien-Startseite (native, ohne Webview):
 
 ---
 
-*Stand: Version 1.0.0 — öffentliche Standard-Edition.*
+*Stand: Version 1.1.0 — öffentliche Standard-Edition.*

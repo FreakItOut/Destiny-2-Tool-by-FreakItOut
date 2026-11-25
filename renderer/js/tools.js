@@ -4469,6 +4469,7 @@ let transferJobsState = null;
       `</div>` +
       renderVendorShoppingOptimizer() +
       renderVendorDiagnostics(state) +
+      `<div class="dim-vendors-hint">Nur Händler mit aktuellen Angeboten werden gelistet. Xûr erscheint Freitag bis Dienstag; Eisenbanner und Prüfungen nur in ihrer Woche. Nicht verfügbare Händler liefern von Bungie keine Angebote – das ist kein Ladefehler.</div>` +
       (groups || '<div class="dim-vendors-loading">Keine Händler mit Angeboten gefunden.</div>') +
     `</section>`;
   }

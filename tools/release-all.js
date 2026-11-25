@@ -69,8 +69,9 @@ try {
   }
   run('Release-Check', STD_ROOT, 'node tools/release-check.js', 120000);
 
-  const stdExe = path.join(STD_ROOT, 'dist', 'Destiny 2 Tool by FreakItOut 1.0.0.exe');
-  const leExe = path.join(LE_ROOT, 'dist', 'Destiny 2 Tool by FreakItOut Lenastheo Limited Edition 1.0.0.exe');
+  const appVersion = JSON.parse(fs.readFileSync(path.join(STD_ROOT, 'package.json'), 'utf8')).version;
+  const stdExe = path.join(STD_ROOT, 'dist', `Destiny 2 Tool by FreakItOut ${appVersion}.exe`);
+  const leExe = path.join(LE_ROOT, 'dist', `Destiny 2 Tool by FreakItOut Lenastheo Limited Edition ${appVersion}.exe`);
   const testExe = path.join(TEST_ROOT, 'Lenastheo Testversion.exe');
   const plugin = path.join(STD_ROOT, 'dist', 'com.freakitout.d2tool.streamDeckPlugin');
   const hashes = {

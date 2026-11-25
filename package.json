@@ -1,6 +1,6 @@
 {
   "name": "frakitouts-destiny-2-tool",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Destiny 2 Tool by FreakItOut – Webseiten-Overlay mit Tastatur- und Controller-Steuerung",
   "main": "electron/main.js",
   "author": "FreakItOut",
@@ -109,11 +109,26 @@
       "package.json"
     ],
     "extraResources": [
-      { "from": "node_modules/qrcode", "to": "modules/node_modules/qrcode" },
-      { "from": "node_modules/dijkstrajs", "to": "modules/node_modules/dijkstrajs" },
-      { "from": "node_modules/pngjs", "to": "modules/node_modules/pngjs" },
-      { "from": "node_modules/js-yaml", "to": "modules/node_modules/js-yaml" },
-      { "from": "node_modules/argparse", "to": "modules/node_modules/argparse" }
+      {
+        "from": "node_modules/qrcode",
+        "to": "modules/node_modules/qrcode"
+      },
+      {
+        "from": "node_modules/dijkstrajs",
+        "to": "modules/node_modules/dijkstrajs"
+      },
+      {
+        "from": "node_modules/pngjs",
+        "to": "modules/node_modules/pngjs"
+      },
+      {
+        "from": "node_modules/js-yaml",
+        "to": "modules/node_modules/js-yaml"
+      },
+      {
+        "from": "node_modules/argparse",
+        "to": "modules/node_modules/argparse"
+      }
     ],
     "asarUnpack": [
       "electron/gamepad-helper/GamepadHelper-prebuilt-*.exe"
