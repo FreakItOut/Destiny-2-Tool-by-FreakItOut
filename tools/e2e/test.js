@@ -2056,6 +2056,53 @@ async function run() {
   onboarding.close();
   check('Einrichtungs-Assistent schließt', Boolean(document.querySelector('.onboarding-backdrop.hidden')));
 
+  // --- Inventar-Virtualisierung: große Listen in 120er-Blöcken ----------
+  try {
+    const e2eBefore = window.__D2_E2E;
+    const tabEl = document.querySelector('.dinv-tab.on');
+    const tabBefore = tabEl ? tabEl.dataset.tab : 'tools';
+    window.__D2_E2E = false;
+    document.body.classList.remove('pad-active');
+    const godrollFilter = document.querySelector('#inventoryGodrollFilter');
+    if (godrollFilter && godrollFilter.classList.contains('active')) godrollFilter.click();
+    const invSearch = document.querySelector('#inventorySearch');
+    if (invSearch) {
+      invSearch.value = '';
+      invSearch.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
+    await wait(220);
+    const helper = window.__d2invTest;
+    const plan = helper && helper.chunkPlan
+      ? [helper.chunkPlan(581, 0), helper.chunkPlan(581, 120), helper.chunkPlan(581, 480), helper.chunkPlan(581, 581)]
+      : [];
+    check('Chunk-Plan teilt große Listen in 120er-Blöcke',
+      plan.length === 4 && plan[0].end === 120 && plan[0].more === true && plan[1].end === 240 &&
+        plan[2].end === 581 && plan[2].more === false && plan[3].more === false,
+      plan.map((entry) => `${entry && entry.end}/${entry && entry.more}`).join(' '));
+    const html = helper && helper.chunkHtml ? helper.chunkHtml(581) : '';
+    const probe = document.createElement('div');
+    probe.innerHTML = html;
+    const probeTiles = probe.querySelectorAll('.dinv-tile-wrap').length;
+    const probeMore = probe.querySelector('[data-inv-chunk-more]');
+    check('Große Liste rendert zuerst nur 120 Kacheln',
+      probeTiles === 120 && Boolean(probeMore) && /120\/581/.test(probeMore.textContent || ''),
+      `${probeTiles} · ${probeMore ? probeMore.textContent : '-'}`);
+    probe.remove();
+    const wraps = [...document.querySelectorAll('#inventoryView .dinv-tile-wrap')];
+    const computed = wraps.length ? getComputedStyle(wraps[0]).contentVisibility : '';
+    const heights = [...new Set(wraps.map((tile) => Math.round(tile.getBoundingClientRect().height)))];
+    check('Kacheln nutzen Paint-Virtualisierung mit fester Höhe',
+      wraps.length > 10 && computed === 'auto' && heights.length === 1 && heights[0] === 79,
+      `${wraps.length} Kacheln · ${computed} · ${heights.join('/')}`);
+    window.__D2_E2E = e2eBefore;
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: tabBefore } }));
+    await wait(160);
+  } catch (error) {
+    window.__D2_E2E = true;
+    check('Große Liste rendert zuerst nur 120 Kacheln', false, String((error && error.message) || error));
+  }
+
   try {
     for (const tip of document.querySelectorAll('.inventory-tooltip.show, .vc-tooltip.show, #armorPickerTooltip.show, #toolsXurTooltip.show')) {
       tip.classList.remove('show');

@@ -76,7 +76,7 @@ const DIM = {
 
 // ---------- CSS (einmalig injiziert, alle Regeln mit !important) ----------
 const INVENTORY_CSS = `
-#inventoryView { position: absolute; inset: 0; z-index: 40; background: #0b1018; display: flex; flex-direction: column; overflow: hidden; }
+#inventoryView { position: absolute; inset: 0; z-index: 40; background: #0b1018; display: flex; flex-direction: column; overflow: hidden; --dinv-tile-h: 79px; }
 #inventoryView.hidden { display: none; }
 .inventory-view-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; flex-shrink: 0; border-bottom: 1px solid #1a2230; }
 .inventory-view-head h2 { margin: 0; font-size: 16px; font-weight: 700; color: #e8ecf2; }
@@ -90,7 +90,7 @@ const INVENTORY_CSS = `
 .inventory-toolbar input[type=search] { flex: 2 1 200px; height: 28px; font-size: 12px; padding: 0 8px; border-radius: 5px; border: 1px solid #2a3548; background: rgba(0,0,0,0.4); color: #e8ecf2; }
 .inventory-toolbar input[type=text] { flex: 0 0 150px; height: 28px; font-size: 12px; padding: 0 8px; border-radius: 5px; border: 1px solid #2a3548; background: rgba(0,0,0,0.4); color: #e8ecf2; }
 .inventory-toolbar select.control { flex: 0 0 128px !important; width: 128px !important; height: 28px !important; font-size: 12px; padding: 0 6px; border-radius: 5px; border: 1px solid #2a3548; background: rgba(0,0,0,0.4); color: #e8ecf2; }
-.inventory-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto; padding: 8px 14px; }
+.inventory-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto; overflow-anchor: none; padding: 8px 14px; }
 .inventory-result { margin: 8px 14px 0; padding: 6px 10px; border: 1px solid #2a3548; border-radius: 6px; max-height: 180px; overflow-y: auto; font-size: 11px; flex-shrink: 0; }
 .inventory-result .r-ok { color: #29f36a; }
 .inventory-result .r-err { color: #ff6b6b; }
@@ -128,7 +128,13 @@ const INVENTORY_CSS = `
 /* ---- Badge-Band unten (DIM BadgeInfo): Power-Level groß & klar ---- */
 .dinv-tile-badge { position: absolute; left: 0; right: 0; bottom: 0; height: 17px; display: flex; align-items: center; justify-content: space-between; padding: 0 3px; background: rgba(8,12,20,0.78); z-index: 3; pointer-events: none; box-sizing: border-box; }
 /* ---- Tile-Wrapper mit Perk-Reihe UNTER der Kachel (verdeckt nichts) ---- */
-.dinv-tile-wrap { display: flex; flex-direction: column; gap: 1px; width: 56px; flex-shrink: 0; }
+.dinv-tile-wrap { display: flex; flex-direction: column; gap: 1px; width: 56px; height: var(--dinv-tile-h, 79px); flex-shrink: 0; content-visibility: auto; contain-intrinsic-size: auto var(--dinv-tile-h, 79px); }
+body.tv-mode #inventoryView { --dinv-tile-h: 104px; }
+body.tv-mode .dinv-tile-wrap { width: 76px; }
+body.tv-mode .dinv-sub { grid-template-columns: repeat(3, 76px); }
+body.tv-mode .dinv-sub.vault { grid-template-columns: repeat(auto-fill, 76px); }
+body.pad-active .dinv-tile-wrap { content-visibility: visible; }
+.dinv-chunk { display: contents; }
 .dinv-tile-perkrow { display: flex; gap: 2px; justify-content: center; align-items: center; height: 11px; }
 .dinv-tile-perkrow img { width: 10px !important; height: 10px !important; filter: drop-shadow(0 0 1.5px rgba(0,0,0,0.9)) saturate(1.4); }
 /* ---- Drag & Drop: eigener Pointer-Drag (Ghost + Drop-Zonen) ---- */
@@ -792,6 +798,71 @@ export function createInventory(ctx) {
   // Items deutlich schneller.
   let lazyRowObserver = null;
   const lazyRowHtml = new WeakMap();
+  // Große, vollständig aufgeklappte Listen werden in 120er-Blöcken
+  // nachgeladen. Zusammen mit der festen Kachelhöhe und
+  // content-visibility bleibt das Scrollen auch bei 1.700+ Items flüssig.
+  const CHUNK_SIZE = 120;
+  const chunkedLists = new Map();
+  let chunkObserver = null;
+  function chunkingEnabled() {
+    return !window.__D2_E2E
+      && !document.body.classList.contains('pad-active')
+      && !searchActive
+      && typeof IntersectionObserver === 'function';
+  }
+  // Reine Fenster-Rechnung: welcher Block kommt als Nächstes, gibt es mehr?
+  function chunkPlan(total, rendered, size = CHUNK_SIZE) {
+    const end = Math.min(total, rendered + size);
+    return { end, more: end < total };
+  }
+  function chunkMoreButton(key, rendered, total) {
+    const plan = chunkPlan(total, rendered);
+    if (rendered >= total) return '';
+    return `<button type="button" class="dinv-more" data-inv-chunk-more="${esc(key)}">Weitere ${plan.end - rendered} laden (${rendered}/${total})</button>`;
+  }
+  function appendChunk(key) {
+    const state = chunkedLists.get(key);
+    if (!state || !body) return;
+    const container = body.querySelector(`[data-inv-chunk="${CSS.escape(key)}"]`);
+    if (!container) return;
+    const oldButton = container.querySelector('[data-inv-chunk-more]');
+    if (oldButton) oldButton.remove();
+    const next = state.items.slice(state.rendered, chunkPlan(state.items.length, state.rendered).end);
+    if (!next.length) return;
+    container.insertAdjacentHTML('beforeend',
+      next.map((item) => tileHtml(item, state.kind, state.owner)).join('') +
+      chunkMoreButton(key, state.rendered + next.length, state.items.length));
+    state.rendered += next.length;
+    const nextButton = container.querySelector('[data-inv-chunk-more]');
+    if (!nextButton || !chunkObserver) return;
+    chunkObserver.observe(nextButton);
+    // Wenn der neue Block noch im Ladebereich liegt (hoher Viewport),
+    // direkt weiterfüllen – aber nur innerhalb des nächsten Frames.
+    requestAnimationFrame(() => {
+      if (!nextButton.isConnected) return;
+      const buttonRect = nextButton.getBoundingClientRect();
+      const bodyRect = body.getBoundingClientRect();
+      if (buttonRect.top - bodyRect.top < body.clientHeight + 900) appendChunk(key);
+    });
+  }
+  function initChunkLists() {
+    if (chunkObserver) {
+      chunkObserver.disconnect();
+      chunkObserver = null;
+    }
+    if (!body || !chunkingEnabled()) return;
+    const buttons = [...body.querySelectorAll('[data-inv-chunk-more]')];
+    if (!buttons.length) return;
+    chunkObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const key = String(entry.target.dataset.invChunkMore || '');
+        if (key) appendChunk(key);
+        chunkObserver.unobserve(entry.target);
+      }
+    }, { root: body, rootMargin: '900px 0px' });
+    buttons.forEach((button) => chunkObserver.observe(button));
+  }
   function applyLazyInventoryRows() {
     if (lazyRowObserver) {
       lazyRowObserver.disconnect();
@@ -803,7 +874,7 @@ export function createInventory(ctx) {
     // erste Treffer gefunden und fokussiert werden kann.
     if (searchActive) return;
     if (typeof IntersectionObserver !== 'function') return;
-    const rows = [...body.querySelectorAll('.dinv-row')].filter((row) => !row.classList.contains('dinv-head-row'));
+    const rows = [...body.querySelectorAll('.dinv-row')].filter((row) => !row.classList.contains('dinv-head-row') && !row.querySelector('[data-inv-chunk]'));
     if (rows.length < 5) return;
     lazyRowObserver = new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -2145,11 +2216,42 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   function tileWindow(items, kind, owner, key, limit = 80) {
     const list = Array.isArray(items) ? items : [];
     if (!list.length) return '';
-    if (list.length <= limit || expandedTileLists.has(key)) {
+    if (list.length <= limit) {
+      return list.map((item) => tileHtml(item, kind, owner)).join('');
+    }
+    if (expandedTileLists.has(key)) {
+      if (list.length > 240 && chunkingEnabled()) {
+        const first = Math.min(CHUNK_SIZE, list.length);
+        chunkedLists.set(key, { items: list, kind, owner, rendered: first });
+        return `<div class="dinv-chunk" data-inv-chunk="${esc(key)}">` +
+          list.slice(0, first).map((item) => tileHtml(item, kind, owner)).join('') +
+          chunkMoreButton(key, first, list.length) +
+          `</div>`;
+      }
       return list.map((item) => tileHtml(item, kind, owner)).join('');
     }
     const html = list.slice(0, limit).map((item) => tileHtml(item, kind, owner)).join('');
     return html + `<button type="button" class="dinv-more" data-inv-more="${esc(key)}">+${list.length - limit} weitere anzeigen</button>`;
+  }
+  // Nur für den E2E-Test: Fenster-Rendering und Blockrechnung direkt
+  // prüfen, ohne eine künstliche 1.700-Item-Datenquelle zu brauchen.
+  if (window.__D2_E2E) {
+    window.__d2invTest = {
+      chunkPlan,
+      chunkHtml(count, key = 'e2e:chunk') {
+        const items = Array.from({ length: count }, (_, index) => ({
+          hash: 900000 + index,
+          instanceId: `e2e-chunk-${index}`,
+          name: `Testkachel ${index}`,
+          bucket: 1498876634
+        }));
+        expandedTileLists.add(key);
+        const html = tileWindow(items, 'vault', '', key, 80);
+        expandedTileLists.delete(key);
+        chunkedLists.delete(key);
+        return html;
+      }
+    };
   }
   // Kopfzeilen-Zelle (StoreHeading + StoreStats) für einen Charakter.
   function characterStatBreakdown(character, hash) {
@@ -3017,6 +3119,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   let inventoryPendingScroll = null;
   function render() {
     if (!body) return;
+    chunkedLists.clear();
     syncVaultWarning();
     checkWatchlist();
     if (view) view.classList.toggle('dinv-compact', ((getCfg().bungie && getCfg().bungie.inventoryDensity) || 'comfortable') === 'compact');
@@ -3144,6 +3247,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     if (window.enhanceTvTargets) window.enhanceTvTargets(body);
     applyVaultCollapse();
     applyLazyInventoryRows();
+    initChunkLists();
 
     if (selectedItem) {
       const tile = body.querySelector(`[data-inv-select="${CSS.escape(selectedItem.key)}"]`);
@@ -9236,6 +9340,11 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       applyVaultCollapse();
     });
     body.addEventListener('click', async (event) => {
+      const chunkMore = event.target.closest('[data-inv-chunk-more]');
+      if (chunkMore) {
+        appendChunk(String(chunkMore.dataset.invChunkMore || ''));
+        return;
+      }
       const moreTiles = event.target.closest('[data-inv-more]');
       if (moreTiles) {
         expandedTileLists.add(String(moreTiles.dataset.invMore || ''));

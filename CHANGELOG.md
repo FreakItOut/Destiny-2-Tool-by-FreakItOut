@@ -6,6 +6,29 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.2.0] – 2026-11-25
+
+### Hinzugefügt
+
+- **Inventar-Virtualisierung** – Kacheln haben eine feste Höhe und werden
+  nur im sichtbaren Bereich gezeichnet (`content-visibility`). Auch bei
+  1.700+ Items bleibt der Aufbau schnell und die Scrollhöhe stabil.
+- **Blockweises Nachladen** – vollständig aufgeklappte Tresorlisten rendern
+  zuerst 120 Kacheln; „Weitere 120 laden“ und Scrollen laden den nächsten
+  Block nach. Der DOM bleibt klein, die Scrollposition bleibt erhalten.
+- E2E-Tests für Blockplan, 120er-Erstblock und Paint-Virtualisierung.
+
+### Behoben
+
+- **Scrollsprung beim Neu-Rendern** – `overflow-anchor: none` verhindert,
+  dass nachwachsende Off-Screen-Zeilen die Position verschieben.
+- **TV-Modus** – Kachel- und Rasterbreite (76 px) passen wieder zusammen,
+  die feste Kachelhöhe ist auf 104 px ausgelegt.
+
+### Geändert
+
+- Version **1.2.0**; App-Feature-Test umfasst **72 Prüfungen**, E2E **477**.
+
 ## [1.1.0] – 2026-11-25
 
 ### Hinzugefügt

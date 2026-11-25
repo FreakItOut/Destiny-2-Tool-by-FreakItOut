@@ -112,6 +112,7 @@ check('Kein Lazy-Paint mit falschen Höhen', !/content-visibility:\s*auto/.test(
 check('Sticky-Navigation ohne Backdrop-Blur', !/\.inv-tools-nav\s*\{[^}]*backdrop-filter\s*:/s.test(toolsCss));
 check('Destiny-2-Beenden vollständig entfernt', !/quitGame|game:quit|overlayQuitGameBtn/.test(app + index + main + preload + config + settings));
 check('Händler-Verfügbarkeit erklärt', tools.includes('dim-vendors-hint') && tools.includes('Xûr erscheint Freitag bis Dienstag'));
+check('Inventar nutzt Fenster-/Chunk-Rendering', inventory.includes('chunkedLists') && inventory.includes('content-visibility: auto') && inventory.includes('data-inv-chunk'));
 check('README nennt neue Features', readme.includes('Command Palette') && readme.includes('Auto-Checkliste') && readme.includes('Multi-Build-Ziele'));
 
 if (failures) {

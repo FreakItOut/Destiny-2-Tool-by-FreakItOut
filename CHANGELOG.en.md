@@ -6,6 +6,30 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] – 2026-11-25
+
+### Added
+
+- **Inventory virtualization** – tiles have a fixed height and are only
+  painted in the visible area (`content-visibility`). Building stays fast and
+  the scroll height stays stable even with 1,700+ items.
+- **Chunked loading** – fully expanded vault lists render 120 tiles first;
+  “load 120 more” and scrolling append the next chunk. The DOM stays small and
+  the scroll position is preserved.
+- E2E checks for the chunk plan, the first 120-tile block and paint
+  virtualization.
+
+### Fixed
+
+- **Scroll jump on re-render** – `overflow-anchor: none` stops growing
+  off-screen rows from moving the position.
+- **TV mode** – tile and grid width (76 px) match again; the fixed tile height
+  is 104 px.
+
+### Changed
+
+- Version **1.2.0**; app feature test now has **72 checks**, E2E **477**.
+
 ## [1.1.0] – 2026-11-25
 
 ### Added
