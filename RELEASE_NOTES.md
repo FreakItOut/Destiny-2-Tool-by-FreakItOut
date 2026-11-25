@@ -40,8 +40,10 @@ GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
   `Daten`-Ordner mitnehmen.
 - Prüfsummen: `SHA256SUMS.txt` herunterladen und z. B. mit
   `Get-FileHash .\Datei.exe -Algorithm SHA256` vergleichen.
-- Vollständige Anleitung: [README](README.md) · Änderungen:
-  [CHANGELOG](CHANGELOG.md).
+- Vollständige Anleitung:
+  [README](https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut/blob/main/README.md) ·
+  Änderungen:
+  [CHANGELOG](https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut/blob/main/CHANGELOG.md).
 
 ### Datenschutz
 
@@ -87,8 +89,10 @@ GitHub replaces spaces in file names with dots. The checksums in
   with the EXE.
 - Checksums: download `SHA256SUMS.txt` and compare with e.g.
   `Get-FileHash .\File.exe -Algorithm SHA256`.
-- Full guide: [README.en.md](README.en.md) · Changes:
-  [CHANGELOG.en.md](CHANGELOG.en.md).
+- Full guide:
+  [README.en.md](https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut/blob/main/README.en.md) ·
+  Changes:
+  [CHANGELOG.en.md](https://github.com/FreakItOut/Destiny-2-Tool-by-FreakItOut/blob/main/CHANGELOG.en.md).
 
 ### Privacy
 
