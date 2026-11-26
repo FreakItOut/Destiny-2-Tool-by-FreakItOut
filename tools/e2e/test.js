@@ -2169,6 +2169,31 @@ async function run() {
     check('TV-Inventar nutzt die Zellbreite', false, String((error && error.message) || error));
   }
 
+  // --- Overlay-Inventar: kompakt und ohne doppelte Leisten --------------
+  try {
+    const tabEl = document.querySelector('.dinv-tab.on');
+    const tabBack = tabEl ? tabEl.dataset.tab : 'tools';
+    document.body.classList.add('mode-overlay', 'inventory-open');
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
+    await wait(220);
+    const sub = document.querySelector('#inventoryBody .dinv-sub:not(.vault)');
+    const columns = sub ? getComputedStyle(sub).gridTemplateColumns.split(' ').filter(Boolean).length : 0;
+    const tile = sub ? sub.querySelector('.dinv-tile') : null;
+    const tileHeight = tile ? Math.round(tile.getBoundingClientRect().height) : 0;
+    const titleEl = document.querySelector('.inventory-view-head > div:first-child');
+    const padHintEl = document.querySelector('.inventory-pad-hint');
+    const titleHidden = !titleEl || getComputedStyle(titleEl).display === 'none';
+    const padHintHidden = !padHintEl || getComputedStyle(padHintEl).display === 'none';
+    check('Overlay-Inventar nutzt die Zellbreite', columns >= 4, `${columns} Spalten`);
+    check('Overlay-Inventar ist kompakt', tileHeight >= 60 && titleHidden && padHintHidden, `${tileHeight}px · Titel ${titleHidden} · Hinweis ${padHintHidden}`);
+    document.body.classList.remove('mode-overlay', 'inventory-open');
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: tabBack } }));
+    await wait(160);
+  } catch (error) {
+    document.body.classList.remove('mode-overlay', 'inventory-open');
+    check('Overlay-Inventar nutzt die Zellbreite', false, String((error && error.message) || error));
+  }
+
   try {
     for (const tip of document.querySelectorAll('.inventory-tooltip.show, .vc-tooltip.show, #armorPickerTooltip.show, #toolsXurTooltip.show')) {
       tip.classList.remove('show');

@@ -135,6 +135,35 @@ body.tv-mode .dinv-sub,
 body.tv-mode .dinv-sub.vault { grid-template-columns: repeat(auto-fill, 76px); }
 body.tv-mode .dinv-tile { width: 76px !important; height: 76px !important; }
 body.tv-mode .dinv-pm-slot { width: 76px !important; height: 76px !important; }
+/* Overlay-Inventar: opak und dicht, damit es über dem Spiel nutzbar ist. */
+body.mode-overlay #inventoryView { background: #0b1018 !important; --dinv-tile-h: 88px; }
+body.mode-overlay .inventory-view-head { padding: 2px 8px !important; }
+body.mode-overlay .inventory-view-head > div:first-child { display: none; }
+body.mode-overlay .inventory-head-controls { gap: 4px; }
+body.mode-overlay .inventory-head-controls .btn { height: 28px; padding: 0 8px; font-size: 11px; }
+body.mode-overlay .inventory-toolbar { padding: 3px 8px !important; gap: 4px !important; }
+body.mode-overlay .inventory-toolbar input,
+body.mode-overlay .inventory-toolbar select,
+body.mode-overlay .inventory-toolbar .btn { height: 28px !important; min-height: 28px !important; font-size: 11px !important; }
+body.mode-overlay #inventoryStatus,
+body.mode-overlay .inventory-legend,
+body.mode-overlay .inventory-pad-hint { display: none !important; }
+body.mode-overlay #inventoryResult:empty,
+body.mode-overlay #inventoryDetail:empty { display: none !important; }
+body.mode-overlay .dinv-tab { min-height: 30px !important; font-size: 12px !important; padding: 3px 9px !important; }
+body.mode-overlay .dinv-sub,
+body.mode-overlay .dinv-sub.vault { grid-template-columns: repeat(auto-fill, 64px); }
+body.mode-overlay .dinv-tile { width: 64px !important; height: 64px !important; }
+body.mode-overlay .dinv-tile-wrap { width: 64px; }
+body.mode-overlay .dinv-pm-slot { width: 64px !important; height: 64px !important; }
+body.mode-overlay.inventory-open .overlay-bar { padding: 3px 8px; gap: 4px; }
+body.mode-overlay.inventory-open .overlay-brand,
+body.mode-overlay.inventory-open .overlay-clock,
+body.mode-overlay.inventory-open .overlay-session,
+body.mode-overlay.inventory-open .overlay-champion { display: none !important; }
+body.mode-overlay.inventory-open .overlay-bar .overlay-action,
+body.mode-overlay.inventory-open .overlay-bar button,
+body.mode-overlay.inventory-open .overlay-bar .chip { min-height: 30px !important; height: 30px !important; font-size: 11px !important; }
 body.pad-active .dinv-tile-wrap { content-visibility: visible; }
 .dinv-chunk { display: contents; }
 .dinv-tile-perkrow { display: flex; gap: 2px; justify-content: center; align-items: center; height: 11px; }
@@ -2359,8 +2388,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const slots = [];
     // Im TV-Modus keine 21 leeren Plätze aufblasen: nur belegte Slots
     // plus ein kleiner Puffer, damit die Ansicht kompakt bleibt.
-    const tvMode = document.body.classList.contains('tv-mode');
-    const slotCount = tvMode ? Math.min(21, Math.max(9, postmasterList.length + 2)) : 21;
+    const compactMode = document.body.classList.contains('tv-mode')
+      || document.body.classList.contains('mode-overlay');
+    const slotCount = compactMode ? Math.min(21, Math.max(9, postmasterList.length + 2)) : 21;
     for (let i = 0; i < slotCount; i += 1) {
       const item = postmasterList[i];
       slots.push(item ? tileHtml(item, 'postmaster', character.id) : `<div class="dinv-pm-slot"></div>`);

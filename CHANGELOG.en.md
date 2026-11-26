@@ -6,6 +6,19 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.2] – 2026-11-26
+
+### Fixed
+
+- **Overlay inventory was unusable** – in the overlay the inventory is now
+  opaque, without duplicate title/status/legend rows and with a compact
+  header. The overlay bar shrinks to the necessary actions while the
+  inventory is open.
+- **More items at once** – overlay tiles are 64 px and use the full cell width
+  (`auto-fill`); the postmaster only shows occupied slots plus a buffer.
+- **E2E** checks overlay columns, tile size and hidden bars.
+- Version **1.5.2**.
+
 ## [1.5.1] – 2026-11-26
 
 ### Fixed

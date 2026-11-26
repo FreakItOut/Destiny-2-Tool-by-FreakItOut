@@ -6,6 +6,20 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.2] – 2026-11-26
+
+### Behoben
+
+- **Overlay-Inventar war unbrauchbar** – im Overlay wird das Inventar jetzt
+  opak, ohne doppelte Titel-/Status-/Legendenzeilen und mit kompakter
+  Kopfzeile dargestellt. Die Overlay-Leiste schrumpft bei geöffnetem Inventar
+  auf die nötigen Aktionen.
+- **Mehr Items gleichzeitig** – Overlay-Kacheln sind 64 px groß und nutzen
+  die volle Zellbreite (`auto-fill`), die Poststelle zeigt nur belegte Slots
+  plus Puffer.
+- **E2E** prüft Overlay-Spalten, Kachelgröße und ausgeblendete Leisten.
+- Version **1.5.2**.
+
 ## [1.5.1] – 2026-11-26
 
 ### Behoben

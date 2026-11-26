@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.5.1
+# Destiny 2 Tool by FreakItOut 1.5.2
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,21 +6,19 @@
 
 ## Deutsch
 
-Version 1.5.1 verbessert den TV-Modus im Inventar: mehr Items pro Zeile,
-weniger leere Poststellen-Plätze und kompaktere Kopfbereiche.
+Version 1.5.2 macht das Inventar im Overlay nutzbar: opak, kompakt, ohne doppelte Leisten und mit deutlich mehr Items pro Zeile.
 
-### Neu in 1.5.1
+### Neu in 1.5.2
 
-- **TV-Inventar nutzt die volle Breite** – Kacheln füllen die Zelle per
-  `auto-fill` statt nur drei fester Spalten. Dadurch sind deutlich mehr Items
-  gleichzeitig sichtbar.
-- **Poststelle kompakt** – im TV-Modus werden nur belegte Slots plus ein
-  kleiner Puffer gerendert, nicht mehr 21 leere Plätze.
-- **Kompaktere TV-Kopfzeile** – kleinere Tabs, Filter und Abstände; die
-  Kacheln bleiben mit 76 px groß und fokussierbar.
-- **E2E-Tests** prüfen TV-Spalten und Kachelgröße.
+- **Overlay-Inventar opak und kompakt** – eigene Titel-/Status-/Legendenzeilen
+  entfallen im Overlay, die Kopfzeile wird kleiner und die Overlay-Leiste
+  schrumpft auf die nötigen Aktionen.
+- **Mehr Items sichtbar** – 64-px-Kacheln mit `auto-fill` über die volle
+  Zellbreite; die Poststelle rendert nur belegte Slots plus Puffer.
+- **TV-Modus bleibt verbessert** – 76-px-Kacheln und volle Zellbreite.
+- **E2E-Tests** prüfen TV- und Overlay-Spalten, Kachelgröße und Leisten.
 
-### Enthalten aus 1.5.0
+### Enthalten aus 1.5.1
 
 - Fokus-Dashboard, Einfach-/Erweitert-Einstellungen, Loadout-Warteschlange
   mit Konflikterkennung, 90-Tage-Analyse und SBOM.
@@ -29,8 +27,8 @@ weniger leere Poststellen-Plätze und kompaktere Kopfbereiche.
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.1.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.1.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.2.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.2.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -38,7 +36,7 @@ weniger leere Poststellen-Plätze und kompaktere Kopfbereiche.
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.5.1.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.2.exe`).
 
 ### Voraussetzungen
 
@@ -71,20 +69,20 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.5.1 improves the TV mode inventory: more items per row, fewer empty
-postmaster slots and more compact headers.
+Version 1.5.2 makes the overlay inventory usable: opaque, compact, without
+duplicate bars and with many more items per row.
 
-### New in 1.5.1
+### New in 1.5.2
 
-- **TV inventory uses the full width** – tiles fill the cell via `auto-fill`
-  instead of only three fixed columns. Many more items are visible at once.
-- **Compact postmaster** – in TV mode only occupied slots plus a small buffer
-  are rendered, not 21 empty slots.
-- **More compact TV header** – smaller tabs, filters and gaps; tiles stay at
-  76 px and remain focusable.
-- **E2E tests** check TV columns and tile size.
+- **Opaque, compact overlay inventory** – its own title/status/legend rows
+  are hidden in the overlay, the header is smaller and the overlay bar shrinks
+  to the necessary actions.
+- **More items visible** – 64 px tiles with `auto-fill` across the full cell
+  width; the postmaster renders only occupied slots plus a buffer.
+- **TV mode remains improved** – 76 px tiles and full cell width.
+- **E2E tests** check TV and overlay columns, tile size and bars.
 
-### Included from 1.5.0
+### Included from 1.5.1
 
 - Focus dashboard, simple/advanced settings, loadout queue with conflict
   detection, 90-day analytics and SBOM.
@@ -93,8 +91,8 @@ postmaster slots and more compact headers.
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.1.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.1.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.2.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.2.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -102,7 +100,7 @@ postmaster slots and more compact headers.
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.5.1.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.2.exe`).
 
 ### Requirements
 
