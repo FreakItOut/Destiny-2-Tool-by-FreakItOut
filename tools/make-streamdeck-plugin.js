@@ -18,10 +18,15 @@ const TARGET = path.join(DIST, 'com.freakitout.d2tool.streamDeckPlugin');
 async function loadArchiver() {
   const loaded = await import('archiver');
   const archiver = loaded.default || loaded;
-  if (typeof archiver !== 'function') {
-    throw new Error('archiver konnte nicht geladen werden.');
+  if (typeof archiver === 'function') return archiver;
+  // archiver 8 exportiert Klassen statt einer Factory.
+  if (typeof loaded.ZipArchive === 'function') {
+    return (format, options) => {
+      if (format !== 'zip') throw new Error(`Archivformat ${format} wird nicht unterstützt.`);
+      return new loaded.ZipArchive(options);
+    };
   }
-  return archiver;
+  throw new Error('archiver konnte nicht geladen werden.');
 }
 
 async function main() {
