@@ -104,6 +104,11 @@ function migrateInstalledDataToAppData() {
     if (fs.existsSync(targetConfig)) return;
     fs.copyFileSync(oldConfig, targetConfig);
     try {
+      if (!fs.existsSync(`${targetConfig}.bak`)) fs.copyFileSync(oldConfig, `${targetConfig}.bak`);
+    } catch (error) {
+      // Backup ist optional.
+    }
+    try {
       const oldBackups = path.join(oldData, 'backups');
       const targetBackups = path.join(target, 'backups');
       if (fs.existsSync(oldBackups) && !fs.existsSync(targetBackups)) {

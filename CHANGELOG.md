@@ -6,6 +6,44 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.9.0] – 2026-11-26
+
+### Hinzugefügt
+
+- **Config-Rettung** – vor jedem Speichern wird die letzte gültige
+  `config.json` als `.bak` gesichert; bei defekter Datei wird zuerst daraus
+  wiederhergestellt. Der Installer legt beim Übernehmen ebenfalls eine
+  `.bak` an.
+- **Persistente Loadout-Warteschlange** – wartende Einträge überleben einen
+  Neustart und werden bewusst mit „Fortsetzen“ wieder aufgenommen.
+- **Offline-Ausgang ausgebaut** – Konfliktvorschau pro Aktion, exponentielles
+  Backoff mit nächstem Versuch, sowie Markieren/Entmarkieren und Mod-Sockets
+  als zusätzliche Ausgangs-Aktionen.
+- **Suche 2.0** – Treffer werden auch im Item-Popup und in Perk-Namen
+  hervorgehoben; gespeicherte Suchen lassen sich umbenennen, einzeln oder
+  gesammelt löschen.
+- **Champion-Prüfung mit Undo** – Korrekturen können mit einem Klick
+  rückgängig gemacht werden.
+- **HUD-Editor** – Chips lassen sich direkt in der Overlay-Leiste per
+  Drag & Drop sortieren; pro Chip ist „Immer / PvE / PvP“ einstellbar.
+- **Dashboard** – Kartengröße pro Karte (Alt+Rechtsklick), „Heute“-Layout und
+  PNG-Export des sichtbaren Dashboards.
+- **Befehlspalette** – Befehle für Ausgang senden/öffnen,
+  Loadout-Warteschlange und Champion-Prüfung.
+
+### Geändert
+
+- **Englische Übersetzung wird erst bei Bedarf geladen** – deutscher Start
+  lädt die 356-KB-Datei nicht mehr mit.
+- **Release-Workflow** prüft zusätzlich die gebauten Prüfsummen und startet
+  einen Portable-Smoke-Test der echten Build-Artefakte.
+- Fokus im HUD-Panel, `aria-modal` und Reduced-Motion-Regeln ergänzt.
+
+### Technik
+
+- E2E auf **516** Schritte, App-Features auf **98** Prüfungen erweitert.
+- Konfigurations-Test prüft die Wiederherstellung aus `config.json.bak`.
+
 ## [1.8.1] – 2026-11-26
 
 ### Behoben

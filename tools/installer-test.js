@@ -32,6 +32,8 @@ check('Installer übernimmt alte config.json',
 check('Installer übernimmt Backups',
   installer.includes('$INSTDIR\\Daten\\backups') &&
   installer.includes("$APPDATA\\FreakItOut's Destiny 2 Tool\\backups"));
+check('Installer sichert die übernommene Config als .bak',
+  installer.includes("$APPDATA\\FreakItOut's Destiny 2 Tool\\config.json.bak"));
 check('App migriert Installationsdaten nach %APPDATA%',
   main.includes('function migrateInstalledDataToAppData') &&
   main.includes("path.join(oldData, 'config.json')") &&

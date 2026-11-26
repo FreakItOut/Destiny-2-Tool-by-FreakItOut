@@ -64,6 +64,31 @@ function hudChipStyle(key) {
   return style && typeof style === 'object' ? style : {};
 }
 
+function hudChipRules() {
+  const raw = hudOverlay().chipRules;
+  return raw && typeof raw === 'object' ? raw : {};
+}
+
+function hudGameMode() {
+  const label = String(hudGetLiveActivity() || '').toLowerCase();
+  return /schmelztiegel|crucible|pvp|trials|eiserner banner|iron banner|competitive|rival|osiris/.test(label) ? 'pvp' : 'pve';
+}
+
+function applyChipRules() {
+  const editing = document.body.classList.contains('hud-edit');
+  const mode = hudGameMode();
+  const rules = hudChipRules();
+  for (const [key, selector] of Object.entries(HUD_CHIP_SELECTORS)) {
+    const element = qs(selector);
+    if (!element) continue;
+    const rule = rules[key] || 'always';
+    const hidden = !editing && ((rule === 'pvp' && mode !== 'pvp') || (rule === 'pve' && mode === 'pvp'));
+    element.classList.toggle('hud-rule-hidden', hidden);
+    element.dataset.hudChip = key;
+    element.draggable = editing;
+  }
+}
+
 function applyHudChipStyles() {
   for (const [key, selector] of Object.entries(HUD_CHIP_SELECTORS)) {
     const element = qs(selector);
@@ -93,11 +118,15 @@ function applyHudScale() {
 function applyChipOrder() {
   const bar = qs('#overlayBar');
   if (!bar) return;
-  const nodes = hudOrder().map((key) => qs(HUD_CHIP_SELECTORS[key])).filter(Boolean);
-  if (!nodes.length) return;
-  for (const node of nodes) bar.appendChild(node);
+  for (const key of hudOrder()) {
+    const node = qs(HUD_CHIP_SELECTORS[key]);
+    if (!node) continue;
+    node.dataset.hudChip = key;
+    bar.appendChild(node);
+  }
   applyHudScale();
   applyHudChipStyles();
+  applyChipRules();
 }
 
 function hudProfiles() {
@@ -117,7 +146,8 @@ function applyHudProfile(profile, options = {}) {
       chipOrder: Array.isArray(profile.chipOrder) ? profile.chipOrder : hudOrder(),
       showItems: { ...(overlay.showItems || {}), ...(profile.showItems || {}) },
       hudScale: profile.hudScale || hudScale(),
-      chipStyles: profile.chipStyles && typeof profile.chipStyles === 'object' ? profile.chipStyles : overlay.chipStyles
+      chipStyles: profile.chipStyles && typeof profile.chipStyles === 'object' ? profile.chipStyles : overlay.chipStyles,
+      chipRules: profile.chipRules && typeof profile.chipRules === 'object' ? profile.chipRules : overlay.chipRules
     }
   });
   renderHudEditor();
@@ -174,6 +204,11 @@ function renderHudEditor() {
         </select>
         <input type="color" data-hud-chip-color="${key}" value="${chipColor}" title="Chip-Farbe">
         <button type="button" data-hud-color-clear="${key}" title="Farbe zurücksetzen">×</button>
+        <select data-hud-rule="${key}" title="Sichtbarkeit nach Aktivität">
+          <option value="always" ${(hudChipRules()[key] || 'always') === 'always' ? 'selected' : ''}>Alle</option>
+          <option value="pve" ${hudChipRules()[key] === 'pve' ? 'selected' : ''}>PvE</option>
+          <option value="pvp" ${hudChipRules()[key] === 'pvp' ? 'selected' : ''}>PvP</option>
+        </select>
         <button type="button" data-hud-move="up" data-hud-key="${key}" ${index === 0 ? 'disabled' : ''} title="Nach vorne">↑</button>
         <button type="button" data-hud-move="down" data-hud-key="${key}" ${index === order.length - 1 ? 'disabled' : ''} title="Nach hinten">↓</button>
       </div>`;
@@ -201,7 +236,11 @@ function toggleHudEditor(force) {
   const button = qs('#overlayHudEditBtn');
   if (button) button.setAttribute('aria-expanded', show ? 'true' : 'false');
   document.body.classList.toggle('hud-edit', show);
-  if (show) renderHudEditor();
+  applyChipRules();
+  if (show) {
+    renderHudEditor();
+    qs('#hudEditorClose')?.focus?.();
+  }
 }
 
 function moveHudChip(key, direction) {
@@ -245,6 +284,7 @@ async function saveHudProfileFromEditor() {
     showItems: { ...(overlay.showItems || {}) },
     hudScale: hudScale(),
     chipStyles: { ...hudChipStyles() },
+    chipRules: { ...hudChipRules() },
     display: onlyDisplay ? hudDisplaySignature : '',
     match: ['pvp', 'raid'].includes(match) ? match : 'all'
   };
@@ -323,6 +363,7 @@ function resetHudLayout() {
       chipOrder: HUD_DEFAULT_ORDER.slice(),
       hudScale: 'm',
       chipStyles: {},
+      chipRules: {},
       showItems
     }
   });
@@ -399,6 +440,14 @@ function bindHudEditor() {
         renderHudEditor();
         return;
       }
+      const chipRule = event.target.closest('[data-hud-rule]');
+      if (chipRule) {
+        const key = String(chipRule.dataset.hudRule || '');
+        const value = ['always', 'pve', 'pvp'].includes(chipRule.value) ? chipRule.value : 'always';
+        hudSetConfig({ overlay: { chipRules: { [key]: value } } });
+        renderHudEditor();
+        return;
+      }
       if (event.target.closest('#hudProfileFile')) {
         importHudProfiles(event.target.files && event.target.files[0]).catch(() => {});
         event.target.value = '';
@@ -448,6 +497,48 @@ function bindHudEditor() {
       hudDragKey = '';
       panel.querySelectorAll('.hud-chip-row.dragging, .hud-chip-row.drag-over')
         .forEach((element) => element.classList.remove('dragging', 'drag-over'));
+    });
+  }
+  const bar = qs('#overlayBar');
+  if (bar) {
+    let barDragKey = '';
+    bar.addEventListener('dragstart', (event) => {
+      if (!document.body.classList.contains('hud-edit')) return;
+      const chip = event.target.closest('[data-hud-chip]');
+      if (!chip) return;
+      barDragKey = String(chip.dataset.hudChip || '');
+      chip.classList.add('dragging');
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', barDragKey);
+      }
+    });
+    bar.addEventListener('dragover', (event) => {
+      if (!barDragKey) return;
+      const chip = event.target.closest('[data-hud-chip]');
+      if (!chip) return;
+      event.preventDefault();
+      bar.querySelectorAll('.drag-over').forEach((element) => element.classList.remove('drag-over'));
+      chip.classList.add('drag-over');
+    });
+    bar.addEventListener('drop', (event) => {
+      if (!barDragKey) return;
+      const chip = event.target.closest('[data-hud-chip]');
+      if (!chip) return;
+      event.preventDefault();
+      const targetKey = String(chip.dataset.hudChip || '');
+      if (!targetKey || targetKey === barDragKey) return;
+      const order = hudOrder().filter((key) => key !== barDragKey);
+      const targetIndex = order.indexOf(targetKey);
+      if (targetIndex < 0) return;
+      order.splice(targetIndex, 0, barDragKey);
+      hudSetConfig({ overlay: { chipOrder: order } });
+      barDragKey = '';
+      renderHudEditor();
+    });
+    bar.addEventListener('dragend', () => {
+      barDragKey = '';
+      bar.querySelectorAll('.dragging, .drag-over').forEach((element) => element.classList.remove('dragging', 'drag-over'));
     });
   }
   window.addEventListener('keydown', (event) => {

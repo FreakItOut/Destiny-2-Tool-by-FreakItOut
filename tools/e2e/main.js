@@ -153,6 +153,12 @@ app.whenReady().then(() => {
       fs.writeFileSync(path.join(dir, 'settings.png'), extra.toPNG());
       log('page settings');
       await win.webContents.executeJavaScript("document.querySelector('#settingsCloseBtn')?.click(); true").catch(() => {});
+      await win.webContents.executeJavaScript("document.body.classList.add('mode-overlay'); document.querySelector('#overlayHudEditBtn')?.click(); true").catch(() => {});
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      extra = await win.webContents.capturePage();
+      fs.writeFileSync(path.join(dir, 'hud.png'), extra.toPNG());
+      log('page hud');
+      await win.webContents.executeJavaScript("document.querySelector('#hudEditorClose')?.click(); document.body.classList.remove('mode-overlay'); true").catch(() => {});
       // Zusatzaufnahme im TV-Modus: Inventar (Kacheln, Tooltip-Ziele).
       if (process.env.INV_TV_MODE === '1') {
         await win.webContents.executeJavaScript("document.querySelector('.dinv-tab[data-tab=\"inventory\"]')?.click(); true").catch(() => {});

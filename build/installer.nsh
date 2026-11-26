@@ -12,6 +12,7 @@
     CreateDirectory "$APPDATA\FreakItOut's Destiny 2 Tool"
     ${IfNot} ${FileExists} "$APPDATA\FreakItOut's Destiny 2 Tool\config.json"
       CopyFiles /SILENT "$INSTDIR\Daten\config.json" "$APPDATA\FreakItOut's Destiny 2 Tool"
+      CopyFiles /SILENT "$INSTDIR\Daten\config.json" "$APPDATA\FreakItOut's Destiny 2 Tool\config.json.bak"
       ${If} ${FileExists} "$INSTDIR\Daten\backups\*.*"
         CreateDirectory "$APPDATA\FreakItOut's Destiny 2 Tool\backups"
         CopyFiles /SILENT "$INSTDIR\Daten\backups\*.*" "$APPDATA\FreakItOut's Destiny 2 Tool\backups"

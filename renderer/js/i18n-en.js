@@ -1,6 +1,21 @@
 'use strict';
 // Automatisch erzeugt von tools/make-i18n.js.
 window.__I18N_EN__ = {
+  "Dashboard als PNG speichern": "Save dashboard as PNG",
+  "Rückgängig konnte nicht gespeichert werden.": "Undo could not be saved.",
+  "Sichtbarkeit nach Aktivität": "Visibility by activity",
+  "Dashboard als PNG gespeichert:": "Dashboard saved as PNG:",
+  "Dashboard ist gerade nicht sichtbar.": "Dashboard is not visible right now.",
+  "Champion-Korrektur rückgängig gemacht.": "Champion correction undone.",
+  "Kartengröße:": "Card size:",
+  "Layout: Heute": "Layout: Today",
+  "Suche umbenennen:": "Rename search:",
+  "Alle gespeicherten Suchen löschen?": "Delete all saved searches?",
+  "Bereits erledigt": "Already done",
+  "Nächster Versuch": "Next attempt",
+  "Mod anwenden": "Apply mod",
+  "markieren": "lock",
+  "Markierung entfernen": "unlock",
   "Waffen ohne erkannten Champion-Brecher prüfen und korrigieren": "Review and correct weapons without a detected Champion breaker",
   "Champion-Prüfung": "Champion audit",
   "Waffen ohne erkannten Brecher. Auswahl markieren und einen Typ zuweisen – die Korrektur gilt lokal und überschreibt die Automatik.": "Weapons without a detected breaker. Select them and assign a type – the correction is local and overrides the automatic result.",

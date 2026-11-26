@@ -1377,7 +1377,8 @@ export function createDashboard(ctx) {
           beginner: ['dashNews', 'dashBungieStatus', 'dashDataStatus'],
           pro: ['dashTour', 'dashNews'],
           pvp: ['dashCharacters', 'dashCollection', 'dashNews', 'dashBungieStatus'],
-          raid: ['dashTour', 'dashNews']
+          raid: ['dashTour', 'dashNews'],
+          today: ['dashTour', 'dashCharacters', 'dashChampions', 'dashMatrix', 'dashSince', 'dashSeason', 'dashPower', 'dashTriumph', 'dashCollection', 'dashNews', 'dashBungieStatus', 'dashDataStatus']
         };
         const value = String(preset.value || 'all');
         setConfig({ dashboardPreset: value, dashboardHidden: presets[value] || [] });
@@ -1394,6 +1395,15 @@ export function createDashboard(ctx) {
       const card = event.target.closest('.dash-card, .dash-fold');
       if (!card || !card.id || card.id === 'dashTour') return;
       event.preventDefault();
+      if (event.altKey) {
+        const sizes = { ...(getConfig().dashboardCardSizes || {}) };
+        const current = sizes[card.id] || 'm';
+        sizes[card.id] = current === 's' ? 'm' : current === 'm' ? 'l' : 's';
+        setConfig({ dashboardCardSizes: sizes });
+        applyDashboardCardView();
+        toast(`Kartengröße: ${sizes[card.id].toUpperCase()}`, 'info', 1400);
+        return;
+      }
       if (event.shiftKey) {
         const order = (getConfig().dashboardOrder || []).filter((id) => id !== card.id);
         order.unshift(card.id);
@@ -1425,6 +1435,10 @@ export function createDashboard(ctx) {
       }
       if (event.target.closest('[data-dash-analytics-png]')) {
         exportAnalyticsPng().catch(() => {});
+        return;
+      }
+      if (event.target.closest('[data-dash-export-png]')) {
+        exportDashboardPng().catch(() => {});
         return;
       }
       if (event.target.closest('[data-dash-more]')) {
@@ -1755,6 +1769,12 @@ export function createDashboard(ctx) {
     const size = ['s', 'm', 'l'].includes(String(getConfig().dashboardCardSize)) ? String(getConfig().dashboardCardSize) : 'm';
     dashboardPanel.classList.remove('dash-size-s', 'dash-size-m', 'dash-size-l');
     dashboardPanel.classList.add(`dash-size-${size}`);
+    const sizes = getConfig().dashboardCardSizes || {};
+    for (const card of dashboardPanel.querySelectorAll('.dash-card')) {
+      card.classList.remove('dash-card-s', 'dash-card-m', 'dash-card-l');
+      const cardSize = sizes[card.id];
+      if (['s', 'm', 'l'].includes(cardSize)) card.classList.add(`dash-card-${cardSize}`);
+    }
     const sizeSelect = qs('#dashCardSize');
     if (sizeSelect) sizeSelect.value = size;
     const query = String(getConfig().dashboardCardSearch || '').trim().toLowerCase();
@@ -1801,6 +1821,33 @@ export function createDashboard(ctx) {
     }
     const saved = await ctx.api.saveScreenshot(capture.dataUrl);
     if (saved && saved.ok) toast(`Analyse als PNG gespeichert: ${saved.path}`, 'success', 3600);
+    else if (!saved || !saved.canceled) toast('PNG konnte nicht gespeichert werden.', 'error', 3000);
+  }
+
+  async function exportDashboardPng() {
+    if (!dashboardPanel) return;
+    try { dashboardPanel.scrollIntoView({ block: 'start' }); } catch (error) { /* egal */ }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const rect = dashboardPanel.getBoundingClientRect();
+    const x = Math.max(0, Math.floor(rect.left));
+    const y = Math.max(0, Math.floor(rect.top));
+    const width = Math.min(Math.ceil(rect.width), window.innerWidth - x);
+    const height = Math.min(Math.ceil(rect.height), window.innerHeight - y);
+    if (width < 60 || height < 60) {
+      toast('Dashboard ist gerade nicht sichtbar.', 'info', 2600);
+      return;
+    }
+    if (typeof ctx.api.captureDashboard !== 'function') {
+      toast('PNG-Export ist in dieser Version nicht verfügbar.', 'info', 2600);
+      return;
+    }
+    const capture = await ctx.api.captureDashboard({ x, y, width, height });
+    if (!capture || !capture.ok || !capture.dataUrl) {
+      toast((capture && capture.error) || 'PNG konnte nicht erstellt werden.', 'error', 3000);
+      return;
+    }
+    const saved = await ctx.api.saveScreenshot(capture.dataUrl);
+    if (saved && saved.ok) toast(`Dashboard als PNG gespeichert: ${saved.path}`, 'success', 3600);
     else if (!saved || !saved.canceled) toast('PNG konnte nicht gespeichert werden.', 'error', 3000);
   }
 

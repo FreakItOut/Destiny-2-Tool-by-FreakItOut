@@ -610,6 +610,10 @@ function commandDefinitions() {
     { label: 'Overlay ein-/ausblenden', hint: 'Overlay', run: () => api.toggleOverlay() },
     { label: 'Maus-Durchlassen umschalten', hint: 'Overlay', run: () => api.toggleClickThrough() },
     { label: 'Inventar aktualisieren', hint: 'Daten', run: () => inventory.refreshInventory() },
+    { label: 'Offline-Ausgang senden', hint: 'Inventar', run: () => window.dispatchEvent(new CustomEvent('d2-outbox-send')) },
+    { label: 'Offline-Ausgang öffnen', hint: 'Inventar', run: () => window.dispatchEvent(new CustomEvent('d2-outbox-open')) },
+    { label: 'Loadout-Warteschlange öffnen', hint: 'Loadouts', run: () => window.dispatchEvent(new CustomEvent('d2-loadout-queue-open')) },
+    { label: 'Champion-Prüfung öffnen', hint: 'Inventar', run: () => window.dispatchEvent(new CustomEvent('d2-champion-audit-open')) },
     { label: 'Xûr öffnen', hint: 'Händler', run: () => inventory.openTools('vendor', { vendorHash: 2190858386 }) }
   ];
 }

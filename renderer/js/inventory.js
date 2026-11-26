@@ -1370,14 +1370,25 @@ export function createInventory(ctx) {
       let done = false;
       let lastError = '';
       for (const plugHash of empties) {
-        try {
-          const result = await api.bungieInsertPlug({
-            itemId: entry.item.instanceId,
-            characterId: entry.owner,
-            socketIndex: mod.idx,
-            plugItemHash: plugHash,
-            membershipType: data.membershipType
+        const payload = {
+          itemId: entry.item.instanceId,
+          characterId: entry.owner,
+          socketIndex: mod.idx,
+          plugItemHash: plugHash,
+          membershipType: data.membershipType
+        };
+        if (!navigator.onLine) {
+          enqueueOutbox({
+            kind: 'plug', payload, characterId: entry.owner,
+            characterName: characterLabel(entry.owner), itemName: entry.item.name || 'Item'
           });
+          okCount += 1;
+          done = true;
+          results.push({ ok: true, text: `${entry.item.name} · ${mod.n || 'Mod'} (Ausgang)` });
+          break;
+        }
+        try {
+          const result = await api.bungieInsertPlug(payload);
           if (result && result.ok) {
             okCount += 1;
             done = true;
@@ -1385,6 +1396,16 @@ export function createInventory(ctx) {
             break;
           }
           lastError = (result && result.error) || 'Einstecken fehlgeschlagen';
+          if (outboxRetryable(lastError)) {
+            enqueueOutbox({
+              kind: 'plug', payload, characterId: entry.owner,
+              characterName: characterLabel(entry.owner), itemName: entry.item.name || 'Item', lastError
+            });
+            okCount += 1;
+            done = true;
+            results.push({ ok: true, text: `${entry.item.name} · ${mod.n || 'Mod'} (Ausgang)` });
+            break;
+          }
         } catch (error) {
           lastError = error.message || String(error);
         }
@@ -2707,6 +2728,12 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   }
 
   function outboxLabel(entry) {
+    if (entry.kind === 'lock') {
+      return `${entry.itemName || 'Item'} → ${entry.payload && entry.payload.lock ? 'markieren' : 'Markierung entfernen'}`;
+    }
+    if (entry.kind === 'plug') {
+      return `${entry.itemName || 'Item'} → Mod anwenden`;
+    }
     const target = entry.kind === 'equip'
       ? (entry.characterName ? `anlegen: ${entry.characterName}` : 'anlegen')
       : (entry.toVault ? 'Tresor' : (entry.characterName || 'Charakter'));
@@ -2722,6 +2749,12 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
 
   // ---------- Champion-Prüfung: Waffen ohne erkannten Brecher ----------
   let championAuditOriginals = new Map();
+  let championAuditUndo = null;
+
+  function updateChampionAuditUndoButton() {
+    const button = qs('#championAuditUndo');
+    if (button) button.disabled = championAuditUndo == null;
+  }
 
   function collectInventoryEntries() {
     if (!data) return [];
@@ -2761,6 +2794,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     if (count) count.textContent = `${entries.length} ohne Brecher · ${allWeapons.length} Waffen`;
     if (!entries.length) {
       championAuditList.innerHTML = '<span class="inv-tool-muted">Alle Waffen haben einen erkannten oder manuell gesetzten Champion-Brecher.</span>';
+      updateChampionAuditUndoButton();
       return;
     }
     championAuditList.innerHTML = entries.slice(0, 200).map(({ key, item, where }) => `
@@ -2771,6 +2805,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         <small>${esc(item.typeName || '')}${where ? ` · ${esc(where)}` : ''}</small>
       </label>`).join('')
       + (entries.length > 200 ? `<span class="inv-tool-muted">… und ${entries.length - 200} weitere. Suche nutzt weiterhin „Ohne Champion“.</span>` : '');
+    updateChampionAuditUndoButton();
   }
 
   function openChampionAudit() {
@@ -2786,6 +2821,8 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       toast('Erst Waffen auswählen.', 'info', 1800);
       return;
     }
+    let previous = '{}';
+    try { previous = window.localStorage.getItem('d2tool.championOverrides') || '{}'; } catch (error) { previous = '{}'; }
     let changed = 0;
     for (const key of selected) {
       const entry = championAuditOriginals.get(key);
@@ -2793,9 +2830,28 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       setChampionOverride(entry.item, type);
       changed += 1;
     }
+    if (changed) {
+      championAuditUndo = previous;
+      updateChampionAuditUndoButton();
+    }
     render();
     renderChampionAudit();
     toast(`${changed} Waffe${changed === 1 ? '' : 'n'} aktualisiert.`, 'success', 2200);
+  }
+
+  function undoChampionAudit() {
+    if (championAuditUndo == null) return;
+    try {
+      window.localStorage.setItem('d2tool.championOverrides', championAuditUndo);
+    } catch (error) {
+      toast('Rückgängig konnte nicht gespeichert werden.', 'error', 2400);
+      return;
+    }
+    championAuditUndo = null;
+    updateChampionAuditUndoButton();
+    render();
+    renderChampionAudit();
+    toast('Champion-Korrektur rückgängig gemacht.', 'info', 2200);
   }
 
   function exportChampionOverrides() {
@@ -2835,14 +2891,19 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
 
   function enqueueOutbox(entry) {
     const list = readOutbox();
-    const key = `${entry.kind}:${entry.payload && entry.payload.itemId}:${entry.toVault ? 1 : 0}:${entry.characterId || ''}`;
-    const existing = list.find((item) => `${item.kind}:${item.payload && item.payload.itemId}:${item.toVault ? 1 : 0}:${item.characterId || ''}` === key);
+    const payload = entry.payload || {};
+    const key = `${entry.kind}:${payload.itemId}:${payload.socketIndex || 0}:${payload.plugItemHash || 0}:${entry.toVault ? 1 : 0}:${entry.characterId || payload.characterId || ''}`;
+    const existing = list.find((item) => {
+      const itemPayload = item.payload || {};
+      return `${item.kind}:${itemPayload.itemId}:${itemPayload.socketIndex || 0}:${itemPayload.plugItemHash || 0}:${item.toVault ? 1 : 0}:${item.characterId || itemPayload.characterId || ''}` === key;
+    });
     if (existing) {
       existing.at = Date.now();
       existing.tries = (Number(existing.tries) || 0) + 1;
       existing.lastError = entry.lastError || existing.lastError || '';
+      existing.nextTryAt = 0;
     } else {
-      list.push({ ...entry, id: `ob-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, at: Date.now(), tries: 1 });
+      list.push({ ...entry, id: `ob-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, at: Date.now(), tries: 1, nextTryAt: 0 });
     }
     writeOutbox(list);
     return list.length;
@@ -2881,7 +2942,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       <div class="inventory-outbox-row" data-outbox-id="${esc(entry.id)}">
         <div class="inventory-outbox-copy">
           <strong>${esc(outboxLabel(entry))}</strong>
-          <small>${Number(entry.tries) || 0} Versuch${Number(entry.tries) === 1 ? '' : 'e'}${entry.lastError ? ` · ${esc(entry.lastError)}` : ''}</small>
+          <small>${Number(entry.tries) || 0} Versuch${Number(entry.tries) === 1 ? '' : 'e'}${outboxConflictText(entry) ? ` · ${esc(outboxConflictText(entry))}` : ''}</small>
         </div>
         <button type="button" class="outbox-move" data-outbox-up="${index}" ${index === 0 ? 'disabled' : ''} title="Nach oben">↑</button>
         <button type="button" class="outbox-move" data-outbox-down="${index}" ${index === list.length - 1 ? 'disabled' : ''} title="Nach unten">↓</button>
@@ -2913,6 +2974,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const location = itemLocationById(entry);
     if (!location) return null;
     if (location.kind === 'missing') return { done: false, error: 'Item ist nicht mehr im Inventar.' };
+    if (entry.kind === 'lock' || entry.kind === 'plug') return null;
     if (entry.kind === 'equip') {
       if (location.kind === 'equipped' && String(location.characterId) === String(entry.characterId)) {
         return { done: true };
@@ -2928,6 +2990,16 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       return { done: true };
     }
     return null;
+  }
+
+  function outboxConflictText(entry) {
+    const conflict = outboxConflict(entry);
+    if (conflict && conflict.done) return 'Bereits erledigt';
+    if (conflict && conflict.error) return conflict.error;
+    if (Number(entry.nextTryAt) > Date.now()) {
+      return `Nächster Versuch ${new Date(entry.nextTryAt).toLocaleTimeString(window.i18n ? window.i18n.locale() : 'de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    return entry.lastError || '';
   }
 
   async function runOutbox(manual = false, onlyId = '') {
@@ -2948,6 +3020,10 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         remaining.push(entry);
         continue;
       }
+      if (!manual && Number(entry.nextTryAt) > Date.now()) {
+        remaining.push(entry);
+        continue;
+      }
       const conflict = outboxConflict(entry);
       if (conflict && conflict.done) {
         done += 1;
@@ -2960,9 +3036,10 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       }
       let result;
       try {
-        result = entry.kind === 'equip'
-          ? await api.bungieEquip(entry.payload)
-          : await api.bungieTransfer(entry.payload);
+        if (entry.kind === 'equip') result = await api.bungieEquip(entry.payload);
+        else if (entry.kind === 'lock') result = await api.bungieLock(entry.payload);
+        else if (entry.kind === 'plug') result = await api.bungieInsertPlug(entry.payload);
+        else result = await api.bungieTransfer(entry.payload);
       } catch (error) {
         result = { ok: false, error: error.message || String(error) };
       }
@@ -2973,7 +3050,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       }
       const message = (result && result.error) || 'Aktion fehlgeschlagen.';
       if (outboxRetryable(message)) {
-        remaining.push({ ...entry, lastError: message, tries: (Number(entry.tries) || 0) + 1 });
+        const tries = (Number(entry.tries) || 0) + 1;
+        const backoff = Math.min(5 * 60 * 1000, 1500 * (2 ** Math.min(tries, 8)));
+        remaining.push({ ...entry, lastError: message, tries, nextTryAt: Date.now() + backoff });
       } else {
         // Endgültig abgelehnt (z. B. Item nicht mehr vorhanden): nicht
         // ewig wiederholen, aber sichtbar melden.
@@ -3910,11 +3989,12 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const saved = savedSearches();
     const chip = (token, label) => '<button type="button" class="inv-filter-chip" data-filter-apply="' + escapeHtml(token) + '">' + escapeHtml(label) + '</button>';
     const savedRow = (entry) => '<span class="inv-filter-saved"><button type="button" class="inv-filter-chip" data-filter-apply="' + escapeHtml(entry) + '">' + escapeHtml(entry) + '</button>' +
+      '<button type="button" class="inv-filter-x" data-filter-rename="' + escapeHtml(entry) + '" title="Umbenennen" aria-label="Umbenennen">✎</button>' +
       '<button type="button" class="inv-filter-x" data-filter-forget="' + escapeHtml(entry) + '" title="Entfernen" aria-label="Entfernen">×</button></span>';
     filterMenu.innerHTML =
       '<div class="inv-filter-head"><strong>Filter</strong><button type="button" class="icon-btn" data-filter-close aria-label="Schließen">✕</button></div>' +
       (history.length ? '<div class="inv-filter-section"><span class="inv-filter-title">Zuletzt</span><div class="inv-filter-chips">' + history.map((entry) => chip(entry, entry)).join('') + '</div></div>' : '') +
-      (saved.length ? '<div class="inv-filter-section"><span class="inv-filter-title">Gespeichert</span><div class="inv-filter-chips">' + saved.map(savedRow).join('') + '</div></div>' : '') +
+      (saved.length ? '<div class="inv-filter-section"><span class="inv-filter-title">Gespeichert <button type="button" class="inv-filter-x" data-filter-clear-saved title="Alle gespeicherten Suchen löschen" aria-label="Alle gespeicherten Suchen löschen">Alle löschen</button></span><div class="inv-filter-chips">' + saved.map(savedRow).join('') + '</div></div>' : '') +
       '<div class="inv-filter-section"><span class="inv-filter-title">Schnellfilter</span><div class="inv-filter-chips">' + FILTER_PRESETS.map((preset) => chip(preset.token, preset.label)).join('') + '</div></div>' +
       '<div class="inv-filter-section"><span class="inv-filter-title">Perk</span><div class="inv-filter-add">' +
         '<input type="text" data-filter-perk-input maxlength="60" placeholder="z. B. Vorpal Weapon" aria-label="Perk-Name">' +
@@ -3954,6 +4034,23 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         if (forget) {
           setSavedSearches(savedSearches().filter((entry) => entry !== forget.dataset.filterForget));
           renderFilterMenu();
+          return;
+        }
+        const rename = event.target.closest('[data-filter-rename]');
+        if (rename) {
+          const previous = String(rename.dataset.filterRename || '');
+          const next = String(window.prompt('Suche umbenennen:', previous) || '').trim().slice(0, 120);
+          if (next && next !== previous) {
+            setSavedSearches(savedSearches().map((entry) => (entry === previous ? next : entry)));
+            renderFilterMenu();
+          }
+          return;
+        }
+        if (event.target.closest('[data-filter-clear-saved]')) {
+          if (!savedSearches().length || window.confirm('Alle gespeicherten Suchen löschen?')) {
+            setSavedSearches([]);
+            renderFilterMenu();
+          }
           return;
         }
         if (event.target.closest('[data-filter-perk]')) {
@@ -4388,7 +4485,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       perkGrid = item.perks.map((perk) => {
         const god = isGod(perk);
         const near = !god && isNear(perk);
-        return `<div class="inv-perk-column"><span class="inv-perk-stack"><span class="inv-perk-cell selected${god ? ' god' : near ? ' near' : ''}" tabindex="0" aria-label="${esc(perk.n)}" ${perkData(perk, { selected: true, god })}>${perk.i ? `<img src="https://www.bungie.net${esc(perk.i)}" alt="">` : ''}${god ? '<span class="pcheck">✓</span>' : near ? '<span class="pcheck near">✓</span>' : ''}</span></span><span class="inv-perk-name">${esc(perk.n || '')}</span></div>`;
+        return `<div class="inv-perk-column"><span class="inv-perk-stack"><span class="inv-perk-cell selected${god ? ' god' : near ? ' near' : ''}" tabindex="0" aria-label="${esc(perk.n)}" ${perkData(perk, { selected: true, god })}>${perk.i ? `<img src="https://www.bungie.net${esc(perk.i)}" alt="">` : ''}${god ? '<span class="pcheck">✓</span>' : near ? '<span class="pcheck near">✓</span>' : ''}</span></span><span class="inv-perk-name">${highlightSearchText(perk.n || '')}</span></div>`;
       }).join('');
     }
     // ---- Mod-/Kosmetik-Sockets (DIM: eigene Reihe, nur gesteckter Plug) ----
@@ -4578,7 +4675,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       `<div class="inv-popup-head">` +
       (item.icon ? `<img class="inv-popup-icon" style="background:${DIM.RARITY_BG[r] || '#522f65'}" src="https://www.bungie.net${esc(item.icon)}" alt="">` : '') +
       `<div class="inv-popup-title">` +
-      `<strong class="inv-popup-name n${r}">${esc((item.name || 'Item').toUpperCase())}</strong>` +
+      `<strong class="inv-popup-name n${r}">${highlightSearchText(item.name || 'Item')}</strong>` +
       `<span class="inv-popup-sub">${esc(item.typeName || 'Item')}${item.power ? ` · ${item.power} Power` : ''}${rn ? ` · ${esc(rn)}` : ''}${item.masterwork ? ' · Meisterwerk' : ''}</span>` +
       (notes ? notes : '') +
       (nearNotes ? nearNotes : '') +
@@ -4700,13 +4797,31 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       return;
     } else if (action === 'lock') {
       const lock = !((Number(item.state) || 0) & 1);
-      const result = await api.bungieLock({ itemId: item.instanceId, characterId: target, membershipType: data.membershipType, lock });
+      const payload = { itemId: item.instanceId, characterId: target, membershipType: data.membershipType, lock };
+      if (!navigator.onLine) {
+        const count = enqueueOutbox({
+          kind: 'lock', payload, characterId: target,
+          characterName: characterLabel(target), itemName: item.name || 'Item'
+        });
+        toast(`Offline – Markierung in den Ausgang gelegt (${count} warten).`, 'warning', 2800);
+        return;
+      }
+      const result = await api.bungieLock(payload);
       if (result && result.ok) {
         item.state = lock ? (Number(item.state) || 0) | 1 : (Number(item.state) || 0) & ~1;
         toast(lock ? 'Item markiert.' : 'Markierung entfernt.', 'success', 1600);
         openPopup();
       } else {
-        toast((result && result.error) || 'Markieren fehlgeschlagen.', 'error', 3200);
+        const message = (result && result.error) || 'Markieren fehlgeschlagen.';
+        if (outboxRetryable(message)) {
+          const count = enqueueOutbox({
+            kind: 'lock', payload, characterId: target,
+            characterName: characterLabel(target), itemName: item.name || 'Item', lastError: message
+          });
+          toast(`${message} – in den Ausgang gelegt (${count} warten).`, 'warning', 3200);
+        } else {
+          toast(message, 'error', 3200);
+        }
         button.disabled = false;
       }
       return;
@@ -8461,10 +8576,39 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   }
 
   // Loadout-Warteschlange: mehrere Loadouts nacheinander anwenden.
-  const loadoutQueue = [];
+  // Sie überlebt Neustarts; laufende Einträge werden beim Laden wieder
+  // auf "wartend" gesetzt und müssen bewusst fortgesetzt werden.
+  const LOADOUT_QUEUE_KEY = 'd2tool.loadoutQueue';
+  function readStoredLoadoutQueue() {
+    try {
+      const list = JSON.parse(window.localStorage.getItem(LOADOUT_QUEUE_KEY) || '[]');
+      if (!Array.isArray(list)) return [];
+      return list.filter((entry) => entry && entry.loadoutId).slice(-20).map((entry, index) => {
+        const state = entry.state === 'running' ? 'pending' : entry.state;
+        return {
+          id: String(entry.id || `lq-restored-${index}`),
+          loadoutId: String(entry.loadoutId),
+          name: String(entry.name || 'Loadout'),
+          state: ['pending', 'done', 'failed'].includes(state) ? state : 'pending',
+          error: String(entry.error || ''),
+          at: Number(entry.at) || Date.now()
+        };
+      });
+    } catch (error) {
+      return [];
+    }
+  }
+  function saveLoadoutQueue() {
+    try {
+      window.localStorage.setItem(LOADOUT_QUEUE_KEY, JSON.stringify(loadoutQueue.slice(-20)));
+    } catch (error) {
+      // Optional; die Warteschlange bleibt für diese Sitzung erhalten.
+    }
+  }
+  const loadoutQueue = readStoredLoadoutQueue();
   let loadoutQueueRunning = false;
-  let loadoutQueuePaused = false;
-  let loadoutQueueSeq = 0;
+  let loadoutQueuePaused = loadoutQueue.some((entry) => entry.state === 'pending');
+  let loadoutQueueSeq = Date.now();
 
   function loadoutQueueCounts() {
     return loadoutQueue.reduce((counts, entry) => {
@@ -8501,6 +8645,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   }
 
   function renderLoadoutQueuePanel() {
+    saveLoadoutQueue();
     if (!loadoutQueuePanel || !loadoutQueueList) return;
     renderLoadoutQueueBar();
     if (!loadoutQueue.length) {
@@ -10332,6 +10477,20 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     renderOutbox();
     renderOutboxPanel();
   });
+  window.addEventListener('d2-outbox-send', () => {
+    runOutbox(true).catch(() => {});
+  });
+  window.addEventListener('d2-outbox-open', () => {
+    if (!outboxPanel) return;
+    renderOutboxPanel();
+    outboxPanel.classList.remove('hidden');
+  });
+  window.addEventListener('d2-loadout-queue-open', () => {
+    if (!loadoutQueuePanel) return;
+    renderLoadoutQueuePanel();
+    loadoutQueuePanel.classList.remove('hidden');
+  });
+  window.addEventListener('d2-champion-audit-open', () => openChampionAudit());
 
   // Loadout-Warteschlange: Detailpanel, Anhalten, Wiederholen, Sortieren.
   if (loadoutQueueBar) {
@@ -10355,6 +10514,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       renderLoadoutQueuePanel();
     });
     renderLoadoutQueuePanel();
+    if (loadoutQueuePaused && loadoutQueue.some((entry) => entry.state === 'pending')) {
+      showQueueBar('Warteschlange wiederhergestellt – „Fortsetzen“ drücken.', true);
+    }
   }
   if (loadoutQueuePanel) {
     loadoutQueuePanel.addEventListener('click', (event) => {
@@ -10540,6 +10702,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   qs('#championAuditClear')?.addEventListener('click', () => {
     applyChampionAudit(0);
   });
+  qs('#championAuditUndo')?.addEventListener('click', undoChampionAudit);
   qs('#championAuditSelectAll')?.addEventListener('change', (event) => {
     for (const input of championAuditList?.querySelectorAll('[data-champion-audit-key]') || []) {
       input.checked = event.target.checked === true;

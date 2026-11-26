@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.8.1
+# Destiny 2 Tool by FreakItOut 1.9.0
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,9 +6,21 @@
 
 ## Deutsch
 
-Version 1.8.1 macht Setup-Updates datenschonend: Konfiguration, Verlauf und Bungie-Anmeldung bleiben beim Installieren einer neuen Version erhalten.
+Version 1.9.0 bringt Datensicherheit und Alltag: Config-Rettung aus .bak, persistente Loadout-Warteschlange, ausgebauten Offline-Ausgang, Suche 2.0, HUD-Drag & Aktivitätsregeln sowie Dashboard-Feinschliff.
 
-### Neu in 1.8.1
+### Neu in 1.9.0
+
+- **Config-Rettung** – letzte gültige Fassung als `config.json.bak`, automatische
+  Wiederherstellung bei defekter Datei.
+- **Persistente Loadout-Warteschlange** – überlebt Neustarts, bewusstes Fortsetzen.
+- **Offline-Ausgang** – Konfliktvorschau, Backoff, Markieren und Mod-Sockets.
+- **Suche 2.0** – Treffer im Popup/Perk, gespeicherte Suchen verwalten.
+- **Champion-Prüfung** – Undo für Korrekturen.
+- **HUD** – Chips direkt im Overlay ziehen, Sichtbarkeit nach PvE/PvP.
+- **Dashboard** – Kartengröße pro Karte, Heute-Layout, PNG-Export.
+- **Schneller Start** – englische Übersetzung lädt erst bei Bedarf.
+
+### Enthalten aus 1.8.1
 
 - **Setup-Updates erhalten Nutzerdaten** – die installierte Version schreibt
   immer nach `%APPDATA%\FreakItOut's Destiny 2 Tool`; Setup-Updates
@@ -42,8 +54,8 @@ Version 1.8.1 macht Setup-Updates datenschonend: Konfiguration, Verlauf und Bung
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.8.1.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.8.1.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.9.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.9.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -51,7 +63,7 @@ Version 1.8.1 macht Setup-Updates datenschonend: Konfiguration, Verlauf und Bung
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.8.1.exe`).
+(`Destiny 2 Tool by FreakItOut 1.9.0.exe`).
 
 ### Voraussetzungen
 
@@ -84,9 +96,21 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.8.1 makes setup updates data-safe: configuration, history and the Bungie login survive installing a new version.
+Version 1.9.0 focuses on data safety and daily use: config recovery from .bak, a persistent loadout queue, an expanded offline outbox, search 2.0, HUD drag & activity rules, and dashboard polish.
 
-### New in 1.8.1
+### New in 1.9.0
+
+- **Config recovery** – last valid copy as `config.json.bak`, automatic restore
+  for a broken file.
+- **Persistent loadout queue** – survives restarts, resumed deliberately.
+- **Offline outbox** – conflict preview, backoff, lock and mod-socket actions.
+- **Search 2.0** – matches in the popup/perks, saved-search management.
+- **Champion audit** – undo for corrections.
+- **HUD** – drag chips directly in the overlay, visibility by PvE/PvP.
+- **Dashboard** – per-card size, Today layout, PNG export.
+- **Faster start** – English dictionary loads on demand.
+
+### Included from 1.8.1
 
 - **Setup updates keep user data** – the installed version always writes to
   `%APPDATA%\FreakItOut's Destiny 2 Tool`; updates replace neither the
@@ -120,8 +144,8 @@ Version 1.8.1 makes setup updates data-safe: configuration, history and the Bung
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.8.1.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.8.1.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.9.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.9.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -129,7 +153,7 @@ Version 1.8.1 makes setup updates data-safe: configuration, history and the Bung
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.8.1.exe`).
+(`Destiny 2 Tool by FreakItOut 1.9.0.exe`).
 
 ### Requirements
 

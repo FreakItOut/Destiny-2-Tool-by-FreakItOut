@@ -125,7 +125,7 @@
       <div id="overlayLoadoutList" class="overlay-lo-list"></div>
       <p id="overlayLoadoutHint" class="overlay-lo-hint"></p>
     </div>
-    <div id="hudEditorPanel" class="hud-editor hidden" role="dialog" aria-label="HUD-Layout">
+    <div id="hudEditorPanel" class="hud-editor hidden" role="dialog" aria-modal="true" aria-label="HUD-Layout">
       <div class="hud-editor-head">
         <strong>HUD-Layout</strong>
         <button id="hudEditorClose" class="icon-btn" title="Schließen" aria-label="Schließen">✕</button>
@@ -237,6 +237,7 @@
                 <button type="button" class="btn ghost small" data-dash-action="postmaster">📬 Poststelle</button>
                 <button type="button" class="btn ghost small" data-dash-action="tools">🧭 Werkzeuge</button>
                 <button type="button" class="btn ghost small" data-dash-action="refresh">↻ Daten neu laden</button>
+                <button type="button" class="btn ghost small" data-dash-export-png title="Dashboard als PNG speichern">PNG</button>
                 <button type="button" class="btn ghost small" data-dash-more>Mehr anzeigen</button>
                 <button type="button" class="btn ghost small" data-dash-action="focus">Fokus</button>
                 <select class="dash-profile-select" data-dash-preset aria-label="Dashboard-Layout">
@@ -245,6 +246,7 @@
                   <option value="pro">Layout: Profi</option>
                   <option value="pvp">Layout: PvP</option>
                   <option value="raid">Layout: Raid</option>
+                  <option value="today">Layout: Heute</option>
                 </select>
                 <select class="dash-profile-select" id="dashCardSize" aria-label="Kartengröße">
                   <option value="s">Karten: Klein</option>
@@ -449,6 +451,7 @@
           <div class="champion-audit-foot">
             <button id="championAuditExport" class="btn ghost small" type="button">Export</button>
             <button id="championAuditImport" class="btn ghost small" type="button">Import</button>
+            <button id="championAuditUndo" class="btn ghost small" type="button" disabled>Rückgängig</button>
             <input id="championAuditFile" type="file" accept=".json,application/json" hidden>
             <span id="championAuditCount" class="champion-audit-count"></span>
           </div>
@@ -1996,7 +1999,6 @@
       <p id="securityLockError" class="warn"></p>
     </div>
   </div>
-  <script src="js/i18n-en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/dashboard-analytics.js"></script>
   <script type="module" src="js/app.js"></script>

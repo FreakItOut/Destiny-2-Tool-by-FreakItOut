@@ -75,6 +75,13 @@ check('Champion-Prüfung', inventory.includes('openChampionAudit') && index.incl
 check('Suche hervorheben', inventory.includes('highlightSearchText') && inventory.includes('dinv-mark'));
 check('Release-Workflow', releaseWorkflow.includes('gh release create') && releaseWorkflow.includes('npm run dist'));
 check('Web-Einstellungsseiten entfernt', !index.includes('data-settings-panel="web"') && !index.includes('data-settings-panel="custom"'));
+check('Config-Rettung aus .bak', config.includes('config.json.bak') && config.includes('repairedFrom = \'config.json.bak\''));
+check('Loadout-Warteschlange persistent', inventory.includes('LOADOUT_QUEUE_KEY') && inventory.includes('readStoredLoadoutQueue'));
+check('Outbox mit Backoff und Konfliktvorschau', inventory.includes('nextTryAt') && inventory.includes('outboxConflictText'));
+check('Englische Übersetzung lazy', index.indexOf('i18n-en.js') < 0 && read('renderer/js/i18n.js').includes('ensureDictionary'));
+check('HUD-Regeln und Overlay-Drag', overlayHud.includes('chipRules') && overlayHud.includes("bar.addEventListener('drop'"));
+check('Dashboard-Karten einzeln und Heute-Ansicht', dashboardSource.includes('dashboardCardSizes') && index.includes('value="today"'));
+check('Befehlspalette für Ausgang/Queue/Champion', app.includes('d2-outbox-send') && app.includes('d2-loadout-queue-open') && app.includes('d2-champion-audit-open'));
 check('Champion-Planer mit Artefakt und Swaps', tools.includes('renderChampionPlanner') && tools.includes('artifactBreakers') && tools.includes('championSwapSuggestions'));
 check('Build-Lückenanalyse', tools.includes('renderBuildGap') && tools.includes('data-gap-target') && tools.includes('data-gap-loadout'));
 check('Crafting-Materialplan', tools.includes('renderCraftingMaterialPlan') && tools.includes('Crafting-Materialplan'));

@@ -57,6 +57,8 @@ const DEFAULTS = {
     hudScale: 'm',
     // Feineinstellung pro Chip: { scale: 's'|'m'|'l', color: '#rrggbb' }.
     chipStyles: {},
+    // Sichtbarkeit pro Chip: always | pve | pvp.
+    chipRules: {},
     // Gespeichertes HUD-Profil automatisch nach Aktivität wählen.
     hudAutoProfile: false,
     // Gespeicherte Overlay-Layouts (Position/Größe/Chips …).
@@ -340,6 +342,8 @@ const DEFAULTS = {
   // Kartengröße (s/m/l) und Kartensuche im Dashboard.
   dashboardCardSize: 'm',
   dashboardCardSearch: '',
+  // Karten-Individuelle Größe: { cardId: 's'|'m'|'l' }
+  dashboardCardSizes: {},
   analyticsHistory: {},
   quickActionsHidden: [],
   // Automatisches, mit Windows safeStorage verschlüsseltes Backup.
@@ -1017,6 +1021,10 @@ function normalize(raw) {
   merged.dashboardFocus = merged.dashboardFocus !== false;
   merged.dashboardCardSize = ['s', 'm', 'l'].includes(String(merged.dashboardCardSize)) ? String(merged.dashboardCardSize) : 'm';
   merged.dashboardCardSearch = String(merged.dashboardCardSearch || '').slice(0, 60);
+  const rawCardSizes = merged.dashboardCardSizes && typeof merged.dashboardCardSizes === 'object' ? merged.dashboardCardSizes : {};
+  merged.dashboardCardSizes = Object.fromEntries(Object.entries(rawCardSizes)
+    .filter(([key, value]) => /^dash[A-Za-z0-9]+$/.test(String(key)) && ['s', 'm', 'l'].includes(String(value)))
+    .slice(0, 40));
   const analyticsSource = isPlainObject(merged.analyticsHistory) ? merged.analyticsHistory : {};
   const analyticsKeys = Object.keys(analyticsSource).filter((key) => /^\d{4}-\d{2}-\d{2}$/.test(key)).sort().slice(-180);
   merged.analyticsHistory = {};
@@ -1241,6 +1249,13 @@ function normalize(raw) {
     };
   }
   merged.overlay.chipStyles = chipStyles;
+  const rawChipRules = isPlainObject(merged.overlay.chipRules) ? merged.overlay.chipRules : {};
+  const chipRules = {};
+  for (const key of CHIP_KEYS) {
+    const value = String(rawChipRules[key] || 'always');
+    chipRules[key] = ['always', 'pve', 'pvp'].includes(value) ? value : 'always';
+  }
+  merged.overlay.chipRules = chipRules;
 
   // Sitzungs-Wiederherstellung: Kategorie-/Seiten-IDs, max. 8.
   if (!isPlainObject(merged.session)) merged.session = { siteIds: [] };
@@ -1683,6 +1698,7 @@ function normalize(raw) {
       showItems,
       hudScale: ['s', 'm', 'l', 'xl'].includes(entry.hudScale) ? entry.hudScale : 'm',
       chipStyles: isPlainObject(entry.chipStyles) ? entry.chipStyles : {},
+      chipRules: isPlainObject(entry.chipRules) ? entry.chipRules : {},
       display: /^\d+x\d+@[\d.]+$/.test(String(entry.display || '')) ? String(entry.display) : '',
       match: ['all', 'pvp', 'raid', 'dungeon'].includes(entry.match) ? entry.match : 'all'
     });
@@ -1708,29 +1724,46 @@ let repairInfo = null;
 
 function load() {
   configFile = path.join(app.getPath('userData'), 'config.json');
+  const backupFile = `${configFile}.bak`;
   try {
     const raw = fs.readFileSync(configFile, 'utf8');
     data = normalize(JSON.parse(raw));
     repairInfo = null;
+    // Letzte funktionierende Fassung als schnelle Wiederherstellung sichern.
+    try {
+      if (!fs.existsSync(backupFile)) fs.copyFileSync(configFile, backupFile);
+    } catch (error) {
+      // Optional.
+    }
   } catch (error) {
-    // Reparatur: defekte Datei sichern und das neueste gültige Backup
-    // laden. Bleibt das erfolglos, gelten die Standardwerte.
+    // Reparatur: defekte Datei sichern und zuerst die letzte gute Fassung,
+    // danach das neueste gültige Backup laden.
     let repairedFrom = '';
     try {
       if (fs.existsSync(configFile)) {
         fs.copyFileSync(configFile, `${configFile}.broken-${Date.now()}.json`);
       }
-      const dir = path.join(app.getPath('userData'), 'backups');
-      const candidates = fs.existsSync(dir)
-        ? fs.readdirSync(dir).filter((name) => /^config-.*\.json$/i.test(name)).sort().reverse()
-        : [];
-      for (const name of candidates) {
+      if (fs.existsSync(backupFile)) {
         try {
-          data = normalize(JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8')));
-          repairedFrom = name;
-          break;
+          data = normalize(JSON.parse(fs.readFileSync(backupFile, 'utf8')));
+          repairedFrom = 'config.json.bak';
         } catch (backupError) {
-          // nächstes Backup probieren
+          // Nächstes Backup probieren.
+        }
+      }
+      if (!repairedFrom) {
+        const dir = path.join(app.getPath('userData'), 'backups');
+        const candidates = fs.existsSync(dir)
+          ? fs.readdirSync(dir).filter((name) => /^config-.*\.json$/i.test(name)).sort().reverse()
+          : [];
+        for (const name of candidates) {
+          try {
+            data = normalize(JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8')));
+            repairedFrom = name;
+            break;
+          } catch (backupError) {
+            // nächstes Backup probieren
+          }
         }
       }
     } catch (repairError) {
@@ -1760,6 +1793,15 @@ function save() {
   if (!configFile) return false;
   try {
     fs.mkdirSync(path.dirname(configFile), { recursive: true });
+    const backupFile = `${configFile}.bak`;
+    try {
+      if (fs.existsSync(configFile)) {
+        JSON.parse(fs.readFileSync(configFile, 'utf8'));
+        fs.copyFileSync(configFile, backupFile);
+      }
+    } catch (error) {
+      // Defekte Datei nicht als "letzte gute Fassung" sichern.
+    }
     const tmp = `${configFile}.tmp`;
     fs.writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
     fs.renameSync(tmp, configFile);

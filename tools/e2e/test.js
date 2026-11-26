@@ -684,6 +684,9 @@ async function run() {
   await wait(150);
   inv.queueLoadout('lo-queue-test');
   await wait(300);
+  let storedQueue = [];
+  try { storedQueue = JSON.parse(localStorage.getItem('d2tool.loadoutQueue') || '[]'); } catch (error) { storedQueue = []; }
+  check('Loadout-Warteschlange wird gespeichert', storedQueue.length >= 1, JSON.stringify(storedQueue));
   const queueBar = document.querySelector('#loadoutQueueBar');
   check('Loadout-Warteschlange sichtbar', Boolean(queueBar) && !queueBar.classList.contains('hidden'));
   document.querySelector('#loadoutQueueDetails')?.click();
@@ -700,6 +703,9 @@ async function run() {
   document.querySelector('#loadoutQueuePanel [data-loadout-remove]')?.click();
   await wait(100);
   check('Loadout-Warteschlange entfernt Eintrag', !document.querySelector('#loadoutQueuePanel .loadout-queue-row'));
+  let storedAfter = [];
+  try { storedAfter = JSON.parse(localStorage.getItem('d2tool.loadoutQueue') || '[]'); } catch (error) { storedAfter = []; }
+  check('Loadout-Warteschlange aus Speicher entfernt', storedAfter.length === 0, JSON.stringify(storedAfter));
   document.querySelector('#loadoutQueueClose')?.click();
   cfg.bungie.loadouts = cfg.bungie.loadouts.filter((entry) => entry.id !== 'lo-queue-test');
   inv.renderLoadouts();
@@ -2143,6 +2149,26 @@ async function run() {
     sizeSelect.value = 'm';
     sizeSelect.dispatchEvent(new Event('change', { bubbles: true }));
   }
+  cfg.dashboardCardSizes = { dashChampions: 'l' };
+  dash.render();
+  await wait(120);
+  check('Dashboard-Karte einzeln groß', Boolean(dashPanel.querySelector('#dashChampions.dash-card-l')),
+    dashPanel.querySelector('#dashChampions')?.className);
+  const dashPresetSelect = dashPanel.querySelector('[data-dash-preset]');
+  if (dashPresetSelect) {
+    dashPresetSelect.value = 'today';
+    dashPresetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    await wait(150);
+  }
+  check('Dashboard Heute-Ansicht blendet Karten aus',
+    Boolean(dashPanel.querySelector('#dashChampions.dash-user-hidden')),
+    dashPanel.querySelector('#dashChampions')?.className);
+  if (dashPresetSelect) {
+    dashPresetSelect.value = 'all';
+    dashPresetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    await wait(120);
+  }
+  cfg.dashboardCardSizes = {};
   const dashGodBtn = dashPanel && dashPanel.querySelector('[data-dash-action="godrolls"]');
   check('Dashboard-Aktion „Godrolls“ vorhanden', Boolean(dashGodBtn));
   if (dashGodBtn) dashGodBtn.click();

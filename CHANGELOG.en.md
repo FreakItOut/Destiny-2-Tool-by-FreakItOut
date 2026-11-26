@@ -6,6 +6,40 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] – 2026-11-26
+
+### Added
+
+- **Config recovery** – the last valid `config.json` is kept as `.bak` before
+  every save; a broken file is restored from it first. The installer also
+  writes a `.bak` when migrating.
+- **Persistent loadout queue** – pending entries survive a restart and are
+  resumed deliberately with “Resume”.
+- **Offline outbox expanded** – conflict preview per action, exponential
+  backoff with a next-attempt time, plus lock/unlock and mod-socket actions.
+- **Search 2.0** – matches are highlighted in the item popup and perk names;
+  saved searches can be renamed, deleted individually or all at once.
+- **Champion audit with undo** – corrections can be reverted in one click.
+- **HUD editor** – chips can be dragged directly in the overlay bar; each chip
+  can be set to “Always / PvE / PvP”.
+- **Dashboard** – per-card size (Alt+right-click), a “Today” layout and a PNG
+  export of the visible dashboard.
+- **Command palette** – commands for sending/opening the outbox, the loadout
+  queue and the champion audit.
+
+### Changed
+
+- **English dictionary loads on demand** – German startup no longer loads the
+  356 KB file.
+- **Release workflow** also verifies the built checksums and runs a portable
+  smoke test on the real build artifacts.
+- HUD panel focus, `aria-modal` and reduced-motion rules added.
+
+### Technical
+
+- E2E expanded to **516** steps, app features to **98** checks.
+- Config test covers recovery from `config.json.bak`.
+
 ## [1.8.1] – 2026-11-26
 
 ### Fixed

@@ -9,7 +9,33 @@
 // die Render-Funktionen umzubauen. Bei Deutsch werden die Originale
 // wiederhergestellt.
 (function () {
-  const dictionary = window.__I18N_EN__ || {};
+  let dictionary = window.__I18N_EN__ || {};
+  let dictionaryPromise = null;
+
+  // Die englische Übersetzung (ca. 350 KB) wird erst geladen, wenn
+  // Englisch tatsächlich gewählt ist. Deutsch braucht sie nie.
+  function ensureDictionary() {
+    if (window.__I18N_EN__) {
+      dictionary = window.__I18N_EN__;
+      return Promise.resolve(dictionary);
+    }
+    if (dictionaryPromise) return dictionaryPromise;
+    dictionaryPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'js/i18n-en.js';
+      script.async = true;
+      script.onload = () => {
+        dictionary = window.__I18N_EN__ || {};
+        resolve(dictionary);
+      };
+      script.onerror = () => {
+        dictionaryPromise = null;
+        reject(new Error('i18n-en.js konnte nicht geladen werden.'));
+      };
+      document.head.appendChild(script);
+    });
+    return dictionaryPromise;
+  }
   const rawPatterns = window.__I18N_PATTERNS__ || [];
   const EXTRA_PATTERNS = [
     [/^(\d+) ausgewählt$/, '$1 selected'],
@@ -36,7 +62,17 @@
     [/^App: Lesen (.+) · Verschieben (.+) — Autorisierung: Lesen (.+) · Verschieben (.+)$/, 'App: Read $1 · Move $2 — Authorization: Read $3 · Move $4'],
     [/^Prüfung nicht möglich: (.+)$/, 'Check not possible: $1'],
     [/^(\d+) Waffen$/, '$1 Weapons'],
-    [/^(\d+) Rüstungsteile$/, '$1 Armor pieces']
+    [/^(\d+) Rüstungsteile$/, '$1 Armor pieces'],
+    [/^Offline-Ausgang: (\d+) Aktion(?:en)? warten(?: \((.+)\))?(?: – (.+))?$/, 'Offline outbox: $1 action(s) waiting$2$3'],
+    [/^Offline-Ausgang: (\d+) gesendet(?:, (\d+) warten weiter)?\.$/, 'Offline outbox: $1 sent$2.'],
+    [/^Nächster Versuch (.+)$/, 'Next attempt $1'],
+    [/^Loadout-Warteschlange: (.+)$/, 'Loadout queue: $1'],
+    [/^Warteschlange wiederhergestellt – „Fortsetzen“ drücken\.$/, 'Queue restored – press “Resume”.'],
+    [/^Warteschlange angehalten – „Fortsetzen“ drücken\.$/, 'Queue paused – press “Resume”.'],
+    [/^HUD-Profil „(.+)“ angewendet\.$/, 'HUD profile “$1” applied.'],
+    [/^HUD-Profil „(.+)“ gespeichert\.$/, 'HUD profile “$1” saved.'],
+    [/^(\d+) HUD-Profil\(e\) exportiert\.$/, '$1 HUD profile(s) exported.'],
+    [/^(\d+) HUD-Profil\(e\) importiert\.$/, '$1 HUD profile(s) imported.']
   ];
   const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE', 'PRE']);
   const SKIP_SELECTOR = [
@@ -482,14 +518,24 @@
   function setLanguage(next) {
     const value = next === 'en' ? 'en' : 'de';
     if (value === language) {
-      if (value === 'en') walk(document.body);
+      if (value === 'en') {
+        if (dictionary && Object.keys(dictionary).length) walk(document.body);
+        else ensureDictionary().then(() => { if (language === 'en') { walk(document.body); startObserver(); } }).catch(() => {});
+      }
       return;
     }
     language = value;
     document.documentElement.lang = value === 'en' ? 'en' : 'de';
     if (value === 'en') {
-      walk(document.body);
-      startObserver();
+      ensureDictionary()
+        .then(() => {
+          if (language !== 'en') return;
+          walk(document.body);
+          startObserver();
+        })
+        .catch(() => {
+          // Ohne Wörterbuch bleibt die Oberfläche deutsch.
+        });
     } else {
       stopObserver();
       restore();

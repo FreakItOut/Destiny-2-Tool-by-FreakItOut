@@ -196,6 +196,18 @@ app.whenReady().then(() => {
     // Datei-Check: der Loadout steht wirklich in config.json.
     const file = JSON.parse(fs.readFileSync(path.join(tempDir, 'config.json'), 'utf8'));
     check('Loadout in config.json', (file.bungie.loadouts || []).length === 1, (file.bungie.loadouts || []).length);
+
+    // Wiederherstellung aus der letzten guten Fassung.
+    const configPath = path.join(tempDir, 'config.json');
+    config.set({ overlay: { opacity: 0.93 } });
+    check('Letzte gute Config als .bak gesichert', fs.existsSync(`${configPath}.bak`));
+    fs.writeFileSync(configPath, '{ broken', 'utf8');
+    const restored = config.load();
+    const report = config.repairReport();
+    check('Defekte Config aus .bak wiederhergestellt',
+      (restored.bungie.loadouts || []).length === 1 && restored.bungie.loadouts[0].name === 'Persistenz-Test',
+      JSON.stringify((restored.bungie.loadouts || []).map((entry) => entry.name)));
+    check('Repair-Report nennt .bak', /config\.json\.bak$/.test(String(report && report.from)), report && report.from);
   } catch (error) {
     check('Test ohne Ausnahme', false, error && (error.stack || error.message));
   }

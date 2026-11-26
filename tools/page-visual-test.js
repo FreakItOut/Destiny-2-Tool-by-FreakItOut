@@ -15,7 +15,7 @@ const ROOT = path.resolve(__dirname, '..');
 const HARNESS = path.join(__dirname, 'e2e');
 const TOLERANCE = 0.04;
 const UPDATE = process.env.D2_UPDATE_BASELINES === '1';
-const VIEWS = ['overview', 'builds', 'week', 'collection', 'vendor', 'dashboard', 'settings'];
+const VIEWS = ['overview', 'builds', 'week', 'collection', 'vendor', 'dashboard', 'settings', 'hud'];
 const ELECTRON = process.execPath;
 
 const targets = [];

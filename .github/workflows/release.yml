@@ -64,10 +64,14 @@ jobs:
       - name: Build (portable + Installer)
         run: npm run dist
 
+      - name: Portable-Smoke der gebauten App
+        run: npm run test:package
+
       - name: SBOM und Prüfsummen
         run: |
           npm run sbom
           npm run checksums
+          npm run test:checksums
 
       - name: Release veröffentlichen
         shell: bash
