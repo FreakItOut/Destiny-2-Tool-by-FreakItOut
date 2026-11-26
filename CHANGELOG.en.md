@@ -6,6 +6,15 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.5] – 2026-11-26
+
+### Removed
+
+- **Empty info boxes in the inventory** – the never-filled
+  `inventoryDetail` bar is removed; empty result, status and loadout bars are
+  hidden instead of taking up space as empty frames.
+- Version **1.5.5**.
+
 ## [1.5.4] – 2026-11-26
 
 ### Fixed

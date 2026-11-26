@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.5.4
+# Destiny 2 Tool by FreakItOut 1.5.5
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,18 +6,16 @@
 
 ## Deutsch
 
-Version 1.5.4 verbessert Champion-Anzeige und Suche: Jede Waffe zeigt ihren Champion-Status, und die Suche blendet standardmäßig nur Treffer ein.
+Version 1.5.5 räumt leere Infoboxen im Inventar auf: Die ungenutzte Detaileiste ist entfernt, leere Ergebnis-/Statusleisten kosten keinen Platz mehr.
 
-### Neu in 1.5.4
+### Neu in 1.5.5
 
-- **Champion-Anzeige auf allen Waffen** – nicht erkannte Brecher zeigen ein
-  neutrales „–“ mit Tooltip, statt ganz zu fehlen.
-- **Suche filtert standardmäßig** – „Nur Treffer“ blendet nicht passende
-  Kacheln und leere Zeilen aus; Tresorlisten öffnen sich bei der Suche.
-- **Umschaltbar** – der Schalter kann wieder auf reines Dimmen stellen.
-- **Enthalten:** Controller-Navigation aus 1.5.3 sowie Overlay-/TV-Dichte.
+- **Leere Inventar-Leisten entfernt** – die nie befüllte Detaileiste ist weg;
+  leere Ergebnis-, Status- und Loadout-Leisten werden ausgeblendet.
+- **Enthalten:** Champion-Anzeige, Treffer-Suche und Controller-Navigation
+  aus 1.5.3/1.5.4.
 
-### Enthalten aus 1.5.3
+### Enthalten aus 1.5.4
 
 - Fokus-Dashboard, Einfach-/Erweitert-Einstellungen, Loadout-Warteschlange
   mit Konflikterkennung, 90-Tage-Analyse und SBOM.
@@ -26,8 +24,8 @@ Version 1.5.4 verbessert Champion-Anzeige und Suche: Jede Waffe zeigt ihren Cham
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.4.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.4.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.5.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.5.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -35,7 +33,7 @@ Version 1.5.4 verbessert Champion-Anzeige und Suche: Jede Waffe zeigt ihren Cham
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.5.4.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.5.exe`).
 
 ### Voraussetzungen
 
@@ -68,19 +66,16 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.5.4 improves Champion display and search: every weapon shows its
-Champion status, and search now shows only matches by default.
+Version 1.5.5 cleans up empty info boxes in the inventory: the unused detail bar is removed and empty result/status bars no longer take up space.
 
-### New in 1.5.4
+### New in 1.5.5
 
-- **Champion display on all weapons** – undetected breakers show a neutral
-  “–” with a tooltip instead of nothing.
-- **Search filters by default** – “Matches only” hides non-matching tiles and
-  empty rows; vault lists open during a search.
-- **Toggleable** – the switch can restore dim-only behaviour.
-- **Included:** controller navigation from 1.5.3 plus overlay/TV density.
+- **Empty inventory bars removed** – the never-filled detail bar is gone;
+  empty result, status and loadout bars are hidden.
+- **Included:** Champion display, match search and controller navigation from
+  1.5.3/1.5.4.
 
-### Included from 1.5.3
+### Included from 1.5.4
 
 - Focus dashboard, simple/advanced settings, loadout queue with conflict
   detection, 90-day analytics and SBOM.
@@ -89,8 +84,8 @@ Champion status, and search now shows only matches by default.
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.4.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.4.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.5.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.5.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -98,7 +93,7 @@ Champion status, and search now shows only matches by default.
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.5.4.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.5.exe`).
 
 ### Requirements
 

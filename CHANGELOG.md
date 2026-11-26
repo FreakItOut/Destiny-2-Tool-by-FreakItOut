@@ -6,6 +6,15 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.5] – 2026-11-26
+
+### Entfernt
+
+- **Leere Infoboxen im Inventar** – die nie befüllte `inventoryDetail`-Leiste
+  ist entfernt; leere Ergebnis-, Status- und Loadout-Leisten werden
+  ausgeblendet, statt als leere Rahmen Platz zu kosten.
+- Version **1.5.5**.
+
 ## [1.5.4] – 2026-11-26
 
 ### Behoben

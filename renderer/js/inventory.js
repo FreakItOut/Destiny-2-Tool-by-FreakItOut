@@ -94,8 +94,6 @@ const INVENTORY_CSS = `
 .inventory-result { margin: 8px 14px 0; padding: 6px 10px; border: 1px solid #2a3548; border-radius: 6px; max-height: 180px; overflow-y: auto; font-size: 11px; flex-shrink: 0; }
 .inventory-result .r-ok { color: #29f36a; }
 .inventory-result .r-err { color: #ff6b6b; }
-.inventory-detail { margin: 8px 14px 0; padding: 10px 12px; border: 1px solid var(--brand); border-radius: 8px; background: rgba(255,255,255,0.04); flex-shrink: 0; max-height: 40vh; overflow-y: auto; }
-.inventory-detail.hidden { display: none; }
 .inventory-loadout-list { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 14px 0; flex-shrink: 0; max-height: 100px; overflow-y: auto; }
 .inv-loadout { display: flex; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid #2a3548; border-radius: 5px; font-size: 11px; }
 .inv-loadout-name { font-weight: 600; color: #e8ecf2; }
@@ -148,8 +146,11 @@ body.mode-overlay .inventory-toolbar .btn { height: 28px !important; min-height:
 body.mode-overlay #inventoryStatus,
 body.mode-overlay .inventory-legend,
 body.mode-overlay .inventory-pad-hint { display: none !important; }
-body.mode-overlay #inventoryResult:empty,
-body.mode-overlay #inventoryDetail:empty { display: none !important; }
+/* Leere Infoboxen kosten nur Platz. */
+.inventory-result.hidden,
+.inventory-result:empty,
+.inventory-loadout-list:empty,
+.inventory-status:empty { display: none !important; }
 body.mode-overlay .dinv-tab { min-height: 30px !important; font-size: 12px !important; padding: 3px 9px !important; }
 body.mode-overlay .dinv-sub,
 body.mode-overlay .dinv-sub.vault { grid-template-columns: repeat(auto-fill, 64px); }
@@ -945,7 +946,6 @@ export function createInventory(ctx) {
   const loadoutSaveBtn = qs('#inventoryLoadoutSave');
   const loadoutList = qs('#inventoryLoadoutList');
   const resultBox = qs('#inventoryResult');
-  const detailPanel = qs('#inventoryDetail');
   const tooltipEl = qs('#inventoryTooltip');
   const inventoryBtn = qs('#inventoryBtn');
   const godrollBtn = qs('#inventoryGodrollFilter');
@@ -1585,7 +1585,7 @@ export function createInventory(ctx) {
     // Auf Werkzeug-/Editor-Seiten nur die jeweilige Ansicht zeigen; die
     // Inventar-Suchleiste und ihre Chips wuerden sonst den Kopf ueberfuellen.
     const inventoryOnly = !isEditor && !isTools;
-    for (const element of [toolbar, inventoryHeadControls, searchChips, legendEl, inventoryStatusEl, resultBox, detailPanel, loadoutList]) {
+    for (const element of [toolbar, inventoryHeadControls, searchChips, legendEl, inventoryStatusEl, resultBox, loadoutList]) {
       if (element) element.classList.toggle('hidden', !inventoryOnly);
     }
     hideTooltip();

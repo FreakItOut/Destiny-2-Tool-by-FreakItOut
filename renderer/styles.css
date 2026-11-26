@@ -3687,19 +3687,6 @@ body.mini-mode #miniExitBtn { display: flex; align-items: center; justify-conten
 }
 .inv-tile-empty { display: block; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.06); }
 
-/* Detailleiste: gewählte Kachel mit Aktionen. */
-.inventory-detail {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 10px 20px 0;
-  padding: 8px 12px;
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  flex: 0 0 auto;
-}
-.inventory-detail.hidden { display: none; }
 .inv-detail-icon { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background: rgba(0, 0, 0, 0.4); flex-shrink: 0; }
 .inv-detail-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 auto; }
 .inv-detail-main strong { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
