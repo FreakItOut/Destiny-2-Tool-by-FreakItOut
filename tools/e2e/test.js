@@ -916,10 +916,15 @@ async function run() {
   check('Stat-Summe auf Ruestungskachel', Boolean(statBadge), statBadge && statBadge.textContent);
   check('Element-Badge auf Waffe', Boolean(document.querySelector('.dinv-tag-elem')), 'kein Element-Badge');
   check('Element-Legende im Inventar', Boolean(document.querySelector('.inventory-legend')), 'keine Legende');
-  check('Champion-Badge auf Waffe', Boolean(document.querySelector('.dinv-tag-champ')), 'kein Champion-Badge');
+  check('Champion-Badge auf Waffe', Boolean(document.querySelector('.dinv-tag-champ:not(.none)')), 'kein Champion-Badge');
   const frameWeaponTile = document.querySelector('.dinv-tile[title^="Perk-Testwaffe"]');
-  check('Champion aus Rahmen ohne Mod', Boolean(frameWeaponTile && frameWeaponTile.parentElement && frameWeaponTile.parentElement.querySelector('.dinv-tag-champ')), 'kein Rahmen-Badge');
+  check('Champion aus Rahmen ohne Mod', Boolean(frameWeaponTile && frameWeaponTile.parentElement && frameWeaponTile.parentElement.querySelector('.dinv-tag-champ:not(.none)')), 'kein Rahmen-Badge');
   await setSearch('is:godroll');
+  const dimWrap = document.querySelector('.dinv-tile-wrap.inv-dim');
+  check('Suche zeigt standardmäßig nur Treffer',
+    Boolean(document.querySelector('#inventorySearchOnly.active')) &&
+      (!dimWrap || getComputedStyle(dimWrap).display === 'none'),
+    dimWrap ? getComputedStyle(dimWrap).display : 'keine gedimmte Kachel');
   check('Aktive Such-Chips sichtbar', Boolean(document.querySelector('[data-search-remove]')), 'kein aktiver Chip');
   const removeChip = document.querySelector('[data-search-remove]');
   if (removeChip) removeChip.click();

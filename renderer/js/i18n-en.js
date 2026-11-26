@@ -1,6 +1,13 @@
 'use strict';
 // Automatisch erzeugt von tools/make-i18n.js.
 window.__I18N_EN__ = {
+  "Nur Treffer anzeigen (aus: Treffer nur dimmen)": "Show only matches (off: dim matches only)",
+  "Kein intrinsischer Champion-Brecher erkannt": "No intrinsic Champion breaker detected",
+  "Nur Treffer": "Matches only",
+  "Alle zeigen": "Show all",
+  "Nur Treffer anzeigen (Klick: Treffer nur dimmen)": "Show only matches (click: dim matches only)",
+  "Treffer nur dimmen (Klick: nur Treffer anzeigen)": "Dim matches only (click: show only matches)",
+  "Kein Champion-Brecher": "No Champion breaker",
   "Trotzdem anlegen": "Apply anyway",
   "Konflikte:": "Conflicts:",
   "＋ Queue": "+ Queue",

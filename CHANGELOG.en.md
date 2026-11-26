@@ -6,6 +6,20 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.4] – 2026-11-26
+
+### Fixed
+
+- **Champion display on all weapons** – weapons without a detected intrinsic
+  breaker now show a neutral “–” with the tooltip “No Champion breaker”
+  instead of no indicator at all.
+- **Search filters by default** – the new “Matches only” switch hides
+  non-matching tiles and empty rows; vault lists expand automatically during
+  a search. The switch can restore dim-only behaviour.
+- **E2E** checks the match filtering and still requires real Champion badges
+  (not the neutral “–”).
+- Version **1.5.4**.
+
 ## [1.5.3] – 2026-11-26
 
 ### Fixed

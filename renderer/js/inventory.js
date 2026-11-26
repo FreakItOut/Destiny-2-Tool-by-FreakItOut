@@ -465,6 +465,11 @@ body.pad-active .inventory-pad-hint { display: flex; }
 .dinv-tag { display: inline-flex !important; align-items: center !important; justify-content: center !important; min-width: 12px !important; height: 10px !important; padding: 0 2px !important; border-radius: 2px !important; font-size: 7px !important; font-weight: 800 !important; line-height: 10px !important; letter-spacing: 0.1px !important; pointer-events: none !important; }
 .dinv-tag-elem { color: #0b0f16 !important; }
 .dinv-tag-champ { background: rgba(9,14,22,0.88) !important; border: 1px solid #f3c66a !important; }
+.dinv-tag-champ.none { border-color: #4a5568 !important; color: #9aa6b6 !important; }
+/* Suche: standardmäßig nur Treffer, keine gedimmten Kacheln dazwischen. */
+body.dinv-search-only .dinv-tile-wrap.inv-dim { display: none !important; }
+body.dinv-search-only .dinv-row:not(.dinv-head-row):not(:has(.dinv-tile-wrap:not(.inv-dim))) { display: none !important; }
+body.dinv-search-only .dinv-vault-body.collapsed { max-height: none !important; }
 body.tv-mode .dinv-tile-tagrow { height: 15px !important; gap: 3px !important; }
 body.tv-mode .dinv-tag { height: 15px !important; min-width: 18px !important; font-size: 10px !important; line-height: 15px !important; padding: 0 4px !important; }
 body.tv-mode .inventory-legend { font-size: 13px !important; }
@@ -946,6 +951,9 @@ export function createInventory(ctx) {
   const godrollBtn = qs('#inventoryGodrollFilter');
   const wishlistBtn = qs('#inventoryWishlistRefresh');
   const duplicatesBtn = qs('#inventoryDuplicatesBtn');
+  const searchOnlyBtn = qs('#inventorySearchOnly');
+  let searchOnly = true;
+  try { searchOnly = window.localStorage.getItem('d2inv.searchOnly') !== '0'; } catch (error) { /* egal */ }
   const searchState = { godrollOnly: false };
   let searchSortOverride = '';
   let searchActive = false;
@@ -2205,7 +2213,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       ? `<span class="dinv-tag dinv-tag-elem" style="background:${ELEMENT_COLOR[Number(item.element)] || '#cfd7e3'}" title="Element: ${esc(elemName)}">${esc(elemShort)}</span>`
       : '';
     const champTags = isWeapon
-      ? champions.map((type) => `<span class="dinv-tag dinv-tag-champ" style="border-color:${CHAMPION_COLORS[type]};color:${CHAMPION_COLORS[type]}" title="Champion (Rahmen): ${esc(CHAMPION_NAMES[type])}">${esc(CHAMPION_SHORT[type])}</span>`).join('')
+      ? (champions.length
+        ? champions.map((type) => `<span class="dinv-tag dinv-tag-champ" style="border-color:${CHAMPION_COLORS[type]};color:${CHAMPION_COLORS[type]}" title="Champion (Rahmen): ${esc(CHAMPION_NAMES[type])}">${esc(CHAMPION_SHORT[type])}</span>`).join('')
+        : '<span class="dinv-tag dinv-tag-champ none" title="Kein intrinsischer Champion-Brecher erkannt">–</span>')
       : '';
     const tagRow = (elemTag || champTags) ? `<span class="dinv-tile-tagrow">${elemTag}${champTags}</span>` : '';
     const badge = (qty || power) ? `<span class="dinv-tile-badge">${qty}${power}</span>` : '';
@@ -2229,7 +2239,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       : item.statDupe
         ? '<span class="dinv-tile-diff" title="Gleiche Stats wie eine andere Kopie">⧉</span>'
         : '';
-    const label = `${item.name}${item.typeName ? ` · ${item.typeName}` : ''}${elemName ? ` · ${elemName}` : ''}${champions.length ? ` · Champion: ${champions.map((type) => CHAMPION_NAMES[type]).join(', ')}` : ''}${item.power ? ` · ${item.power} Power` : ''}${itemNote ? ` · Notiz: ${itemNote}` : ''}`;
+    const label = `${item.name}${item.typeName ? ` · ${item.typeName}` : ''}${elemName ? ` · ${elemName}` : ''}${champions.length ? ` · Champion: ${champions.map((type) => CHAMPION_NAMES[type]).join(', ')}` : (isWeapon ? ' · Kein Champion-Brecher' : '')}${item.power ? ` · ${item.power} Power` : ''}${itemNote ? ` · Notiz: ${itemNote}` : ''}`;
     const dimmed = searchActive && !searchMatchKeys.has(key);
     const dimClass = dimmed ? ' inv-dim' : '';
     const img = item.icon ? `<img src="https://www.bungie.net${esc(item.icon)}" alt="" loading="lazy">` : '';
@@ -2459,7 +2469,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         if (smallToggle) smallToggle.hidden = true;
         continue;
       }
-      const expanded = expandedVaults.has(key);
+      // Bei einer Treffer-Suche bleiben Tresorlisten offen, damit Treffer
+      // nicht in der 4-Zeilen-Vorschau versteckt sind.
+      const expanded = expandedVaults.has(key) || (searchActive && searchOnly);
       const row = cell.closest('.dinv-row');
       // content-visibility kann die Messung off-screen verfälschen.
       if (row) row.style.contentVisibility = 'visible';
@@ -3216,6 +3228,15 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const vaultList = markMatches(sortItems(data.vault || []), 'vault');
     searchActive = tokens.length > 0;
     searchMatchKeys = searchMatches;
+    const onlyMatches = searchActive && searchOnly;
+    document.body.classList.toggle('dinv-search-only', onlyMatches);
+    if (searchOnlyBtn) {
+      searchOnlyBtn.classList.toggle('active', searchOnly);
+      searchOnlyBtn.textContent = searchOnly ? 'Nur Treffer' : 'Alle zeigen';
+      searchOnlyBtn.title = searchOnly
+        ? 'Nur Treffer anzeigen (Klick: Treffer nur dimmen)'
+        : 'Treffer nur dimmen (Klick: nur Treffer anzeigen)';
+    }
     if (simpleSearch && !workerSearch) requestSearchWorker(simpleSearch.text, dataVersion);
     const searchCountEl = qs('#inventorySearchCount');
     if (searchCountEl) searchCountEl.textContent = tokens.length ? `${searchMatches.size} Treffer${fuzzySearchHits ? ' · unscharf' : ''}` : '';
@@ -3470,6 +3491,14 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     filterMenu.style.width = width + 'px';
     filterMenu.style.left = Math.round(left) + 'px';
     filterMenu.style.top = Math.round(rect.bottom + 6) + 'px';
+  }
+
+  if (searchOnlyBtn) {
+    searchOnlyBtn.addEventListener('click', () => {
+      searchOnly = !searchOnly;
+      try { window.localStorage.setItem('d2inv.searchOnly', searchOnly ? '1' : '0'); } catch (error) { /* egal */ }
+      render();
+    });
   }
 
   const filterBtn = qs('#inventoryFilterBtn');

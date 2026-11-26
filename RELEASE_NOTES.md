@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.5.3
+# Destiny 2 Tool by FreakItOut 1.5.4
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,19 +6,18 @@
 
 ## Deutsch
 
-Version 1.5.3 behebt die Controller-Navigation: Das D-Pad erreicht im Inventar jetzt auch Titelleiste, App-Leiste und Overlay-Leiste.
+Version 1.5.4 verbessert Champion-Anzeige und Suche: Jede Waffe zeigt ihren Champion-Status, und die Suche blendet standardmäßig nur Treffer ein.
 
-### Neu in 1.5.3
+### Neu in 1.5.4
 
-- **Controller erreicht alle sichtbaren Elemente** – die Fokusnavigation ist
-  nicht mehr auf das Inventar-Panel begrenzt; Titelleiste, App-Leiste und
-  Overlay-Leiste sind per D-Pad erreichbar.
-- **Versteckte Panels bleiben ausgeschlossen** – Dashboard, Dialoge und
-  eingeklappte Bereiche werden weiterhin korrekt gefiltert.
-- **E2E** prüft fokussierbare Off-Screen-Kacheln.
-- **Enthalten:** Overlay-Inventar und TV-Dichte aus 1.5.2.
+- **Champion-Anzeige auf allen Waffen** – nicht erkannte Brecher zeigen ein
+  neutrales „–“ mit Tooltip, statt ganz zu fehlen.
+- **Suche filtert standardmäßig** – „Nur Treffer“ blendet nicht passende
+  Kacheln und leere Zeilen aus; Tresorlisten öffnen sich bei der Suche.
+- **Umschaltbar** – der Schalter kann wieder auf reines Dimmen stellen.
+- **Enthalten:** Controller-Navigation aus 1.5.3 sowie Overlay-/TV-Dichte.
 
-### Enthalten aus 1.5.2
+### Enthalten aus 1.5.3
 
 - Fokus-Dashboard, Einfach-/Erweitert-Einstellungen, Loadout-Warteschlange
   mit Konflikterkennung, 90-Tage-Analyse und SBOM.
@@ -27,8 +26,8 @@ Version 1.5.3 behebt die Controller-Navigation: Das D-Pad erreicht im Inventar j
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.3.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.3.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.4.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.4.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -36,7 +35,7 @@ Version 1.5.3 behebt die Controller-Navigation: Das D-Pad erreicht im Inventar j
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.5.3.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.4.exe`).
 
 ### Voraussetzungen
 
@@ -69,20 +68,19 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.5.3 fixes controller navigation: the D-pad now also reaches the
-title bar, app bar and overlay bar in the inventory.
+Version 1.5.4 improves Champion display and search: every weapon shows its
+Champion status, and search now shows only matches by default.
 
-### New in 1.5.3
+### New in 1.5.4
 
-- **Controller reaches all visible elements** – focus navigation is no longer
-  limited to the inventory panel; title bar, app bar and overlay bar are
-  reachable with the D-pad.
-- **Hidden panels stay excluded** – dashboard, dialogs and collapsed areas
-  remain filtered out.
-- **E2E** checks focusable off-screen tiles.
-- **Included:** overlay inventory and TV density from 1.5.2.
+- **Champion display on all weapons** – undetected breakers show a neutral
+  “–” with a tooltip instead of nothing.
+- **Search filters by default** – “Matches only” hides non-matching tiles and
+  empty rows; vault lists open during a search.
+- **Toggleable** – the switch can restore dim-only behaviour.
+- **Included:** controller navigation from 1.5.3 plus overlay/TV density.
 
-### Included from 1.5.2
+### Included from 1.5.3
 
 - Focus dashboard, simple/advanced settings, loadout queue with conflict
   detection, 90-day analytics and SBOM.
@@ -91,8 +89,8 @@ title bar, app bar and overlay bar in the inventory.
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.3.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.3.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.4.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.4.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -100,7 +98,7 @@ title bar, app bar and overlay bar in the inventory.
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.5.3.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.4.exe`).
 
 ### Requirements
 

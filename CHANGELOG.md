@@ -6,6 +6,21 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.4] – 2026-11-26
+
+### Behoben
+
+- **Champion-Anzeige auf allen Waffen** – Waffen ohne erkannten intrinsischen
+  Brecher zeigen jetzt ein neutrales „–“ mit Tooltip „Kein Champion-Brecher“
+  statt gar keiner Anzeige.
+- **Suche filtert standardmäßig** – der neue Schalter „Nur Treffer“ blendet
+  nicht passende Kacheln und leere Zeilen aus; Tresorlisten klappen bei einer
+  Suche automatisch auf. Über den Schalter lässt sich wieder auf reines
+  Dimmen umstellen.
+- **E2E** prüft die Treffer-Filterung und weiterhin echte Champion-Badges
+  (nicht das neutrale „–“).
+- Version **1.5.4**.
+
 ## [1.5.3] – 2026-11-26
 
 ### Behoben
