@@ -3006,6 +3006,7 @@ body.inventory-open #toolbar { display: none !important; }
   font-size: 12.5px;
 }
 .check-item.done .check-text { text-decoration: line-through; color: var(--muted-2); }
+.check-item.palette-hit { outline: 2px solid var(--brand); outline-offset: 1px; background: rgba(255, 255, 255, 0.09); }
 .check-text { flex: 1; }
 .check-remove { width: 22px; height: 22px; min-width: 22px; font-size: 13px; color: var(--muted-2); }
 .check-empty { font-size: 12px; color: var(--muted); padding: 6px 2px; }
@@ -3140,6 +3141,56 @@ body.inventory-open #toolbar { display: none !important; }
 .dash-card.dash-card-l { padding: 16px 18px; }
 .dash-card.dash-card-l h4 { font-size: 12px; }
 .dash-card.dash-card-l .dash-body { font-size: 13.5px; gap: 6px; }
+/* Karten anpinnen + benannte Layouts (1.13). */
+.dash-pin {
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+.dash-card:hover .dash-pin { opacity: 1; }
+.dash-pin.on { opacity: 1; color: var(--gold, #f0b35a); }
+.dash-pin:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; opacity: 1; }
+.dash-card:has(> h4 > .dash-pin.on) { border-color: color-mix(in srgb, var(--gold, #f0b35a) 45%, var(--line)); }
+.dash-layouts { position: relative; display: inline-flex; }
+.dash-layouts > summary { list-style: none; cursor: pointer; }
+.dash-layouts > summary::-webkit-details-marker { display: none; }
+.dash-layouts[open] > summary { border-color: var(--brand); color: var(--brand); }
+.dash-layouts-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 210px;
+  padding: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--panel, #101722);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+.dash-layouts-body input {
+  height: 26px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 11px;
+}
+.dash-layouts-body .btn { width: 100%; }
+.dash-layouts-body select { width: 100%; }
+
 .dash-body { display: flex; flex-direction: column; gap: 4px; }
 .dash-row { display: flex; gap: 10px; align-items: center; font-size: 12.5px; }
 .dash-row strong { color: var(--accent); min-width: 52px; }
@@ -3513,12 +3564,21 @@ ol.steps { margin: 4px 0 0; padding-left: 20px; display: flex; flex-direction: c
   padding: 7px 10px;
   border-radius: 6px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
 }
+.palette-item .palette-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.palette-item .palette-hint { margin-left: auto; color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
 .palette-item:hover { background: rgba(255, 255, 255, 0.06); }
 .palette-item.active { background: var(--accent); color: var(--accent-contrast); font-weight: 650; }
+.palette-item.active .palette-hint { color: inherit; opacity: 0.75; }
 .palette-item.muted { color: var(--muted); cursor: default; }
 .palette-item .palette-recent { margin-left: 8px; font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .palette-item.active .palette-recent { color: inherit; opacity: 0.7; }
+.palette-item .palette-recent:first-child { margin-left: auto; }
 
 /* ============================================================
    Mute-Knopf, Konfig-Profile, Kategorie-Reihenfolge

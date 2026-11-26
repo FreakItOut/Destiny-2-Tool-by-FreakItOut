@@ -344,6 +344,9 @@ const DEFAULTS = {
   dashboardCardSearch: '',
   // Karten-Individuelle Größe: { cardId: 's'|'m'|'l' }
   dashboardCardSizes: {},
+  // Angepinnte Dashboard-Karten (IDs) und gespeicherte Layouts.
+  dashboardPinned: [],
+  dashboardLayouts: [],
   analyticsHistory: {},
   quickActionsHidden: [],
   // Automatisches, mit Windows safeStorage verschlüsseltes Backup.
@@ -1025,6 +1028,42 @@ function normalize(raw) {
   merged.dashboardCardSizes = Object.fromEntries(Object.entries(rawCardSizes)
     .filter(([key, value]) => /^dash[A-Za-z0-9]+$/.test(String(key)) && ['s', 'm', 'l'].includes(String(value)))
     .slice(0, 40));
+  const cleanCardIds = (value, max) => {
+    const seen = new Set();
+    const out = [];
+    for (const entry of Array.isArray(value) ? value : []) {
+      const id = String(entry || '').slice(0, 40);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      out.push(id);
+      if (out.length >= max) break;
+    }
+    return out;
+  };
+  merged.dashboardPinned = cleanCardIds(merged.dashboardPinned, 30);
+  const rawLayouts = Array.isArray(merged.dashboardLayouts) ? merged.dashboardLayouts : [];
+  const seenLayoutIds = new Set();
+  merged.dashboardLayouts = rawLayouts
+    .filter((entry) => isPlainObject(entry))
+    .map((entry, index) => {
+      const id = String(entry.id || `layout-${index + 1}`).slice(0, 40);
+      const name = String(entry.name || '').slice(0, 40).trim();
+      if (!id || !name || seenLayoutIds.has(id)) return null;
+      seenLayoutIds.add(id);
+      const sizes = isPlainObject(entry.sizes) ? entry.sizes : {};
+      return {
+        id,
+        name,
+        hidden: cleanCardIds(entry.hidden, 20),
+        order: cleanCardIds(entry.order, 30),
+        sizes: Object.fromEntries(Object.entries(sizes)
+          .filter(([key, value]) => /^dash[A-Za-z0-9]+$/.test(String(key)) && ['s', 'm', 'l'].includes(String(value)))
+          .slice(0, 40)),
+        pinned: cleanCardIds(entry.pinned, 30)
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 12);
   const analyticsSource = isPlainObject(merged.analyticsHistory) ? merged.analyticsHistory : {};
   const analyticsKeys = Object.keys(analyticsSource).filter((key) => /^\d{4}-\d{2}-\d{2}$/.test(key)).sort().slice(-180);
   merged.analyticsHistory = {};

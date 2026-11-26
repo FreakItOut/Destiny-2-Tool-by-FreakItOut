@@ -6,6 +6,26 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.13.0] – 2026-11-27
+
+### Hinzugefügt
+
+- **Konfliktlösung in der Loadout-Warteschlange** – fehlgeschlagene Einträge
+  zeigen „Konflikte: Reparieren“. Die Lösung holt fehlende Teile aus Tresor
+  oder Beutel, legt ein blockierendes Exot aus demselben Slot in den Tresor
+  (mit sicherem Ersatz) und setzt den Eintrag anschließend wieder auf wartend.
+  Nicht lösbare Fälle (mehrere Exoten, falsche Klasse) melden den Grund.
+- **Globale Suche 2.0** – die Befehlspalette durchsucht zusätzlich Notizen,
+  Checklisten-Punkte, Einstellungs-Tabs und alle Werkzeugseiten. Treffer
+  zeigen einen Kontext-Hinweis; die Tastaturbedienung bleibt unverändert.
+- **Dashboard-Layouts** – Karten lassen sich anpinnen und stehen dann vorn.
+  Benannte Layouts speichern ausgeblendete Karten, Reihenfolge, Kartengrößen
+  und Pins; sie lassen sich jederzeit anwenden oder löschen.
+
+### Technik
+
+- E2E auf **527** Schritte erweitert (Konflikt-Hinweis, Pinning, Layouts).
+
 ## [1.12.0] – 2026-11-26
 
 ### Entfernt

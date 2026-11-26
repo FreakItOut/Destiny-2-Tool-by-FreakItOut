@@ -248,6 +248,16 @@
                   <option value="raid">Layout: Raid</option>
                   <option value="today">Layout: Heute</option>
                 </select>
+                <details class="dash-layouts" id="dashLayouts">
+                  <summary class="btn ghost small">Layouts</summary>
+                  <div class="dash-layouts-body">
+                    <input id="dashLayoutName" type="text" maxlength="40" placeholder="Name" aria-label="Name">
+                    <button type="button" class="btn ghost small" data-dash-layout-save>Speichern</button>
+                    <select id="dashLayoutSelect" class="dash-profile-select" aria-label="Layout"></select>
+                    <button type="button" class="btn ghost small" data-dash-layout-apply>Anwenden</button>
+                    <button type="button" class="btn ghost small" data-dash-layout-delete>Löschen</button>
+                  </div>
+                </details>
                 <select class="dash-profile-select" id="dashCardSize" aria-label="Kartengröße">
                   <option value="s">Karten: Klein</option>
                   <option value="m">Karten: Normal</option>

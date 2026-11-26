@@ -6,6 +6,26 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.13.0] – 2026-11-27
+
+### Added
+
+- **Conflict resolution in the loadout queue** – failed entries now offer
+  "Resolve conflicts". The fix pulls missing items from the vault or
+  inventory, stashes a blocking exotic from the same slot into the vault
+  (using a safe replacement), and returns the entry to pending. Cases that
+  cannot be resolved (multiple exotics, wrong class) state the reason.
+- **Global search 2.0** – the command palette also searches notes, checklist
+  items, settings tabs and every tool page. Hits show a context hint; keyboard
+  handling is unchanged.
+- **Dashboard layouts** – cards can be pinned and move to the front. Named
+  layouts store hidden cards, order, card sizes and pins, and can be applied
+  or deleted at any time.
+
+### Technical
+
+- E2E expanded to **527** steps (conflict hint, pinning, layouts).
+
 ## [1.12.0] – 2026-11-26
 
 ### Removed

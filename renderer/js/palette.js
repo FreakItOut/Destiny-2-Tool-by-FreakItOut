@@ -18,6 +18,18 @@ export function createPalette(ctx) {
   let paletteInventory = [];
   let paletteInventoryLoading = false;
 
+  // Texte aus dem vorhandenen Wörterbuch; keine neuen statischen Labels.
+  const t = (value) => {
+    try {
+      if (!window.i18n || typeof window.i18n.translate !== 'function') return value;
+      if (typeof window.i18n.locale === 'function' && !String(window.i18n.locale()).toLowerCase().startsWith('en')) return value;
+      const translated = window.i18n.translate(value);
+      return translated || value;
+    } catch (error) {
+      return value;
+    }
+  };
+
   function loadPaletteInventory() {
     if (paletteInventoryLoading || paletteInventory.length) return;
     if (!api || typeof api.bungieInventoryCached !== 'function') return;
@@ -86,6 +98,54 @@ export function createPalette(ctx) {
     ]) {
       actions.push({ label: `Einstellungen: ${label}`, run: () => ctx.settings.open(tab) });
     }
+    // Notizen: jedes Blatt als Sprungziel (notesApi).
+    let noteSheets = [];
+    try {
+      noteSheets = ctx.notesApi && typeof ctx.notesApi.noteSheets === 'function' ? ctx.notesApi.noteSheets() : [];
+    } catch (error) {
+      noteSheets = [];
+    }
+    for (const note of (Array.isArray(noteSheets) ? noteSheets : []).slice(0, 20)) {
+      if (!note || !note.id) continue;
+      const noteName = String(note.name || '').trim();
+      const excerpt = String(note.text || '').split('\n').map((line) => line.trim()).find(Boolean) || '';
+      actions.push({
+        label: `${t('Notizen')}: ${noteName || '—'}`,
+        hint: excerpt.slice(0, 60),
+        transient: true,
+        run: () => {
+          if (!ctx.notesApi) return;
+          ctx.notesApi.open();
+          setTimeout(() => {
+            const tab = document.querySelector(`[data-note-select="${String(note.id).replace(/"/g, '')}"]`);
+            if (tab) tab.click();
+          }, 70);
+        }
+      });
+    }
+    // Wochen-Checkliste: offene und erledigte Punkte durchsuchbar.
+    const checklistItems = (getConfig().checklist && getConfig().checklist.items) || [];
+    for (const item of (Array.isArray(checklistItems) ? checklistItems : []).slice(0, 30)) {
+      const text = String((item && item.text) || '').trim();
+      if (!text) continue;
+      actions.push({
+        label: `${t('Checkliste')}: ${text}`,
+        hint: item.done ? t('Bereits erledigt') : '',
+        transient: true,
+        run: () => {
+          if (typeof ctx.checklistOpen === 'function') ctx.checklistOpen();
+          else if (typeof ctx.checklistToggle === 'function') ctx.checklistToggle();
+          setTimeout(() => {
+            const rows = [...document.querySelectorAll('#checklistList .check-item')];
+            const row = rows.find((entry) => String(entry.textContent || '').includes(text));
+            if (!row) return;
+            row.classList.add('palette-hit');
+            try { row.scrollIntoView({ block: 'nearest' }); } catch (error) { /* egal */ }
+            setTimeout(() => row.classList.remove('palette-hit'), 1800);
+          }, 90);
+        }
+      });
+    }
     // Zuletzt genutzte Befehle oben einsortieren, ohne sie unten zu doppeln.
     const recentLabels = loadPaletteRecent();
     const recentActions = [];
@@ -98,7 +158,7 @@ export function createPalette(ctx) {
   }
 
   function paletteScore(action, query) {
-    const label = action.label.toLowerCase();
+    const label = `${action.label || ''} ${action.hint || ''}`.toLowerCase();
     if (!query) return 1;
     if (label.includes(query)) return 100 - label.indexOf(query);
     // Grobe Subsequenz-Bewertung: alle Zeichen in Reihenfolge?
@@ -155,7 +215,7 @@ export function createPalette(ctx) {
     }
     paletteIndex = 0;
     paletteResults.innerHTML = scored
-      .map((entry, index) => `<button class="palette-item ${index === 0 ? 'active' : ''}" data-palette-index="${index}">${escapeHtml(entry.action.label)}${entry.action.recent ? '<span class="palette-recent">zuletzt</span>' : ''}</button>`)
+      .map((entry, index) => `<button class="palette-item ${index === 0 ? 'active' : ''}" data-palette-index="${index}"><span class="palette-label">${escapeHtml(entry.action.label)}</span>${entry.action.hint ? `<span class="palette-hint">${escapeHtml(entry.action.hint)}</span>` : ''}${entry.action.recent ? '<span class="palette-recent">zuletzt</span>' : ''}</button>`)
       .join('');
     for (const button of qsa('.palette-item', paletteResults)) {
       button.addEventListener('click', () => runPaletteIndex(Number(button.dataset.paletteIndex)));
@@ -165,7 +225,7 @@ export function createPalette(ctx) {
   function runPaletteIndex(index) {
     const active = window.__paletteActive || [];
     const entry = active[index];
-    if (entry && entry.action) rememberPaletteAction(entry.action.label);
+    if (entry && entry.action && !entry.action.transient) rememberPaletteAction(entry.action.label);
     closePalette();
     if (entry && entry.action && typeof entry.action.run === 'function') {
       try { entry.action.run(); } catch (error) {

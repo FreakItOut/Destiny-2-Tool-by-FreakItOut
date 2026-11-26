@@ -106,7 +106,8 @@ const INVENTORY_CSS = `
 .loadout-queue-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--brand); }
 .loadout-queue-toolbar { display: flex; gap: 6px; margin: 7px 0; }
 .loadout-queue-list { display: flex; flex-direction: column; gap: 5px; }
-.loadout-queue-row { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border: 1px solid #2a3548; border-radius: 6px; background: rgba(255,255,255,0.03); }
+.loadout-queue-row { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border: 1px solid #2a3548; border-radius: 6px; background: rgba(255,255,255,0.03); flex-wrap: wrap; }
+.loadout-queue-row .btn.small { flex-shrink: 0; }
 .loadout-queue-copy { flex: 1 1 auto; min-width: 0; }
 .loadout-queue-copy strong { display: block; font-size: 11.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .loadout-queue-copy small { display: block; font-size: 10px; color: #9aa6b6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1722,6 +1723,19 @@ export function createInventory(ctx) {
   let loading = false;
   let selectedItem = null;
   let lastDiagnostics = null;
+
+  // Vorhandene Wörterbuchtexte für dynamische Beschriftungen (keine
+  // neuen statischen Strings im UI).
+  const tr = (value) => {
+    try {
+      if (!window.i18n || typeof window.i18n.translate !== 'function') return value;
+      if (typeof window.i18n.locale === 'function' && !String(window.i18n.locale()).toLowerCase().startsWith('en')) return value;
+      const translated = window.i18n.translate(value);
+      return translated || value;
+    } catch (error) {
+      return value;
+    }
+  };
 
   // Wartet auf den Inventar-Snapshot (z. B. wenn ein Overlay-Loadout
   // angewendet wird, bevor der erste Abruf fertig ist).
@@ -8606,17 +8620,26 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   }
 
   // Konfliktprüfung vor dem Anwenden: Exoten, Klasse, fehlende Teile.
-  function loadoutConflicts(loadout, characterId) {
-    const conflicts = [];
+  function loadoutConflictDetails(loadout, characterId) {
+    const details = [];
+    if (!data || !loadout) return details;
     const character = (data.characters || []).find((entry) => entry.id === characterId) || {};
     const characterClass = Number(character.classType);
     const entries = (loadout.items || []).map((item) => {
       const found = item.instanceId ? locateItem(item.instanceId, characterId) : null;
-      return { item, found, actual: (found && found.item) || item };
+      const bucket = Number(item.bucket) || Number(found && found.item && found.item.bucket) || 0;
+      return { item, found, actual: (found && found.item) || item, bucket };
     });
+    const weaponBuckets = new Set(DIM.WEAPON_SLOTS.map((slot) => slot.key));
+    const armorBuckets = new Set(DIM.ARMOR_SLOTS.map((slot) => slot.key));
     const exotics = entries.filter((entry) => Number(entry.actual.rarity) === 6);
-    if (exotics.length > 1) {
-      conflicts.push({ text: `${exotics.length} Exoten im Set – Destiny erlaubt nur einen.`, blocking: true });
+    const exoticWeapons = exotics.filter((entry) => weaponBuckets.has(entry.bucket));
+    const exoticArmor = exotics.filter((entry) => armorBuckets.has(entry.bucket));
+    if (exoticWeapons.length > 1) {
+      details.push({ kind: 'exotic-weapon', blocking: true, resolvable: false, text: `${exoticWeapons.length} Exoten im Waffen-Set – Destiny erlaubt nur einen.` });
+    }
+    if (exoticArmor.length > 1) {
+      details.push({ kind: 'exotic-armor', blocking: true, resolvable: false, text: `${exoticArmor.length} Exoten in der Rüstung – Destiny erlaubt nur einen.` });
     }
     if (Number.isInteger(characterClass) && characterClass >= 0 && characterClass <= 2) {
       const wrongClass = entries.filter((entry) => {
@@ -8624,14 +8647,142 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         return Number.isInteger(cls) && cls >= 0 && cls <= 2 && cls !== characterClass;
       });
       if (wrongClass.length) {
-        conflicts.push({ text: `${wrongClass.length} Teil(e) für eine andere Klasse.`, blocking: true });
+        details.push({ kind: 'class', blocking: true, resolvable: false, text: `${wrongClass.length} Teil(e) für eine andere Klasse.` });
       }
     }
     const missing = entries.filter((entry) => entry.item.instanceId && (!entry.found || entry.found.loc === 'unknown'));
     if (missing.length) {
-      conflicts.push({ text: `${missing.length} Item(s) nicht im Inventar gefunden.`, blocking: false });
+      details.push({ kind: 'missing', blocking: false, resolvable: true, entries: missing, text: `${missing.length} Item(s) nicht im Inventar gefunden.` });
     }
-    return conflicts;
+    // Angelegte Exoten, die das gewünschte Exoten-Teil blockieren.
+    const equipped = ((data.equipped || {})[characterId]) || [];
+    const blockers = [];
+    const desiredWeapon = exoticWeapons[0] ? String(exoticWeapons[0].item.instanceId || '') : '';
+    const desiredArmor = exoticArmor[0] ? String(exoticArmor[0].item.instanceId || '') : '';
+    for (const item of equipped) {
+      if (Number(item.rarity) !== 6 || !item.instanceId) continue;
+      const bucket = Number(item.bucket) || 0;
+      if (desiredWeapon && weaponBuckets.has(bucket) && String(item.instanceId) !== desiredWeapon) blockers.push(item);
+      if (desiredArmor && armorBuckets.has(bucket) && String(item.instanceId) !== desiredArmor) blockers.push(item);
+    }
+    if (blockers.length) {
+      details.push({ kind: 'equipped-exotic', blocking: true, resolvable: true, blockers, text: `${blockers.length} angelegte(s) Exoten-Teil blockiert das Loadout.` });
+    }
+    return details;
+  }
+
+  function loadoutConflicts(loadout, characterId) {
+    return loadoutConflictDetails(loadout, characterId).map((detail) => ({ text: detail.text, blocking: detail.blocking }));
+  }
+
+  // Item sicher zum Zielcharakter bringen (Tresor/anderer Hüter → Beutel).
+  async function moveItemToTarget(characterId, item) {
+    if (!data || !item || !item.instanceId) return { ok: false, text: `${(item && item.name) || 'Item'}: ohne Instanz` };
+    const membershipType = data.membershipType;
+    const found = locateItem(item.instanceId, characterId);
+    if (found.loc === 'unknown') return { ok: false, text: `${item.name}: Item ist nicht mehr im Inventar.` };
+    if (found.loc === 'equipped' && found.owner === characterId) return { ok: true };
+    if (found.loc === 'equipped' && found.owner !== characterId) return { ok: false, text: `${item.name}: bei einem anderen Hüter angelegt.` };
+    if (found.loc === 'other-char') {
+      const stash = await api.bungieTransfer({ itemHash: item.hash, itemId: item.instanceId, stackSize: 1, toVault: true, characterId: found.owner, membershipType });
+      if (!stash || !stash.ok) return { ok: false, text: `${item.name}: ${(stash && stash.error) || 'Einlagern fehl'}` };
+      await sleepMs(350);
+    }
+    if (found.loc === 'vault' || found.loc === 'other-char') {
+      const pull = await api.bungieTransfer({ itemHash: item.hash, itemId: item.instanceId, stackSize: 1, toVault: false, characterId, membershipType });
+      if (!pull || !pull.ok) return { ok: false, text: `${item.name}: ${(pull && pull.error) || 'Holen fehl'}` };
+      await sleepMs(350);
+    }
+    return { ok: true };
+  }
+
+  // Ersatz im selben Slot, der kein Exot ist und nicht selbst im Loadout liegt.
+  function findReplacementInBucket(characterId, blocker, loadout) {
+    const bucket = Number(blocker.bucket) || 0;
+    if (!bucket) return null;
+    const character = (data.characters || []).find((entry) => entry.id === characterId) || {};
+    const characterClass = Number(character.classType);
+    const loadoutIds = new Set((loadout.items || []).map((item) => String(item.instanceId || '')).filter(Boolean));
+    const candidates = allItemsPool()
+      .filter((item) => item && item.instanceId && String(item.instanceId) !== String(blocker.instanceId))
+      .filter((item) => Number(item.bucket) === bucket && Number(item.rarity) !== 6)
+      .filter((item) => !loadoutIds.has(String(item.instanceId)))
+      .filter((item) => {
+        if (!isArmorBucket(bucket)) return true;
+        const cls = Number(item.classType);
+        return !Number.isInteger(cls) || cls === 3 || !Number.isInteger(characterClass) || cls === characterClass;
+      })
+      .map((item) => {
+        const found = locateItem(item.instanceId, characterId);
+        return { item, loc: found.loc, owner: found.owner };
+      })
+      .filter((entry) => entry.loc !== 'unknown' && !(entry.loc === 'equipped' && entry.owner !== characterId));
+    if (!candidates.length) return null;
+    const priority = (entry) => {
+      if (entry.loc === 'backpack' && entry.owner === characterId) return 0;
+      if (entry.loc === 'vault') return 1;
+      if (entry.loc === 'backpack') return 2;
+      return 3;
+    };
+    candidates.sort((a, b) => priority(a) - priority(b) || (Number(b.item.power) || 0) - (Number(a.item.power) || 0));
+    return candidates[0].item;
+  }
+
+  // Blockierendes angelegtes Exot ablegen: Ersatz anlegen, dann in den Tresor.
+  async function stashEquippedExotic(characterId, blocker, loadout) {
+    const membershipType = data.membershipType;
+    const replacement = findReplacementInBucket(characterId, blocker, loadout);
+    if (!replacement) return { ok: false, text: `${blocker.name}: kein Ersatz im selben Slot gefunden.` };
+    const moved = await moveItemToTarget(characterId, replacement);
+    if (!moved.ok) return moved;
+    const equip = await api.bungieEquip({ itemId: replacement.instanceId, characterId, membershipType });
+    if (!equip || !equip.ok) return { ok: false, text: `${replacement.name}: ${(equip && equip.error) || 'Ausrüsten fehl'}` };
+    await sleepMs(450);
+    const stash = await api.bungieTransfer({ itemHash: blocker.hash, itemId: blocker.instanceId, stackSize: 1, toVault: true, characterId, membershipType });
+    if (!stash || !stash.ok) return { ok: false, text: `${blocker.name}: ${(stash && stash.error) || 'Einlagern fehl'}` };
+    await sleepMs(350);
+    return { ok: true };
+  }
+
+  // Ein-Klick-Konfliktlösung für die Warteschlange. Nur sichere
+  // Transfers (Tresor/Beutel) und Ablegen blockierender Exoten.
+  async function resolveLoadoutConflicts(loadoutId) {
+    const loadout = getLoadoutList().find((entry) => entry.id === loadoutId);
+    if (!loadout || !loadout.characterId) return { ok: false, message: 'Loadout oder Charakter fehlt.' };
+    if (!data) {
+      refresh(true);
+      const ready = await waitForInventory(15000);
+      if (!ready) return { ok: false, message: 'Inventar nicht verfügbar.' };
+    }
+    const characterId = loadout.characterId;
+    let details = loadoutConflictDetails(loadout, characterId);
+    const hard = details.filter((detail) => detail.blocking && !detail.resolvable);
+    if (hard.length) return { ok: false, message: hard[0].text };
+    if (details.some((detail) => detail.kind === 'missing')) {
+      await refresh(true);
+      details = loadoutConflictDetails(loadout, characterId);
+    }
+    for (const item of loadout.items || []) {
+      if (!item.instanceId) continue;
+      const found = locateItem(item.instanceId, characterId);
+      if (found.loc === 'vault' || found.loc === 'other-char') {
+        const moved = await moveItemToTarget(characterId, item);
+        if (!moved.ok) return { ok: false, message: moved.text };
+      } else if (found.loc === 'unknown') {
+        return { ok: false, message: `${item.name}: Item ist nicht mehr im Inventar.` };
+      } else if (found.loc === 'equipped' && found.owner !== characterId) {
+        return { ok: false, message: `${item.name}: bei einem anderen Hüter angelegt.` };
+      }
+    }
+    const blockerDetail = loadoutConflictDetails(loadout, characterId).find((detail) => detail.kind === 'equipped-exotic');
+    for (const blocker of (blockerDetail && blockerDetail.blockers) || []) {
+      const stashed = await stashEquippedExotic(characterId, blocker, loadout);
+      if (!stashed.ok) return { ok: false, message: stashed.text };
+    }
+    await refresh(true);
+    const remaining = loadoutConflictDetails(loadout, characterId).filter((detail) => detail.blocking);
+    if (remaining.length) return { ok: false, message: remaining[0].text };
+    return { ok: true, message: '' };
   }
 
   // Loadout-Warteschlange: mehrere Loadouts nacheinander anwenden.
@@ -8666,6 +8817,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   }
   const loadoutQueue = readStoredLoadoutQueue();
   let loadoutQueueRunning = false;
+  let loadoutQueueFixing = false;
   let loadoutQueuePaused = loadoutQueue.some((entry) => entry.state === 'pending');
   let loadoutQueueSeq = Date.now();
 
@@ -8703,6 +8855,13 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     showQueueBar(`Loadout-Warteschlange: ${parts.join(', ')}`, true);
   }
 
+  function loadoutQueueConflicts(entry) {
+    if (!data || !entry || entry.state !== 'failed') return [];
+    const loadout = getLoadoutList().find((item) => item.id === entry.loadoutId);
+    if (!loadout || !loadout.characterId) return [];
+    return loadoutConflicts(loadout, loadout.characterId);
+  }
+
   function renderLoadoutQueuePanel() {
     saveLoadoutQueue();
     if (!loadoutQueuePanel || !loadoutQueueList) return;
@@ -8717,6 +8876,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     loadoutQueueList.innerHTML = loadoutQueue.map((entry, index) => {
       const pending = pendingIndexes.findIndex((item) => item.index === index);
       const canMove = entry.state === 'pending';
+      const canFix = loadoutQueueConflicts(entry).length > 0;
       return `<div class="loadout-queue-row" data-loadout-queue-id="${esc(entry.id)}">
         <div class="loadout-queue-copy">
           <strong>${esc(entry.name)}</strong>
@@ -8725,6 +8885,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         <span class="loadout-queue-state ${esc(entry.state)}">${labels[entry.state] || entry.state}</span>
         ${canMove ? `<button type="button" class="outbox-move" data-loadout-up="${index}" ${pending < 1 ? 'disabled' : ''} title="Nach oben">↑</button>
         <button type="button" class="outbox-move" data-loadout-down="${index}" ${pending < 0 || pending >= pendingIndexes.length - 1 ? 'disabled' : ''} title="Nach unten">↓</button>` : ''}
+        ${canFix ? `<button type="button" class="btn ghost small" data-loadout-fix="${esc(entry.id)}" title="${esc(tr('Konflikte:'))}">${esc(tr('Konflikte:'))} ${esc(tr('Reparieren'))}</button>` : ''}
         ${entry.state === 'failed' ? `<button type="button" class="btn ghost small" data-loadout-retry="${esc(entry.id)}">Erneut</button>` : ''}
         ${entry.state !== 'running' ? `<button type="button" class="btn ghost small" data-loadout-remove="${esc(entry.id)}">Entfernen</button>` : ''}
       </div>`;
@@ -8798,8 +8959,15 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       }
       try {
         await applyLoadout(entry.loadoutId, { skipConfirm: true, fromQueue: true });
-        entry.state = 'done';
-        done += 1;
+        const unresolved = (loadout.items || []).filter((item) => item.instanceId && locateItem(item.instanceId, loadout.characterId).loc === 'unknown');
+        if (unresolved.length) {
+          entry.state = 'failed';
+          entry.error = `${unresolved.length} Item(s) nicht im Inventar gefunden.`;
+          failed += 1;
+        } else {
+          entry.state = 'done';
+          done += 1;
+        }
       } catch (error) {
         entry.state = 'failed';
         entry.error = (error && error.message) || 'Anwenden fehlgeschlagen.';
@@ -8819,6 +8987,37 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       showQueueBar(summary);
       toast(summary, failed ? 'warning' : 'success', 3800);
     }
+  }
+
+  // „Konflikte: Reparieren“ – sichere Lösung, dann Eintrag wieder auf pending.
+  async function fixLoadoutQueueEntry(entry) {
+    if (!entry || loadoutQueueFixing) return;
+    loadoutQueueFixing = true;
+    const wasPaused = loadoutQueuePaused;
+    loadoutQueuePaused = true;
+    const waitStarted = Date.now();
+    while (loadoutQueueRunning && Date.now() - waitStarted < 30000) await sleepMs(200);
+    entry.state = 'running';
+    entry.error = '';
+    renderLoadoutQueuePanel();
+    let result;
+    try {
+      result = await resolveLoadoutConflicts(entry.loadoutId);
+    } catch (error) {
+      result = { ok: false, message: (error && error.message) || 'Anwenden fehlgeschlagen.' };
+    }
+    if (result.ok) {
+      entry.state = 'pending';
+      entry.error = '';
+    } else {
+      entry.state = 'failed';
+      entry.error = result.message;
+      toast(result.message, 'warning', 4600);
+    }
+    loadoutQueueFixing = false;
+    loadoutQueuePaused = wasPaused;
+    renderLoadoutQueuePanel();
+    if (entry.state === 'pending' && !loadoutQueuePaused) processLoadoutQueue();
   }
 
   async function applyLoadout(loadoutId, options = {}) {
@@ -10587,6 +10786,12 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       const down = event.target.closest('[data-loadout-down]');
       if (down) {
         moveLoadoutQueueEntry(Number(down.dataset.loadoutDown), 1);
+        return;
+      }
+      const fix = event.target.closest('[data-loadout-fix]');
+      if (fix) {
+        const entry = loadoutQueue.find((item) => item.id === fix.dataset.loadoutFix);
+        if (entry) fixLoadoutQueueEntry(entry);
         return;
       }
       const retry = event.target.closest('[data-loadout-retry]');

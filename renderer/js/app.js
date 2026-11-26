@@ -315,6 +315,7 @@ const palette = createPalette({
   settings: { open: (tab) => settings.open(tab) },
   notesApi: notes,
   checklistToggle: checklist.toggle,
+  checklistOpen: () => checklist.open('all'),
   inventory: { toggle: toggleInventoryPage, open: showInventoryPage },
   contentSearch: (query) => (inventory && typeof inventory.searchContent === 'function' ? inventory.searchContent(query) : []),
   openPostmaster: () => {

@@ -714,6 +714,34 @@ async function run() {
   cfg.bungie.loadouts = cfg.bungie.loadouts.filter((entry) => entry.id !== 'lo-queue-test');
   inv.renderLoadouts();
 
+  // --- Loadout-Warteschlange: Konfliktlösung anbieten ----------------
+  cfg.bungie.loadouts.push({
+    id: 'lo-conflict-test',
+    name: 'Konflikt-Test',
+    classType: 0,
+    characterId: 'c1',
+    items: [
+      { hash: 2201, instanceId: 'i-exo-a', name: 'Exo-Test-Helm', bucket: B.HELMET, rarity: 6, classType: 0 },
+      { hash: 2202, instanceId: 'i-exo-b', name: 'Exo-Test-Brust', bucket: B.CHEST, rarity: 6, classType: 0 }
+    ],
+    mods: []
+  });
+  inv.renderLoadouts();
+  await wait(120);
+  inv.queueLoadout('lo-conflict-test');
+  await wait(360);
+  document.querySelector('#loadoutQueueDetails')?.click();
+  await wait(100);
+  const conflictRows = [...document.querySelectorAll('#loadoutQueuePanel .loadout-queue-row')];
+  const conflictRow = conflictRows.find((row) => /Konflikt-Test/.test(row.textContent || ''));
+  check('Konflikt-Eintrag als Fehler markiert', Boolean(conflictRow?.querySelector('.loadout-queue-state.failed')), conflictRow?.textContent);
+  check('Konflikt-Eintrag bietet Lösung', Boolean(conflictRow?.querySelector('[data-loadout-fix]')), conflictRow?.textContent);
+  document.querySelector('#loadoutQueuePanel [data-loadout-remove]')?.click();
+  await wait(100);
+  document.querySelector('#loadoutQueueClose')?.click();
+  cfg.bungie.loadouts = cfg.bungie.loadouts.filter((entry) => entry.id !== 'lo-conflict-test');
+  inv.renderLoadouts();
+
   // --- Bearbeiten (Persistenz) -----------------------------------------
   document.querySelector('[data-loadout-edit]').click();
   check('Drawer erneut offen', await until(() => drawer()));
@@ -2179,6 +2207,51 @@ async function run() {
     await wait(120);
   }
   cfg.dashboardCardSizes = {};
+  // --- Dashboard: Karten anpinnen + benannte Layouts ---
+  cfg.dashboardPinned = [];
+  cfg.dashboardLayouts = [];
+  dash.render();
+  await wait(160);
+  const champPin = dashPanel.querySelector('#dashChampions [data-dash-pin]');
+  check('Dashboard-Kartenkopf hat Pin-Button', Boolean(champPin));
+  champPin?.click();
+  await wait(140);
+  check('Dashboard-Karte angepinnt',
+    (cfg.dashboardPinned || []).includes('dashChampions') && Boolean(dashPanel.querySelector('#dashChampions .dash-pin.on')),
+    JSON.stringify(cfg.dashboardPinned || []));
+  check('Angepinnte Karte sortiert vorne',
+    Number(dashPanel.querySelector('#dashChampions')?.style.order) === 1,
+    dashPanel.querySelector('#dashChampions')?.style.order);
+  const layoutName = dashPanel.querySelector('#dashLayoutName');
+  if (layoutName) layoutName.value = 'E2E-Layout';
+  dashPanel.querySelector('[data-dash-layout-save]')?.click();
+  await wait(120);
+  const savedLayout = (cfg.dashboardLayouts || [])[0];
+  check('Dashboard-Layout gespeichert',
+    Boolean(savedLayout) && savedLayout.name === 'E2E-Layout' && Array.isArray(savedLayout.pinned) && savedLayout.pinned.includes('dashChampions'),
+    JSON.stringify(savedLayout || null));
+  const layoutSelect = dashPanel.querySelector('#dashLayoutSelect');
+  check('Dashboard-Layout im Menü', Boolean(layoutSelect && layoutSelect.options.length === 1));
+  cfg.dashboardPinned = [];
+  cfg.dashboardCardSizes = {};
+  dash.render();
+  await wait(140);
+  if (layoutSelect && savedLayout) layoutSelect.value = savedLayout.id;
+  dashPanel.querySelector('[data-dash-layout-apply]')?.click();
+  await wait(180);
+  check('Dashboard-Layout angewendet',
+    (cfg.dashboardPinned || []).includes('dashChampions') && Boolean(dashPanel.querySelector('#dashChampions .dash-pin.on')),
+    JSON.stringify(cfg.dashboardPinned || []));
+  dashPanel.querySelector('[data-dash-layout-delete]')?.click();
+  await wait(100);
+  check('Dashboard-Layout gelöscht', (cfg.dashboardLayouts || []).length === 0);
+  dashPanel.querySelector('#dashChampions [data-dash-pin]')?.click();
+  await wait(100);
+  cfg.dashboardPinned = [];
+  cfg.dashboardLayouts = [];
+  cfg.dashboardCardSizes = {};
+  dash.render();
+  await wait(120);
   const dashGodBtn = dashPanel && dashPanel.querySelector('[data-dash-action="godrolls"]');
   check('Dashboard-Aktion „Godrolls“ vorhanden', Boolean(dashGodBtn));
   if (dashGodBtn) dashGodBtn.click();

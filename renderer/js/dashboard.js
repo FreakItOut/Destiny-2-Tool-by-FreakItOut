@@ -1414,6 +1414,25 @@ export function createDashboard(ctx) {
       toast('Karte ausgeblendet – zurücksetzen über Datenstatus → Dashboard.', 'info', 3200);
     });
     dashboardPanel.addEventListener('click', (event) => {
+      const pinBtn = event.target.closest('[data-dash-pin]');
+      if (pinBtn) {
+        toggleDashboardPin(String(pinBtn.dataset.dashPin || ''));
+        return;
+      }
+      if (event.target.closest('[data-dash-layout-save]')) {
+        saveDashboardLayout();
+        return;
+      }
+      if (event.target.closest('[data-dash-layout-apply]')) {
+        const select = qs('#dashLayoutSelect');
+        applyDashboardLayout(select && select.value);
+        return;
+      }
+      if (event.target.closest('[data-dash-layout-delete]')) {
+        const select = qs('#dashLayoutSelect');
+        deleteDashboardLayout(select && select.value);
+        return;
+      }
       if (event.target.closest('[data-dash-postgame-refresh]')) {
         renderPostGame(true);
         renderAnalytics(false);
@@ -1756,6 +1775,152 @@ export function createDashboard(ctx) {
   }
 
   // ------------------------------------------------------------
+  // Karten anpinnen + benannte Layouts
+  // ------------------------------------------------------------
+  function dashboardPinned() {
+    const list = getConfig().dashboardPinned;
+    return Array.isArray(list) ? list.map((id) => String(id || '')).filter(Boolean) : [];
+  }
+
+  function dashboardLayouts() {
+    const list = getConfig().dashboardLayouts;
+    return Array.isArray(list) ? list.filter((entry) => entry && entry.id && entry.name) : [];
+  }
+
+  function dashboardShellCards() {
+    if (!dashboardPanel) return [];
+    const shell = dashboardPanel.querySelector(':scope > .dash-shell');
+    return shell ? [...shell.querySelectorAll(':scope > .dash-card')] : [];
+  }
+
+  function syncDashboardPinButtons() {
+    if (!dashboardPanel) return;
+    const pinned = new Set(dashboardPinned());
+    for (const button of dashboardPanel.querySelectorAll('[data-dash-pin]')) {
+      const id = String(button.dataset.dashPin || '');
+      const on = pinned.has(id);
+      button.classList.toggle('on', on);
+      button.setAttribute('aria-pressed', on ? 'true' : 'false');
+      button.textContent = on ? '📌' : '↑';
+      button.title = on ? 'Nicht mehr anpinnen' : 'Oben anpinnen';
+      button.setAttribute('aria-label', button.title);
+    }
+  }
+
+  function ensureDashboardPinButtons() {
+    for (const card of dashboardShellCards()) {
+      if (!card.id || card.id === 'dashTour') continue;
+      const heading = card.querySelector('h4');
+      if (!heading) continue;
+      if (heading.querySelector(':scope > [data-dash-pin]')) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'dash-pin';
+      button.dataset.dashPin = card.id;
+      heading.appendChild(button);
+    }
+    syncDashboardPinButtons();
+  }
+
+  function applyDashboardOrder() {
+    const cards = dashboardShellCards();
+    if (!cards.length) return;
+    const pinned = dashboardPinned();
+    const pinnedSet = new Set(pinned);
+    const order = Array.isArray(getConfig().dashboardOrder) ? getConfig().dashboardOrder : [];
+    const pinnedCards = [];
+    for (const id of pinned) {
+      const card = cards.find((entry) => entry.id === id);
+      if (card && !pinnedCards.includes(card)) pinnedCards.push(card);
+    }
+    const rank = (card) => {
+      const index = order.indexOf(card.id);
+      return index < 0 ? 999 : index;
+    };
+    const rest = cards
+      .filter((card) => !pinnedSet.has(card.id))
+      .sort((a, b) => rank(a) - rank(b) || cards.indexOf(a) - cards.indexOf(b));
+    [...pinnedCards, ...rest].forEach((card, index) => {
+      card.style.order = String(index + 1);
+    });
+    const shell = dashboardPanel && dashboardPanel.querySelector(':scope > .dash-shell');
+    if (shell) {
+      for (const fold of shell.querySelectorAll(':scope > .dash-fold')) fold.style.order = '900';
+    }
+  }
+
+  function toggleDashboardPin(id) {
+    if (!id) return;
+    const pinned = dashboardPinned().slice();
+    const index = pinned.indexOf(id);
+    if (index >= 0) pinned.splice(index, 1);
+    else {
+      pinned.push(id);
+      if (pinned.length > 30) pinned.splice(0, pinned.length - 30);
+    }
+    setConfig({ dashboardPinned: pinned });
+    applyDashboardOrder();
+    syncDashboardPinButtons();
+  }
+
+  function renderDashboardLayoutMenu() {
+    const select = qs('#dashLayoutSelect');
+    if (!select) return;
+    const layouts = dashboardLayouts();
+    const previous = select.value;
+    select.innerHTML = layouts.length
+      ? layouts.map((layout) => `<option value="${esc(layout.id)}">${esc(layout.name)}</option>`).join('')
+      : '<option value="">—</option>';
+    if (previous && layouts.some((layout) => layout.id === previous)) select.value = previous;
+  }
+
+  function saveDashboardLayout() {
+    const input = qs('#dashLayoutName');
+    const layouts = dashboardLayouts().slice();
+    let id = `dl-${Date.now().toString(36)}`;
+    while (layouts.some((layout) => layout.id === id)) id += 'x';
+    const name = String((input && input.value) || '').trim().slice(0, 40) || `Layout ${layouts.length + 1}`;
+    const layout = {
+      id,
+      name,
+      hidden: [...((getConfig().dashboardHidden) || [])],
+      order: dashboardShellCards().map((card) => card.id).filter(Boolean),
+      sizes: { ...((getConfig().dashboardCardSizes) || {}) },
+      pinned: dashboardPinned()
+    };
+    if (layouts.length >= 12) layouts.shift();
+    layouts.push(layout);
+    setConfig({ dashboardLayouts: layouts });
+    if (input) input.value = '';
+    renderDashboardLayoutMenu();
+    const select = qs('#dashLayoutSelect');
+    if (select) select.value = id;
+    toast('Vorlage gespeichert.', 'success', 2000);
+  }
+
+  function applyDashboardLayout(id) {
+    const layout = dashboardLayouts().find((entry) => entry.id === String(id || ''));
+    if (!layout) {
+      toast('Ansicht nicht gefunden.', 'info', 2200);
+      return;
+    }
+    setConfig({
+      dashboardHidden: Array.isArray(layout.hidden) ? [...layout.hidden] : [],
+      dashboardOrder: Array.isArray(layout.order) ? [...layout.order] : [],
+      dashboardCardSizes: layout.sizes && typeof layout.sizes === 'object' ? { ...layout.sizes } : {},
+      dashboardPinned: Array.isArray(layout.pinned) ? [...layout.pinned] : [],
+      dashboardPreset: 'custom'
+    });
+    renderDashboard();
+  }
+
+  function deleteDashboardLayout(id) {
+    const next = dashboardLayouts().filter((entry) => entry.id !== String(id || ''));
+    setConfig({ dashboardLayouts: next });
+    renderDashboardLayoutMenu();
+  }
+
+  // ------------------------------------------------------------
   // Gesamt-Render
   // ------------------------------------------------------------
   // Karten-Suche und Größe (S/M/L) – rein visuell, keine Datenänderung.
@@ -1862,11 +2027,9 @@ export function createDashboard(ctx) {
         if (element.id === 'dashTour') continue;
         element.classList.toggle('dash-user-hidden', Boolean(element.id && hidden.has(element.id)));
       }
-      const order = (getConfig().dashboardOrder || []);
-      dashboardPanel.querySelectorAll(':scope > .dash-shell > .dash-card, :scope > .dash-shell > .dash-fold').forEach((element) => {
-        const index = order.indexOf(element.id);
-        element.style.order = index >= 0 ? String(index + 1) : '99';
-      });
+      ensureDashboardPinButtons();
+      applyDashboardOrder();
+      renderDashboardLayoutMenu();
       const preset = qs('[data-dash-preset]');
       if (preset) preset.value = getConfig().dashboardPreset || 'all';
       const shell = dashboardPanel.querySelector(':scope > .dash-shell');
@@ -1904,6 +2067,7 @@ export function createDashboard(ctx) {
           target.parentNode.insertBefore(dragged, before ? target : target.nextSibling);
           const order = [...shell.querySelectorAll(':scope > .dash-card, :scope > .dash-fold')].map((element) => element.id).filter(Boolean);
           setConfig({ dashboardOrder: order });
+          applyDashboardOrder();
           shell.querySelectorAll('.dragging, .drag-over').forEach((element) => element.classList.remove('dragging', 'drag-over'));
         });
       }
