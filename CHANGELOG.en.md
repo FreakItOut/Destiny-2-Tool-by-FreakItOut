@@ -6,6 +6,26 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] – 2026-11-26
+
+### Added
+
+- **OR search** – `Testgewehr OR Granaten-Arme` matches both terms; quotes
+  and operators still work.
+- **Data migration as a module** – the adoption of old installation data is
+  tested in isolation (copy, `.bak`, no overwrite, empty source).
+- **Local API/Stream Deck** – new actions `/action/outbox/open`,
+  `/action/outbox/send`, `/action/loadout/queue` and
+  `/action/champion-audit`.
+- **Full-shell smoke** – the smoke test also checks the offline outbox,
+  loadout queue and champion audit panels.
+
+### Changed
+
+- **Release workflow** verifies the built checksums and runs the portable
+  smoke since 1.9.0; data migration is now a separate CI step.
+- E2E expanded to **517** steps, app features to **101** checks.
+
 ## [1.9.0] – 2026-11-26
 
 ### Added

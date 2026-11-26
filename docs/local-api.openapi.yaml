@@ -1494,6 +1494,142 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /action/outbox/open:
+    get:
+      summary: Offline-Ausgang öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/outbox/send:
+    get:
+      summary: Offline-Ausgang jetzt senden
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/loadout/queue:
+    get:
+      summary: Loadout-Warteschlange öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /action/champion-audit:
+    get:
+      summary: Champion-Prüfung öffnen
+      responses:
+        '202':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResult'
+        '400':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Ergebnis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /action/postmaster:
     get:
       summary: Postfach im Inventar öffnen
@@ -1569,7 +1705,7 @@ paths:
         - name: tab
           in: query
           required: false
-          description: overlay|overlaybar|controller|steam|web|custom|display|behavior|security|bungie|diag|about
+          description: overlay|overlaybar|controller|steam|display|behavior|security|bungie|diag|about
           schema:
             type: string
       responses:
@@ -1640,47 +1776,6 @@ paths:
   /action/checklist:
     get:
       summary: Wochen-Checkliste öffnen
-      responses:
-        '202':
-          description: Ergebnis
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ActionResult'
-        '400':
-          description: Ergebnis
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '401':
-          description: Ergebnis
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Ergebnis
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '429':
-          description: Ergebnis
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /action/mini:
-    get:
-      summary: Minimodus umschalten oder setzen
-      parameters:
-        - name: 'on'
-          in: query
-          required: false
-          description: 1|0 (optional)
-          schema:
-            type: string
       responses:
         '202':
           description: Ergebnis

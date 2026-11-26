@@ -35,9 +35,9 @@ check('Installer übernimmt Backups',
 check('Installer sichert die übernommene Config als .bak',
   installer.includes("$APPDATA\\FreakItOut's Destiny 2 Tool\\config.json.bak"));
 check('App migriert Installationsdaten nach %APPDATA%',
-  main.includes('function migrateInstalledDataToAppData') &&
-  main.includes("path.join(oldData, 'config.json')") &&
-  main.includes('migrateInstalledDataToAppData();'));
+  main.includes('migrateInstalledDataToAppData') &&
+  read('electron/data-migration.js').includes('function migrateInstalledDataToAppData') &&
+  read('electron/data-migration.js').includes("path.join(oldData, 'config.json')"));
 check('Installierte App nutzt keinen beschreibbaren Programmordner als Datenordner',
   !main.includes("path.join(exeDir, '.schreibtest')"));
 check('Portable Erkennung bleibt erhalten',

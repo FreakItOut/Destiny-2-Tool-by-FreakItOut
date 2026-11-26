@@ -58,6 +58,7 @@ jobs:
           npm run test:app-features
           npm run test:bundle
           npm run test:installer
+          npm run test:migration
           npm run test:perf
           npm run test:plugin
 

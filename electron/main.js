@@ -92,36 +92,7 @@ try {
 // Ältere Installationsversionen konnten ihre Daten noch im
 // Installationsordner ablegen. Diese werden einmalig nach %APPDATA%
 // übernommen, damit Setup-Updates sie nicht ersetzen.
-function migrateInstalledDataToAppData() {
-  try {
-    if (process.argv.includes('--smoke')) return;
-    const oldData = path.join(path.dirname(process.execPath), 'Daten');
-    const oldConfig = path.join(oldData, 'config.json');
-    if (!fs.existsSync(oldConfig)) return;
-    const target = app.getPath('userData');
-    fs.mkdirSync(target, { recursive: true });
-    const targetConfig = path.join(target, 'config.json');
-    if (fs.existsSync(targetConfig)) return;
-    fs.copyFileSync(oldConfig, targetConfig);
-    try {
-      if (!fs.existsSync(`${targetConfig}.bak`)) fs.copyFileSync(oldConfig, `${targetConfig}.bak`);
-    } catch (error) {
-      // Backup ist optional.
-    }
-    try {
-      const oldBackups = path.join(oldData, 'backups');
-      const targetBackups = path.join(target, 'backups');
-      if (fs.existsSync(oldBackups) && !fs.existsSync(targetBackups)) {
-        fs.cpSync(oldBackups, targetBackups, { recursive: true });
-      }
-    } catch (error) {
-      // Backups sind optional; die Konfiguration ist übernommen.
-    }
-    console.log(`[migration] Daten aus der Installationsversion übernommen: ${target}`);
-  } catch (error) {
-    console.error('[migration] Datenübernahme fehlgeschlagen:', error.message);
-  }
-}
+const { migrateInstalledDataToAppData } = require('./data-migration');
 
 (function applyPortableDataDir() {
   if (process.argv.includes('--smoke')) return;
@@ -161,7 +132,14 @@ function migrateInstalledDataToAppData() {
   }
 
   if (!portableDir) {
-    migrateInstalledDataToAppData();
+    if (!process.argv.includes('--smoke')) {
+      try {
+        const result = migrateInstalledDataToAppData({ userDataDir: app.getPath('userData') });
+        if (result && result.copied) console.log(`[migration] Daten aus der Installationsversion übernommen: ${result.target}`);
+      } catch (error) {
+        console.error('[migration] Datenübernahme fehlgeschlagen:', error.message);
+      }
+    }
     return;
   }
   try {
@@ -3883,6 +3861,26 @@ function startLocalApi() {
           currentView = nextView;
           send('api:action', { action: 'view', view: nextView });
           sendHttp(202, { ok: true, view: nextView, index });
+          return;
+        }
+        if (actionPath === 'outbox/open') {
+          send('api:action', { action: 'outbox-open' });
+          sendHttp(202, { ok: true, action: 'outbox-open' });
+          return;
+        }
+        if (actionPath === 'outbox/send') {
+          send('api:action', { action: 'outbox-send' });
+          sendHttp(202, { ok: true, action: 'outbox-send' });
+          return;
+        }
+        if (actionPath === 'loadout/queue') {
+          send('api:action', { action: 'loadout-queue' });
+          sendHttp(202, { ok: true, action: 'loadout-queue' });
+          return;
+        }
+        if (actionPath === 'champion-audit') {
+          send('api:action', { action: 'champion-audit' });
+          sendHttp(202, { ok: true, action: 'champion-audit' });
           return;
         }
         const view = (query('view') || (url.pathname === '/v' ? 'overview' : '')).toLowerCase();
@@ -14720,6 +14718,17 @@ async function runSmoke() {
       document.querySelector('#inventoryCloseBtn')?.click();
       await wait(160);
       const navOk = navInventory && doubleBack && navTools;
+      // Panels der Befehlspalette/Stream-Deck-Hooks im echten Shell prüfen.
+      document.querySelector('#inventoryBtn').click();
+      await wait(160);
+      window.dispatchEvent(new CustomEvent('d2-outbox-open'));
+      window.dispatchEvent(new CustomEvent('d2-loadout-queue-open'));
+      window.dispatchEvent(new CustomEvent('d2-champion-audit-open'));
+      await wait(120);
+      const panelOpen = (id) => Boolean(document.getElementById(id) && !document.getElementById(id).classList.contains('hidden'));
+      const panelsOk = panelOpen('inventoryOutboxPanel') && panelOpen('loadoutQueuePanel') && panelOpen('championAuditPanel');
+      document.querySelector('#inventoryCloseBtn')?.click();
+      await wait(160);
       document.querySelector('#settingsBtn').click();
       await wait(80);
       const modal = document.querySelector('#settingsModal');
@@ -14791,6 +14800,7 @@ async function runSmoke() {
         navInventory,
         navTools,
         doubleBack,
+        panelsOk,
         added,
         gearBadge,
         removed,
@@ -14838,6 +14848,7 @@ async function runSmoke() {
         ui.focusToggleOk &&
         ui.shellButtonsOk &&
         ui.navOk &&
+        ui.panelsOk &&
         ui.closed &&
         ui.profileSaved &&
         ui.backupOk &&

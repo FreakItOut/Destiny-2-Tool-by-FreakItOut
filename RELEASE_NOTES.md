@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.9.0
+# Destiny 2 Tool by FreakItOut 1.10.0
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,9 +6,18 @@
 
 ## Deutsch
 
-Version 1.9.0 bringt Datensicherheit und Alltag: Config-Rettung aus .bak, persistente Loadout-Warteschlange, ausgebauten Offline-Ausgang, Suche 2.0, HUD-Drag & Aktivitätsregeln sowie Dashboard-Feinschliff.
+Version 1.10.0 rundet die Suche und Integrationen ab: ODER-Suche, getestete Daten-Migration, neue Aktionen für lokale API/Stream Deck und ein erweiterter Full-Shell-Smoke.
 
-### Neu in 1.9.0
+### Neu in 1.10.0
+
+- **ODER-Suche** – mehrere Begriffe mit `OR` kombinieren.
+- **Daten-Migration** – alter Installationsordner wird getestet und sicher
+  nach `%APPDATA%` übernommen.
+- **Lokale API/Stream Deck** – Aktionen für Offline-Ausgang, Loadout-Queue
+  und Champion-Prüfung.
+- **Full-Shell-Smoke** – Navigation und alle neuen Panels im echten App-Lauf.
+
+### Enthalten aus 1.9.0
 
 - **Config-Rettung** – letzte gültige Fassung als `config.json.bak`, automatische
   Wiederherstellung bei defekter Datei.
@@ -54,8 +63,8 @@ Version 1.9.0 bringt Datensicherheit und Alltag: Config-Rettung aus .bak, persis
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.9.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.9.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.10.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.10.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -63,7 +72,7 @@ Version 1.9.0 bringt Datensicherheit und Alltag: Config-Rettung aus .bak, persis
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.9.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.10.0.exe`).
 
 ### Voraussetzungen
 
@@ -96,9 +105,18 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.9.0 focuses on data safety and daily use: config recovery from .bak, a persistent loadout queue, an expanded offline outbox, search 2.0, HUD drag & activity rules, and dashboard polish.
+Version 1.10.0 rounds out search and integrations: OR search, tested data migration, new local API/Stream Deck actions and an expanded full-shell smoke.
 
-### New in 1.9.0
+### New in 1.10.0
+
+- **OR search** – combine several terms with `OR`.
+- **Data migration** – old installation data is tested and safely adopted
+  into `%APPDATA%`.
+- **Local API/Stream Deck** – actions for the offline outbox, loadout queue
+  and champion audit.
+- **Full-shell smoke** – navigation and all new panels in a real app run.
+
+### Included from 1.9.0
 
 - **Config recovery** – last valid copy as `config.json.bak`, automatic restore
   for a broken file.
@@ -144,8 +162,8 @@ Version 1.9.0 focuses on data safety and daily use: config recovery from .bak, a
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.9.0.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.9.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.10.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.10.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -153,7 +171,7 @@ Version 1.9.0 focuses on data safety and daily use: config recovery from .bak, a
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.9.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.10.0.exe`).
 
 ### Requirements
 

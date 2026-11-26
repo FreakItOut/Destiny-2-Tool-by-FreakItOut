@@ -3312,6 +3312,25 @@ if (typeof api.onApiAction === 'function') {
       try { showInventoryPage(); } catch (error) { /* egal */ }
       return;
     }
+    if (action === 'outbox-open') {
+      try { showInventoryPage(); } catch (error) { /* egal */ }
+      window.dispatchEvent(new CustomEvent('d2-outbox-open'));
+      return;
+    }
+    if (action === 'outbox-send') {
+      window.dispatchEvent(new CustomEvent('d2-outbox-send'));
+      return;
+    }
+    if (action === 'loadout-queue') {
+      try { showInventoryPage(); } catch (error) { /* egal */ }
+      window.dispatchEvent(new CustomEvent('d2-loadout-queue-open'));
+      return;
+    }
+    if (action === 'champion-audit') {
+      try { showInventoryPage(); } catch (error) { /* egal */ }
+      window.dispatchEvent(new CustomEvent('d2-champion-audit-open'));
+      return;
+    }
     if (action === 'postmaster') {
       try { showInventoryPage(); } catch (error) { /* egal */ }
       if (inventory && inventory.openPostmaster) inventory.openPostmaster();

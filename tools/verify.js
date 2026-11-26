@@ -47,6 +47,7 @@ const ALL = [
   { script: 'test:config', label: 'Konfiguration', timeout: 300000 },
   { script: 'test:bundle', label: 'Bundle-Budget', timeout: 120000 },
   { script: 'test:installer', label: 'Installer-Datenerhalt', timeout: 120000 },
+  { script: 'test:migration', label: 'Daten-Migration', timeout: 120000 },
   { script: 'test:secrets', label: 'Secret-Redaction', timeout: 120000 },
   { script: 'test:ipc-validation', label: 'IPC-Validierung', timeout: 120000 },
   { script: 'test:xur', label: 'Xûr-Fenster', timeout: 120000 },

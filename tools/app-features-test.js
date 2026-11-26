@@ -82,6 +82,9 @@ check('Englische Übersetzung lazy', index.indexOf('i18n-en.js') < 0 && read('re
 check('HUD-Regeln und Overlay-Drag', overlayHud.includes('chipRules') && overlayHud.includes("bar.addEventListener('drop'"));
 check('Dashboard-Karten einzeln und Heute-Ansicht', dashboardSource.includes('dashboardCardSizes') && index.includes('value="today"'));
 check('Befehlspalette für Ausgang/Queue/Champion', app.includes('d2-outbox-send') && app.includes('d2-loadout-queue-open') && app.includes('d2-champion-audit-open'));
+check('ODER-Suche in der Inventarsuche', inventory.includes('splitOrGroups') && inventory.includes('matchGroups.some'));
+check('Daten-Migration als eigenes Modul', read('electron/data-migration.js').includes('migrateInstalledDataToAppData'));
+check('Lokale API für Ausgang/Queue/Champion', read('electron/api-commands.js').includes('/action/outbox/send') && read('electron/api-commands.js').includes('/action/loadout/queue'));
 check('Champion-Planer mit Artefakt und Swaps', tools.includes('renderChampionPlanner') && tools.includes('artifactBreakers') && tools.includes('championSwapSuggestions'));
 check('Build-Lückenanalyse', tools.includes('renderBuildGap') && tools.includes('data-gap-target') && tools.includes('data-gap-loadout'));
 check('Crafting-Materialplan', tools.includes('renderCraftingMaterialPlan') && tools.includes('Crafting-Materialplan'));

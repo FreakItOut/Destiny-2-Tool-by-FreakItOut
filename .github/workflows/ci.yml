@@ -53,6 +53,9 @@ jobs:
       - name: Installer-Datenerhalt
         run: npm run test:installer
 
+      - name: Daten-Migration
+        run: npm run test:migration
+
       - name: Startup-Budget
         run: npm run test:perf
 

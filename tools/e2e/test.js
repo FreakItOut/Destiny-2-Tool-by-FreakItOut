@@ -1016,6 +1016,12 @@ async function run() {
   }
   check('Treffer im Tooltip markiert', Boolean(document.querySelector('#inventoryTooltip .dinv-mark')),
     document.querySelector('#inventoryTooltip')?.textContent?.slice(0, 80));
+  await setSearch('Testgewehr OR Granaten-Arme');
+  await wait(220);
+  check('ODER-Suche findet beide Begriffe',
+    Boolean(document.querySelector('.dinv-tile[title^="Testgewehr"]')) &&
+    Boolean(document.querySelector('.dinv-tile[title^="Granaten-Arme"]')),
+    document.querySelector('#inventorySearchCount')?.textContent);
   await setSearch('');
 
   // Champion-Prüfung: Waffe ohne Brecher auswählen und Override setzen.

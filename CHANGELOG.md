@@ -6,6 +6,27 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.10.0] – 2026-11-26
+
+### Hinzugefügt
+
+- **ODER-Suche** – `Testgewehr OR Granaten-Arme` findet beide Begriffe;
+  Anführungszeichen und Operatoren funktionieren weiterhin.
+- **Daten-Migration als Modul** – die Übernahme alter Installationsdaten ist
+  isoliert getestet (Kopie, `.bak`, keine Überschreibung, leere Quelle).
+- **Lokale API/Stream Deck** – neue Aktionen `/action/outbox/open`,
+  `/action/outbox/send`, `/action/loadout/queue` und
+  `/action/champion-audit`.
+- **Full-Shell-Smoke** – der Smoke-Test prüft zusätzlich die Panels für
+  Offline-Ausgang, Loadout-Queue und Champion-Prüfung.
+
+### Geändert
+
+- **Release-Workflow** prüft die gebauten Prüfsummen und startet den
+  Portable-Smoke bereits seit 1.9.0; die Daten-Migration ist jetzt ein
+  eigener CI-Schritt.
+- E2E auf **517** Schritte, App-Features auf **101** Prüfungen erweitert.
+
 ## [1.9.0] – 2026-11-26
 
 ### Hinzugefügt

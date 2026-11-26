@@ -1120,7 +1120,11 @@ export function createInventory(ctx) {
     const tokens = [];
     const pattern = /"([^"]+)"|(\S+)/g;
     let match;
-    while ((match = pattern.exec(text))) tokens.push(match[1] ? `"${match[1]}"` : match[2]);
+    while ((match = pattern.exec(text))) {
+      const token = match[1] ? `"${match[1]}"` : match[2];
+      if (/^or$/i.test(String(token).replace(/^"|"$/g, ''))) continue;
+      tokens.push(token);
+    }
     return tokens.slice(0, 8);
   }
 
@@ -1814,6 +1818,39 @@ export function createInventory(ctx) {
       }
     }
     return tokens;
+  }
+
+  // „A OR B“: Gruppen werden getrennt ausgewertet; ein Item passt, wenn
+  // eine Gruppe vollständig passt. Anführungszeichen bleiben unangetastet.
+  function splitOrGroups(raw) {
+    const text = naturalLanguageQuery(raw);
+    if (!text) return [];
+    const groups = [];
+    let current = '';
+    let quoted = false;
+    for (let index = 0; index < text.length; index += 1) {
+      const char = text[index];
+      if (char === '"') quoted = !quoted;
+      if (!quoted && /^or$/i.test(text.slice(index, index + 2))
+        && /\s/.test(text[index - 1] || ' ')
+        && /\s/.test(text[index + 2] || ' ')) {
+        groups.push(current.trim());
+        current = '';
+        index += 1;
+        continue;
+      }
+      current += char;
+    }
+    groups.push(current.trim());
+    return groups.filter(Boolean);
+  }
+
+  function parseSearchGroups(raw) {
+    const text = String(raw || '').trim();
+    if (!text) return [];
+    const groups = splitOrGroups(text);
+    if (groups.length <= 1) return [parseSearch(text)];
+    return groups.map((group) => parseSearch(group)).filter((group) => group.length);
   }
 
   const RARITY_NAMES = { exotic: 6, exotisch: 6, legendär: 5, legendary: 5, selten: 4, rare: 4, gewöhnlich: 2 };
@@ -3738,17 +3775,24 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const domScrollTop = body.scrollTop;
     const reusePending = Boolean(inventoryPendingScroll && domScrollTop === 0 && inventoryPendingScroll.top > 0);
     const previousScrollTop = reusePending ? inventoryPendingScroll.top : domScrollTop;
-    const tokens = parseSearch((searchInput && searchInput.value) || '');
-    if (searchState.godrollOnly) tokens.push({ op: 'is', value: 'godroll' });
-    // sort:name|power|rarity überschreibt die Sortierung nur für diese Suche.
-    const sortIndex = tokens.findIndex((token) => token.op === 'sort');
-    if (sortIndex >= 0) {
-      const value = String(tokens[sortIndex].value || '');
-      searchSortOverride = ['power', 'name', 'rarity', 'stats', 'tier', 'archetype'].includes(value) ? value : '';
-      tokens.splice(sortIndex, 1);
-    } else {
-      searchSortOverride = '';
+    const searchGroups = parseSearchGroups((searchInput && searchInput.value) || '');
+    if (!searchGroups.length) searchGroups.push([]);
+    if (searchState.godrollOnly) {
+      for (const group of searchGroups) group.push({ op: 'is', value: 'godroll' });
     }
+    // sort:name|power|rarity überschreibt die Sortierung nur für diese Suche.
+    let sortValue = '';
+    for (const group of searchGroups) {
+      const sortIndex = group.findIndex((token) => token.op === 'sort');
+      if (sortIndex >= 0) {
+        if (!sortValue) sortValue = String(group[sortIndex].value || '');
+        group.splice(sortIndex, 1);
+      }
+    }
+    const matchGroups = searchGroups.filter((group) => group.length);
+    if (!matchGroups.length) matchGroups.push([]);
+    const tokens = matchGroups.flat();
+    searchSortOverride = ['power', 'name', 'rarity', 'stats', 'tier', 'archetype'].includes(sortValue) ? sortValue : '';
     // Einfache Freitext-Suchen kann der Worker übernehmen. Sobald
     // Operatoren im Spiel sind, bleibt die synchrone Suche zuständig.
     const simpleSearch = tokens.length === 1 && tokens[0].text && !tokens[0].negate ? tokens[0] : null;
@@ -3773,7 +3817,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         const key = String(item.instanceId || item.hash || '');
         if (workerSearch) {
           if (workerSearch.keys.has(key)) searchMatches.add(key);
-        } else if (itemMatches(item, tokens, dupeSet, where, statDupeSet, statLowerSet, armorWishSet)) {
+        } else if (matchGroups.length > 1
+          ? matchGroups.some((group) => itemMatches(item, group, dupeSet, where, statDupeSet, statLowerSet, armorWishSet))
+          : itemMatches(item, tokens, dupeSet, where, statDupeSet, statLowerSet, armorWishSet)) {
           searchMatches.add(key);
         }
       }
