@@ -60,8 +60,16 @@ const {
   clipboard,
   safeStorage,
   powerMonitor,
-  Notification
+  Notification,
+  protocol,
+  net
 } = require('electron');
+
+// Eigener Bild-Cache für Bungie-Icons (wird vor app.whenReady registriert).
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'd2icon',
+  privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true }
+}]);
 
 // ------------------------------------------------------------
 // Installierter Datenordner
@@ -14411,7 +14419,108 @@ app.on('web-contents-created', (event, contents) => {
   }
 });
 
+// ------------------------------------------------------------
+// Bungie-Icon-Cache
+// ------------------------------------------------------------
+// Bilder werden einmal heruntergeladen und unter userData/cache/icons
+// abgelegt. Ein eigener d2icon:-Handler liefert sie danach lokal aus.
+const ICON_CACHE_MAX_FILES = 6000;
+const ICON_MIME = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml' };
+
+function iconCacheDir() {
+  return path.join(app.getPath('userData'), 'cache', 'icons');
+}
+
+function pruneIconCache(dir) {
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true }).filter((entry) => entry.isFile());
+    if (entries.length <= ICON_CACHE_MAX_FILES) return;
+    const sorted = entries
+      .map((entry) => {
+        const full = path.join(dir, entry.name);
+        let at = 0;
+        try { at = fs.statSync(full).mtimeMs; } catch (error) { at = 0; }
+        return { full, at };
+      })
+      .sort((a, b) => a.at - b.at);
+    for (const entry of sorted.slice(0, entries.length - ICON_CACHE_MAX_FILES)) {
+      try { fs.unlinkSync(entry.full); } catch (error) { /* egal */ }
+    }
+  } catch (error) {
+    // Cache-Aufräumen ist optional.
+  }
+}
+
+function setupBungieIconCache() {
+  const dir = iconCacheDir();
+  try { fs.mkdirSync(dir, { recursive: true }); } catch (error) { /* egal */ }
+  pruneIconCache(dir);
+  const iconSession = session.fromPartition('d2icon-cache');
+
+  try {
+    protocol.handle('d2icon', async (request) => {
+      try {
+        const parsed = new URL(request.url);
+        const pathname = decodeURIComponent(parsed.pathname || '');
+        if (!pathname.startsWith('/common/') || pathname.includes('..')) {
+          return new Response('Not found', { status: 404 });
+        }
+        const source = `https://www.bungie.net${pathname}${parsed.search || ''}`;
+        const ext = path.extname(pathname).toLowerCase();
+        const name = `${crypto.createHash('sha1').update(source).digest('hex')}${ICON_MIME[ext] ? ext : '.png'}`;
+        const file = path.join(dir, name);
+        const mime = ICON_MIME[ext] || 'image/png';
+        if (fs.existsSync(file)) {
+          return new Response(fs.readFileSync(file), {
+            status: 200,
+            headers: { 'Content-Type': mime, 'Cache-Control': 'public, max-age=31536000, immutable' }
+          });
+        }
+        const response = await net.fetch(source, {
+          session: iconSession,
+          headers: { 'User-Agent': BUNGIE_HEADERS.userAgent, accept: 'image/*' }
+        });
+        if (!response.ok) return new Response('Not found', { status: response.status || 404 });
+        const buffer = Buffer.from(await response.arrayBuffer());
+        try { fs.writeFileSync(file, buffer); } catch (error) { /* Cache optional */ }
+        return new Response(buffer, {
+          status: 200,
+          headers: {
+            'Content-Type': response.headers.get('content-type') || mime,
+            'Cache-Control': 'public, max-age=31536000, immutable'
+          }
+        });
+      } catch (error) {
+        return new Response('Icon unavailable', { status: 502 });
+      }
+    });
+  } catch (error) {
+    console.error('[icons] Handler konnte nicht registriert werden:', error.message || String(error));
+  }
+
+  try {
+    session.defaultSession.webRequest.onBeforeRequest(
+      { urls: ['https://www.bungie.net/*'] },
+      (details, callback) => {
+        try {
+          if (details.resourceType === 'image' && /\/common\//.test(details.url)) {
+            const parsed = new URL(details.url);
+            callback({ redirectURL: `d2icon://icon${parsed.pathname}${parsed.search || ''}` });
+            return;
+          }
+        } catch (error) {
+          // Normal weiterladen.
+        }
+        callback({});
+      }
+    );
+  } catch (error) {
+    console.error('[icons] Bild-Redirect konnte nicht gesetzt werden:', error.message || String(error));
+  }
+}
+
 app.whenReady().then(() => {
+  try { setupBungieIconCache(); } catch (error) { console.error('[icons] Setup fehlgeschlagen:', error.message || String(error)); }
   config.load();
   startLocalApi();
   // Wunschlisten im Hintergrund vorladen, damit Godrolls sofort stimmen.

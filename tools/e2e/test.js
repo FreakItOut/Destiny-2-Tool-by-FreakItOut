@@ -523,6 +523,10 @@ async function run() {
 
   inv.open();
   check('Inventar geladen', await until(() => document.querySelector('.dinv-char-head')), document.querySelectorAll('.dinv-char-head').length);
+  await wait(250);
+  const firstRenderMs = Number(window.__D2_FIRST_RENDER_MS__) || 0;
+  const renderBudget = Number(window.__D2_RENDER_BUDGET_MS__) || 3000;
+  check('Erster Inventar-Render im Budget', firstRenderMs > 0 && firstRenderMs <= renderBudget, `${firstRenderMs} ms / ${renderBudget} ms`);
   const settingsTitle = document.querySelector('#settingsTitle');
   check('i18n verfügbar', Boolean(window.i18n && window.i18n.translate('Einstellungen') === 'Settings'));
   if (window.i18n && settingsTitle) {

@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.10.0
+# Destiny 2 Tool by FreakItOut 1.11.0
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,9 +6,16 @@
 
 ## Deutsch
 
-Version 1.10.0 rundet die Suche und Integrationen ab: ODER-Suche, getestete Daten-Migration, neue Aktionen für lokale API/Stream Deck und ein erweiterter Full-Shell-Smoke.
+Version 1.11.0 beschleunigt das Inventar: Bungie-Icons kommen aus einem lokalen Cache, Bildflächen zeigen einen Platzhalter und der erste Render hat ein festes Zeitbudget.
 
-### Neu in 1.10.0
+### Neu in 1.11.0
+
+- **Bungie-Icon-Cache** – Bilder werden einmal geladen und lokal ausgeliefert.
+- **Platzhalter** – kein leeres Loch mehr, während Icons laden.
+- **Render-Budget** – der erste Inventar-Render wird gemessen und in E2E
+  gegen 3.000 ms geprüft.
+
+### Enthalten aus 1.10.0
 
 - **ODER-Suche** – mehrere Begriffe mit `OR` kombinieren.
 - **Daten-Migration** – alter Installationsordner wird getestet und sicher
@@ -63,8 +70,8 @@ Version 1.10.0 rundet die Suche und Integrationen ab: ODER-Suche, getestete Date
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.10.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.10.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.11.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.11.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -72,7 +79,7 @@ Version 1.10.0 rundet die Suche und Integrationen ab: ODER-Suche, getestete Date
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.10.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.11.0.exe`).
 
 ### Voraussetzungen
 
@@ -105,9 +112,16 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.10.0 rounds out search and integrations: OR search, tested data migration, new local API/Stream Deck actions and an expanded full-shell smoke.
+Version 1.11.0 speeds up the inventory: Bungie icons come from a local cache, image areas show a placeholder, and the first render has a fixed time budget.
 
-### New in 1.10.0
+### New in 1.11.0
+
+- **Bungie icon cache** – images are downloaded once and served locally.
+- **Placeholder** – no empty hole while icons load.
+- **Render budget** – the first inventory render is measured and checked
+  against 3,000 ms in E2E.
+
+### Included from 1.10.0
 
 - **OR search** – combine several terms with `OR`.
 - **Data migration** – old installation data is tested and safely adopted
@@ -162,8 +176,8 @@ Version 1.10.0 rounds out search and integrations: OR search, tested data migrat
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.10.0.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.10.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.11.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.11.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -171,7 +185,7 @@ Version 1.10.0 rounds out search and integrations: OR search, tested data migrat
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.10.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.11.0.exe`).
 
 ### Requirements
 

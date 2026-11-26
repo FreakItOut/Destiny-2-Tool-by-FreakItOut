@@ -1,6 +1,6 @@
 {
   "name": "frakitouts-destiny-2-tool",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Destiny 2 Tool by FreakItOut – Webseiten-Overlay mit Tastatur- und Controller-Steuerung",
   "main": "electron/main.js",
   "author": "FreakItOut",
@@ -90,7 +90,8 @@
     "testversion": "node tools/update-testversion.js",
     "test:installer": "node tools/installer-test.js",
     "test:checksums": "node tools/checksum-verify.js",
-    "test:migration": "node tools/data-migration-test.js"
+    "test:migration": "node tools/data-migration-test.js",
+    "test:icons": "node tools/icon-cache-test.js"
   },
   "devDependencies": {
     "archiver": "^8.0.0",

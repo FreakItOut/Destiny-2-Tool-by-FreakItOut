@@ -6,6 +6,26 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.11.0] – 2026-11-26
+
+### Hinzugefügt
+
+- **Bungie-Icon-Cache** – Item-, Perk- und Händlerbilder werden einmal
+  heruntergeladen und unter `%APPDATA%\...\cache\icons` zwischengespeichert.
+  Ein eigener `d2icon:`-Handler liefert sie lokal aus; der Cache wird bei
+  mehr als 6.000 Dateien automatisch ausgedünnt.
+- **Icon-Platzhalter** – während des Ladens zeigen Bildflächen einen dezenten
+  Verlauf statt eines leeren Lochs.
+- **Render-Budget** – der erste Inventar-Render misst sich selbst
+  (`__D2_FIRST_RENDER_MS__`, Budget 3.000 ms); der E2E-Test schlägt an, wenn
+  das Budget überschritten wird.
+- **Icon-Cache-Test** – prüft Schema, Redirect, CSP, Platzhalter und
+  Cache-Obergrenze.
+
+### Technik
+
+- E2E auf **518** Schritte, App-Features auf **103** Prüfungen erweitert.
+
 ## [1.10.0] – 2026-11-26
 
 ### Hinzugefügt

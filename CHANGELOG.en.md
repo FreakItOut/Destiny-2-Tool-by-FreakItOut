@@ -6,6 +6,25 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.11.0] – 2026-11-26
+
+### Added
+
+- **Bungie icon cache** – item, perk and vendor images are downloaded once
+  and stored under `%APPDATA%\...\cache\icons`. A `d2icon:` handler serves
+  them locally; the cache is pruned above 6,000 files.
+- **Icon placeholder** – image areas show a subtle gradient while loading
+  instead of an empty hole.
+- **Render budget** – the first inventory render measures itself
+  (`__D2_FIRST_RENDER_MS__`, 3,000 ms budget); E2E fails if the budget is
+  exceeded.
+- **Icon cache test** – checks scheme, redirect, CSP, placeholder and cache
+  limit.
+
+### Technical
+
+- E2E expanded to **518** steps, app features to **103** checks.
+
 ## [1.10.0] – 2026-11-26
 
 ### Added

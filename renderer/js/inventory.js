@@ -3763,6 +3763,19 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   let inventoryScrollRestoreId = 0;
   let inventoryPendingScroll = null;
   function render() {
+    window.__D2_RENDER_BUDGET_MS__ = window.__D2_RENDER_BUDGET_MS__ || 3000;
+    if (window.__D2_FIRST_RENDER_MS__ == null && !window.__D2_FIRST_RENDER_PENDING__) {
+      window.__D2_FIRST_RENDER_PENDING__ = true;
+      const started = performance.now();
+      const measure = () => {
+        if (window.__D2_FIRST_RENDER_MS__ == null) {
+          window.__D2_FIRST_RENDER_MS__ = Math.round((performance.now() - started) * 10) / 10;
+        }
+        window.__D2_FIRST_RENDER_PENDING__ = false;
+      };
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(measure);
+      else setTimeout(measure, 0);
+    }
     if (!body) return;
     chunkedLists.clear();
     syncVaultWarning();

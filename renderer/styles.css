@@ -289,6 +289,12 @@ svg.icon {
   color: #fff;
 }
 
+/* Bungie-Icon-Platzhalter: sichtbar, während das Bild lädt. */
+img[src*="/common/"], img[src^="d2icon:"] {
+  background-color: rgba(255, 255, 255, 0.045);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.09));
+}
+
 /* ==================== Overlay-Leiste ==================== */
 
 .overlay-bar {
