@@ -6,6 +6,25 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.1] – 2026-11-26
+
+### Fixed
+
+- **Setup updates keep user data and the Bungie login** – the installed
+  version now always stores its data in
+  `%APPDATA%\FreakItOut's Destiny 2 Tool`, never in the installation folder.
+  Setup updates therefore no longer replace the configuration or encrypted
+  tokens.
+- **Automatic migration of old installation data** – existing
+  `Daten\config.json` and backups from older installs are copied once to
+  `%APPDATA%` during setup or on first start; an existing newer configuration
+  is never overwritten.
+- **Uninstall keeps the data** – `deleteAppDataOnUninstall` is explicitly
+  disabled; delete the data folder manually to remove everything.
+- **Portable detection unchanged** – the portable EXE still uses the `Daten`
+  folder next to the EXE.
+- Version **1.8.1**.
+
 ## [1.8.0] – 2026-11-26
 
 ### Added

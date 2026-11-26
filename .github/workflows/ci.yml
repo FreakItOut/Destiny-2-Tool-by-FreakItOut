@@ -50,6 +50,9 @@ jobs:
       - name: Bundle-Budget
         run: npm run test:bundle
 
+      - name: Installer-Datenerhalt
+        run: npm run test:installer
+
       - name: Startup-Budget
         run: npm run test:perf
 

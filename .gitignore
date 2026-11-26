@@ -5,6 +5,7 @@ dist-*/
 build/*
 !build/icon.ico
 !build/icon-source.jpg
+!build/installer.nsh
 
 # Persönliche Daten / Zugangsdaten
 config.json

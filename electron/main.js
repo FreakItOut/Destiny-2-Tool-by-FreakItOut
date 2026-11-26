@@ -89,6 +89,35 @@ try {
 // Vorhandene Konfiguration und Anmeldungen werden beim ersten
 // portablen Start aus %APPDATA% übernommen.
 
+// Ältere Installationsversionen konnten ihre Daten noch im
+// Installationsordner ablegen. Diese werden einmalig nach %APPDATA%
+// übernommen, damit Setup-Updates sie nicht ersetzen.
+function migrateInstalledDataToAppData() {
+  try {
+    if (process.argv.includes('--smoke')) return;
+    const oldData = path.join(path.dirname(process.execPath), 'Daten');
+    const oldConfig = path.join(oldData, 'config.json');
+    if (!fs.existsSync(oldConfig)) return;
+    const target = app.getPath('userData');
+    fs.mkdirSync(target, { recursive: true });
+    const targetConfig = path.join(target, 'config.json');
+    if (fs.existsSync(targetConfig)) return;
+    fs.copyFileSync(oldConfig, targetConfig);
+    try {
+      const oldBackups = path.join(oldData, 'backups');
+      const targetBackups = path.join(target, 'backups');
+      if (fs.existsSync(oldBackups) && !fs.existsSync(targetBackups)) {
+        fs.cpSync(oldBackups, targetBackups, { recursive: true });
+      }
+    } catch (error) {
+      // Backups sind optional; die Konfiguration ist übernommen.
+    }
+    console.log(`[migration] Daten aus der Installationsversion übernommen: ${target}`);
+  } catch (error) {
+    console.error('[migration] Datenübernahme fehlgeschlagen:', error.message);
+  }
+}
+
 (function applyPortableDataDir() {
   if (process.argv.includes('--smoke')) return;
 
@@ -121,23 +150,15 @@ try {
           portableDir = parentDir;
         }
       }
-      // Fallback: beschreibbares EXE-Verzeichnis (nur gepackte Apps).
-      if (!portableDir) {
-        const isPackaged = fs.existsSync(path.join(process.resourcesPath || '', 'app.asar'));
-        if (isPackaged) {
-          const exeDir = path.dirname(process.execPath);
-          const probe = path.join(exeDir, '.schreibtest');
-          fs.writeFileSync(probe, 'ok', 'utf8');
-          fs.unlinkSync(probe);
-          portableDir = exeDir;
-        }
-      }
     } catch (error) {
       // Nicht beschreibbar - bleibt bei %APPDATA%.
     }
   }
 
-  if (!portableDir) return;
+  if (!portableDir) {
+    migrateInstalledDataToAppData();
+    return;
+  }
   try {
     const previous = app.getPath('userData');
     const portableDataDir = path.join(portableDir, 'Daten');

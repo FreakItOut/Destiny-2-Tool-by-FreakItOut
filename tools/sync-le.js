@@ -29,6 +29,8 @@ const EDITION_ASSETS = new Set([
   'assets/icon-32.png',
   'assets/icon-running.png',
   'assets/logo.png',
+  'build/icon.ico',
+  'build/icon-source.jpg',
   'streamdeck/com.freakitout.d2tool.sdPlugin/imgs/action.png',
   'streamdeck/com.freakitout.d2tool.sdPlugin/imgs/key.png',
   'streamdeck/com.freakitout.d2tool.sdPlugin/imgs/plugin.png'
@@ -105,7 +107,7 @@ function main() {
     process.exit(1);
   }
   let count = 0;
-  for (const dir of ['electron', 'renderer', 'assets', 'tools', 'docs', 'streamdeck']) {
+  for (const dir of ['electron', 'renderer', 'assets', 'tools', 'docs', 'streamdeck', 'build']) {
     for (const relative of walk(path.join(ROOT, dir))) {
       const full = `${dir}/${relative}`;
       if (EDITION_FILES.has(full) || EDITION_ASSETS.has(full)) continue;
@@ -122,6 +124,8 @@ function main() {
         copyFile(full, brandSettings);
       } else if (full === 'renderer/js/tools.js') {
         copyFile(full, brandTools);
+      } else if (full === 'build/installer.nsh') {
+        copyFile(full, (text) => text.split(STD_BRAND.appDataName).join(LE_BRAND.appDataName));
       } else {
         copyFile(full);
       }

@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.8.0
+# Destiny 2 Tool by FreakItOut 1.8.1
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,9 +6,19 @@
 
 ## Deutsch
 
-Version 1.8.0 bringt den Feinschliff: Offline-Ausgang und Loadout-Warteschlange mit Detailpanels, HUD-Editor mit Drag & Drop und Profilen, Champion-Prüfung, Suche 2.0 und automatisierte Releases.
+Version 1.8.1 macht Setup-Updates datenschonend: Konfiguration, Verlauf und Bungie-Anmeldung bleiben beim Installieren einer neuen Version erhalten.
 
-### Neu in 1.8.0
+### Neu in 1.8.1
+
+- **Setup-Updates erhalten Nutzerdaten** – die installierte Version schreibt
+  immer nach `%APPDATA%\FreakItOut's Destiny 2 Tool`; Setup-Updates
+  ersetzen weder Konfiguration noch verschlüsselte Tokens.
+- **Automatische Übernahme** – ältere Daten aus dem Installationsordner
+  werden beim Setup bzw. ersten Start einmalig übernommen.
+- **Deinstallation behält die Daten** – zum vollständigen Entfernen den
+  Datenordner manuell löschen.
+
+### Enthalten aus 1.8.0
 
 - **Offline-Ausgang mit Detailpanel** – Aktionen einzeln wiederholen,
   entfernen und sortieren; vor dem Senden wird der aktuelle Item-Stand geprüft.
@@ -32,8 +42,8 @@ Version 1.8.0 bringt den Feinschliff: Offline-Ausgang und Loadout-Warteschlange 
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.8.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.8.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.8.1.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.8.1.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -41,7 +51,7 @@ Version 1.8.0 bringt den Feinschliff: Offline-Ausgang und Loadout-Warteschlange 
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.8.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.8.1.exe`).
 
 ### Voraussetzungen
 
@@ -74,9 +84,19 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.8.0 is the polish release: offline outbox and loadout queue detail panels, a HUD editor with drag & drop and profiles, champion audit, search 2.0 and automated releases.
+Version 1.8.1 makes setup updates data-safe: configuration, history and the Bungie login survive installing a new version.
 
-### New in 1.8.0
+### New in 1.8.1
+
+- **Setup updates keep user data** – the installed version always writes to
+  `%APPDATA%\FreakItOut's Destiny 2 Tool`; updates replace neither the
+  configuration nor encrypted tokens.
+- **Automatic migration** – older data from the installation folder is taken
+  over once during setup or on first start.
+- **Uninstall keeps the data** – delete the data folder manually to remove
+  everything.
+
+### Included from 1.8.0
 
 - **Offline outbox with detail panel** – retry, remove and reorder actions;
   the current item state is checked before sending.
@@ -100,8 +120,8 @@ Version 1.8.0 is the polish release: offline outbox and loadout queue detail pan
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.8.0.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.8.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.8.1.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.8.1.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -109,7 +129,7 @@ Version 1.8.0 is the polish release: offline outbox and loadout queue detail pan
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.8.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.8.1.exe`).
 
 ### Requirements
 

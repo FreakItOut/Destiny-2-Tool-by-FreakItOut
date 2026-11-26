@@ -13,9 +13,9 @@ Laufzeit-Abhängigkeiten außer Electron selbst.
 
 Die fertigen Windows-Builds liegen unter **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.8.0.exe`** – portable Version, keine
+- **`Destiny.2.Tool.by.FreakItOut.1.8.1.exe`** – portable Version, keine
   Installation nötig.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.8.0.exe`** – Installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.8.1.exe`** – Installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optionales Stream-Deck-Plugin.
 - **`streamdeck-profile.json`** – passende Stream-Deck-Belegung.
 - **`SHA256SUMS.txt`** – Prüfsummen aller Dateien.
@@ -112,6 +112,12 @@ Beim ersten Start wird die Konfiguration unter
 ```
 
 angelegt. Alle Änderungen werden sofort gespeichert.
+
+Bei einer **Installation** bleiben Konfiguration, Bungie-Anmeldung, Verlauf und
+Backups bei Setup-Updates erhalten. Der Installer übernimmt auch Daten aus
+älteren Versionen, die noch im Installationsordner lagen. Die Deinstallation
+löscht den Datenordner nicht – zum vollständigen Entfernen
+`%APPDATA%\FreakItOut's Destiny 2 Tool` manuell löschen.
 
 Weitere Befehle:
 

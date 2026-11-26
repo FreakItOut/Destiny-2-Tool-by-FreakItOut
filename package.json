@@ -1,6 +1,6 @@
 {
   "name": "frakitouts-destiny-2-tool",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Destiny 2 Tool by FreakItOut – Webseiten-Overlay mit Tastatur- und Controller-Steuerung",
   "main": "electron/main.js",
   "author": "FreakItOut",
@@ -87,7 +87,8 @@
     "test:axe": "node tools/axe-test.js",
     "test:parity": "node tools/edition-parity-test.js",
     "sync:le": "node tools/sync-le.js",
-    "testversion": "node tools/update-testversion.js"
+    "testversion": "node tools/update-testversion.js",
+    "test:installer": "node tools/installer-test.js"
   },
   "devDependencies": {
     "archiver": "^8.0.0",
@@ -152,7 +153,9 @@
       "allowToChangeInstallationDirectory": true,
       "perMachine": false,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "include": "build/installer.nsh"
     },
     "directories": {
       "output": "dist"

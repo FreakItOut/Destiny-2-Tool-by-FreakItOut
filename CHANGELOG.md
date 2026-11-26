@@ -6,6 +6,26 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.8.1] – 2026-11-26
+
+### Behoben
+
+- **Setup-Updates erhalten Nutzerdaten und Bungie-Anmeldung** – die
+  installierte Version legt ihre Daten jetzt immer in
+  `%APPDATA%\FreakItOut's Destiny 2 Tool` ab und nie mehr im
+  Installationsordner. Dadurch ersetzen Setup-Updates weder Konfiguration
+  noch verschlüsselte Tokens.
+- **Automatische Übernahme alter Installationsdaten** – vorhandene
+  `Daten\config.json` und Backups aus älteren Installationen werden beim
+  Setup bzw. beim ersten Start einmalig nach `%APPDATA%` kopiert; eine
+  vorhandene neuere Konfiguration wird nie überschrieben.
+- **Deinstallation behält die Daten** – `deleteAppDataOnUninstall` ist
+  ausdrücklich deaktiviert; zum vollständigen Entfernen den Datenordner
+  manuell löschen.
+- **Portable Erkennung unverändert** – die portable EXE nutzt weiterhin den
+  Ordner `Daten` neben der EXE.
+- Version **1.8.1**.
+
 ## [1.8.0] – 2026-11-26
 
 ### Hinzugefügt

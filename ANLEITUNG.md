@@ -6,7 +6,7 @@ Ein Overlay-Tool für Destiny 2: Dashboard, **Inventar & Loadouts**, Werkzeuge u
 
 ## 1. Schnellstart
 
-1. `Destiny 2 Tool by FreakItOut Setup 1.3.0.exe` installieren **oder** die portable EXE starten.
+1. `Destiny 2 Tool by FreakItOut Setup 1.8.1.exe` installieren **oder** die portable EXE starten.
    - **Portable**: Alle Daten (Config, Notizen, Backups, Cache) landen im `Daten`-Ordner neben der EXE — ideal für USB-Sticks.
 2. In Destiny 2: *Einstellungen → Video → Fenstermodus (randlos)*. Exklusives Vollbild kann kein Overlay anzeigen (Windows-Einschränkung).
 3. Im Tool `Alt+D` drücken (oder Controller) → das Overlay erscheint über dem Spiel. Erneut drücken blendet es aus.
@@ -177,4 +177,4 @@ Native Startseite:
 
 ---
 
-*Stand: Version 1.8.0 — öffentliche Standard-Edition.*
+*Stand: Version 1.8.1 — öffentliche Standard-Edition.*
