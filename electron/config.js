@@ -47,11 +47,16 @@ const DEFAULTS = {
       session: true,
       activity: true,
       battery: true,
+      champion: true,
       bungie: true,
       focus: true
     },
     // Reihenfolge der Chips rechts in der Overlay-Leiste.
-    chipOrder: ['clock', 'session', 'activity', 'battery'],
+    chipOrder: ['clock', 'weekly', 'stopwatch', 'session', 'activity', 'champion', 'battery', 'vault', 'minidash', 'focus'],
+    // HUD-Größe im Overlay: s | m | l | xl.
+    hudScale: 'm',
+    // Gespeichertes HUD-Profil automatisch nach Aktivität wählen.
+    hudAutoProfile: false,
     // Gespeicherte Overlay-Layouts (Position/Größe/Chips …).
     profiles: [],
     // Skalierung nur im Overlay-Modus (4K/HiDPI, 1 = unverändert).
@@ -330,6 +335,9 @@ const DEFAULTS = {
   dashboardOrder: [],
   dashboardPreset: 'all',
   dashboardFocus: true,
+  // Kartengröße (s/m/l) und Kartensuche im Dashboard.
+  dashboardCardSize: 'm',
+  dashboardCardSearch: '',
   analyticsHistory: {},
   quickActionsHidden: [],
   // Automatisches, mit Windows safeStorage verschlüsseltes Backup.
@@ -1005,6 +1013,8 @@ function normalize(raw) {
   merged.dashboardOrder = (Array.isArray(merged.dashboardOrder) ? merged.dashboardOrder : []).map((id) => String(id || '').slice(0, 40)).filter(Boolean).slice(0, 30);
   merged.dashboardPreset = ['all', 'beginner', 'pro', 'pvp', 'raid', 'custom'].includes(String(merged.dashboardPreset)) ? String(merged.dashboardPreset) : 'all';
   merged.dashboardFocus = merged.dashboardFocus !== false;
+  merged.dashboardCardSize = ['s', 'm', 'l'].includes(String(merged.dashboardCardSize)) ? String(merged.dashboardCardSize) : 'm';
+  merged.dashboardCardSearch = String(merged.dashboardCardSearch || '').slice(0, 60);
   const analyticsSource = isPlainObject(merged.analyticsHistory) ? merged.analyticsHistory : {};
   const analyticsKeys = Object.keys(analyticsSource).filter((key) => /^\d{4}-\d{2}-\d{2}$/.test(key)).sort().slice(-180);
   merged.analyticsHistory = {};
@@ -1200,14 +1210,14 @@ function normalize(raw) {
   // Overlay-Leisten-Elemente (bool-Map, alle Schalter bekannt).
   if (!isPlainObject(merged.overlay.showItems)) merged.overlay.showItems = {};
   const showRaw = merged.overlay.showItems;
-  const showKeys = ['notes', 'dashboard', 'loadouts', 'lock', 'hide', 'exit', 'clock', 'session', 'activity', 'battery', 'bungie'];
+  const showKeys = ['notes', 'dashboard', 'loadouts', 'lock', 'hide', 'exit', 'clock', 'session', 'activity', 'battery', 'champion', 'bungie', 'focus'];
   const showItems = {};
   for (const key of showKeys) showItems[key] = showRaw[key] !== false;
   merged.overlay.showItems = showItems;
 
   // Reihenfolge der Overlay-Chips (rechts): bekannte Keys, ohne
   // Duplikate, fehlende hinten anhängen.
-  const CHIP_KEYS = ['clock', 'session', 'activity', 'battery'];
+  const CHIP_KEYS = ['clock', 'weekly', 'stopwatch', 'session', 'activity', 'champion', 'battery', 'vault', 'minidash', 'focus'];
   const rawChipOrder = Array.isArray(merged.overlay.chipOrder) ? merged.overlay.chipOrder : [];
   const chipOrder = [];
   for (const key of rawChipOrder) {
@@ -1216,6 +1226,8 @@ function normalize(raw) {
   }
   for (const key of CHIP_KEYS) if (!chipOrder.includes(key)) chipOrder.push(key);
   merged.overlay.chipOrder = chipOrder;
+  merged.overlay.hudScale = ['s', 'm', 'l', 'xl'].includes(merged.overlay.hudScale) ? merged.overlay.hudScale : 'm';
+  merged.overlay.hudAutoProfile = merged.overlay.hudAutoProfile === true;
 
   // Sitzungs-Wiederherstellung: Kategorie-/Seiten-IDs, max. 8.
   if (!isPlainObject(merged.session)) merged.session = { siteIds: [] };
@@ -1638,12 +1650,12 @@ function normalize(raw) {
     const anchor = ANCHORS.has(entry.anchor) ? entry.anchor : DEFAULTS.overlay.anchor;
     const monitor = Math.round(clamp(Number(entry.monitor) || 0, 0, 15, 0));
     const order = Array.isArray(entry.chipOrder) ? entry.chipOrder : [];
-    const chipOrder = ['clock', 'session', 'activity', 'battery'];
-    const cleanOrder = order.filter((key) => chipOrder.includes(key)).filter((key, index, all) => all.indexOf(key) === index);
-    for (const key of chipOrder) if (!cleanOrder.includes(key)) cleanOrder.push(key);
+    const chipKeys = ['clock', 'weekly', 'stopwatch', 'session', 'activity', 'champion', 'battery', 'vault', 'minidash', 'focus'];
+    const cleanOrder = order.filter((key) => chipKeys.includes(key)).filter((key, index, all) => all.indexOf(key) === index);
+    for (const key of chipKeys) if (!cleanOrder.includes(key)) cleanOrder.push(key);
     const showRaw = isPlainObject(entry.showItems) ? entry.showItems : {};
     const showItems = {};
-    for (const key of ['notes', 'dashboard', 'loadouts', 'lock', 'hide', 'exit', 'clock', 'session', 'activity', 'battery', 'bungie']) {
+    for (const key of ['notes', 'dashboard', 'loadouts', 'lock', 'hide', 'exit', 'clock', 'session', 'activity', 'battery', 'champion', 'bungie', 'focus']) {
       showItems[key] = showRaw[key] !== false;
     }
     overlayProfiles.push({
@@ -1655,7 +1667,9 @@ function normalize(raw) {
       anchor,
       monitor,
       chipOrder: cleanOrder,
-      showItems
+      showItems,
+      hudScale: ['s', 'm', 'l', 'xl'].includes(entry.hudScale) ? entry.hudScale : 'm',
+      match: ['all', 'pvp', 'raid', 'dungeon'].includes(entry.match) ? entry.match : 'all'
     });
     if (overlayProfiles.length >= 8) break;
   }

@@ -466,11 +466,17 @@ export function initSettings({
   // ------------------------------------------------------------
   const CHIP_LABELS = {
     clock: 'Reset (Daily/Weekly)',
+    weekly: 'Weekly-Reset',
+    stopwatch: 'Stoppuhr',
     session: 'Session-Timer',
     activity: 'Aktivitäts-Status',
-    battery: 'Controller-Akku'
+    champion: 'Champion-Abdeckung',
+    battery: 'Controller-Akku',
+    vault: 'Tresor-Füllstand',
+    minidash: 'Mini-Dashboard',
+    focus: 'Fokus-Status'
   };
-  let chipOrderState = ['clock', 'session', 'activity', 'battery'];
+  let chipOrderState = ['clock', 'weekly', 'stopwatch', 'session', 'activity', 'champion', 'battery', 'vault', 'minidash', 'focus'];
 
   function renderChipOrder(config) {
     const box = qs('#overlayChipOrder');
@@ -571,7 +577,8 @@ export function initSettings({
         anchor: profile.anchor,
         monitor: profile.monitor,
         chipOrder: profile.chipOrder,
-        showItems: profile.showItems
+        showItems: profile.showItems,
+        hudScale: profile.hudScale || 'm'
       }
     });
     const widthInput = qs('#overlayWidth');
@@ -2314,7 +2321,9 @@ export function initSettings({
         anchor: current.anchor,
         monitor: current.monitor,
         chipOrder: current.chipOrder,
-        showItems: current.showItems
+        showItems: current.showItems,
+        hudScale: current.hudScale || 'm',
+        match: 'all'
       };
       const next = profiles.concat([profile]).slice(-8);
       setConfig({ overlay: { profiles: next } });

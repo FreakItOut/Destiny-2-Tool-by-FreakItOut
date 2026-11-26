@@ -67,6 +67,7 @@
       <button id="overlayLoadoutsBtn" class="icon-btn" data-icon="layers" title="Loadouts (Schnellzugriff)" aria-label="Loadouts" aria-expanded="false" aria-controls="overlayLoadoutPanel"></button>
       <button id="overlaySettingsBtn" class="icon-btn" data-icon="settings" title="Einstellungen" aria-label="Einstellungen"></button>
       <button id="overlayMoreBtn" class="overlay-action" title="Weitere Overlay-Elemente ein-/ausblenden" aria-expanded="false">Mehr</button>
+      <button id="overlayHudEditBtn" class="icon-btn" title="HUD-Layout bearbeiten" aria-label="HUD-Layout bearbeiten" aria-expanded="false">▦</button>
       <button id="overlayHideBtn" class="overlay-action" data-icon="eye" title="Overlay ausblenden">
         <span>Ausblenden</span>
       </button>
@@ -124,6 +125,43 @@
       <div id="overlayLoadoutList" class="overlay-lo-list"></div>
       <p id="overlayLoadoutHint" class="overlay-lo-hint"></p>
     </div>
+    <div id="hudEditorPanel" class="hud-editor hidden" role="dialog" aria-label="HUD-Layout">
+      <div class="hud-editor-head">
+        <strong>HUD-Layout</strong>
+        <button id="hudEditorClose" class="icon-btn" title="Schließen" aria-label="Schließen">✕</button>
+      </div>
+      <div class="hud-editor-body">
+        <div class="hud-editor-row">
+          <span>Größe</span>
+          <div class="hud-seg" id="hudScaleSeg">
+            <button type="button" data-hud-scale="s">Klein</button>
+            <button type="button" data-hud-scale="m">Normal</button>
+            <button type="button" data-hud-scale="l">Groß</button>
+            <button type="button" data-hud-scale="xl">XL</button>
+          </div>
+        </div>
+        <div id="hudChipList" class="hud-chip-list"></div>
+        <label class="hud-editor-check"><input id="hudAutoProfile" type="checkbox"> Profil automatisch nach Aktivität</label>
+        <div class="hud-editor-row">
+          <span>Profil</span>
+          <select id="hudProfileSelect"></select>
+          <button id="hudProfileApply" class="btn ghost small" type="button">Anwenden</button>
+        </div>
+        <div class="hud-editor-save">
+          <input id="hudProfileName" type="text" maxlength="30" placeholder="Profilname">
+          <select id="hudProfileMatch" aria-label="Profil-Aktivität">
+            <option value="all">Alle Aktivitäten</option>
+            <option value="pvp">PvP</option>
+            <option value="raid">Raid / Dungeon</option>
+          </select>
+          <button id="hudProfileSave" class="btn primary small" type="button">Speichern</button>
+        </div>
+        <div class="hud-editor-actions">
+          <button id="hudReset" class="btn ghost small" type="button">Zurücksetzen</button>
+          <span id="hudEditorHint" class="hud-editor-hint"></span>
+        </div>
+      </div>
+    </div>
     <div id="postGameOverlay" class="post-game-overlay hidden" role="dialog" aria-live="polite" aria-label="Nach dem Spiel">
       <div class="post-game-overlay-head">
         <strong>Nach dem Spiel</strong>
@@ -165,60 +203,6 @@
     </div>
 
     <main id="webArea" class="web-area">
-      <!-- Die frühere Webseiten-Leiste bleibt nur als unsichtbarer
-           Kompatibilitätsanker für die noch vorhandene Altlogik. -->
-      <div id="legacyBrowser" hidden>
-        <nav class="tabbar" id="tabbar" aria-label="Kategorien"></nav>
-        <div class="favorites-bar" id="favoritesBar"></div>
-        <button id="miniExitBtn" class="icon-btn"></button>
-        <button id="backBtn" class="icon-btn"></button>
-        <button id="backHistoryBtn" class="icon-btn"></button>
-        <button id="forwardBtn" class="icon-btn"></button>
-        <button id="reloadBtn" class="icon-btn"></button>
-        <button id="homeBtn" class="icon-btn"></button>
-        <button id="externalBtn" class="btn ghost"></button>
-        <button id="favoriteBtn" class="icon-btn"></button>
-        <button id="muteBtn" class="icon-btn"></button>
-        <button id="pipBtn" class="icon-btn"></button>
-        <button id="miniBtn" class="icon-btn"></button>
-        <button id="splitBtn" class="icon-btn"></button>
-        <button id="unloadOthersBtn" class="icon-btn"></button>
-        <select id="siteSelect" class="control"></select>
-        <select id="overlayCategorySelect" class="control"></select>
-        <select id="overlaySiteSelect" class="control"></select>
-        <input id="siteSearch" class="control" type="search">
-        <datalist id="siteList"></datalist>
-        <span id="siteDesc" class="site-desc"></span>
-        <span id="loadState" class="load-state"></span>
-        <input id="urlInput" class="control" type="text">
-        <button id="urlGoBtn" class="icon-btn"></button>
-        <button id="urlCopyBtn" class="icon-btn"></button>
-        <button id="urlSaveBtn" class="icon-btn"></button>
-        <button id="urlShotBtn" class="icon-btn"></button>
-        <div id="findBar" class="find-bar hidden">
-          <input id="findInput" type="text">
-          <span id="findCount" class="find-count"></span>
-          <button id="findNextBtn" class="icon-btn"></button>
-          <button id="findCloseBtn" class="icon-btn"></button>
-        </div>
-        <div id="emptyState" class="empty-state hidden">
-          <p></p>
-          <button id="emptyAddBtn" class="btn primary"></button>
-        </div>
-        <div id="webError" class="web-error hidden">
-          <h3 id="webErrorTitle"></h3>
-          <p id="webErrorText"></p>
-          <button id="webErrorRetry" class="btn primary"></button>
-          <button id="webErrorExternal" class="btn ghost"></button>
-          <button id="webErrorCopy" class="btn ghost"></button>
-        </div>
-        <div id="loadingBar" class="loading-bar hidden"></div>
-        <button id="overlayBackBtn" class="icon-btn"></button>
-        <button id="overlayForwardBtn" class="icon-btn"></button>
-        <button id="overlayReloadBtn" class="icon-btn"></button>
-        <button id="overlayHomeBtn" class="icon-btn"></button>
-      </div>
-
       <div id="dashboardPanel" class="dashboard hidden">
         <div class="dash-shell">
           <section class="dash-hero-card" id="dashHero">
@@ -255,6 +239,13 @@
                   <option value="pvp">Layout: PvP</option>
                   <option value="raid">Layout: Raid</option>
                 </select>
+                <select class="dash-profile-select" id="dashCardSize" aria-label="Kartengröße">
+                  <option value="s">Karten: Klein</option>
+                  <option value="m">Karten: Normal</option>
+                  <option value="l">Karten: Groß</option>
+                </select>
+                <input id="dashCardSearch" class="dash-card-search" type="search" placeholder="Karten filtern …" aria-label="Dashboard-Karten filtern">
+                <span id="dashCardSearchCount" class="dash-h4-meta"></span>
               </div>
             </div>
           </section>
@@ -302,6 +293,7 @@
 
           <section class="dash-card dash-wide" id="dashAnalytics">
             <h4>Aktivitäts-Analyse <span id="dashAnalyticsMeta" class="dash-h4-meta"></span>
+              <button type="button" class="btn ghost small" data-dash-analytics-png title="Analyse als PNG speichern">PNG</button>
               <button type="button" class="btn ghost small" data-dash-analytics-csv title="90-Tage-Verlauf als CSV exportieren">CSV</button>
               <button type="button" class="btn ghost small" data-dash-analytics-refresh>Neu laden</button>
             </h4>
@@ -409,6 +401,11 @@
         <div id="inventoryLoadoutList" class="inventory-loadout-list"></div>
         <div id="inventoryResult" class="inventory-result hidden" aria-live="polite"></div>
         <div id="loadoutQueueBar" class="loadout-queue-bar hidden" aria-live="polite"></div>
+        <div id="inventoryOutbox" class="inventory-outbox hidden" aria-live="polite">
+          <span id="inventoryOutboxText" class="inventory-outbox-text"></span>
+          <button id="inventoryOutboxRun" class="btn ghost small" type="button" title="Offline-Aktionen jetzt an Bungie senden">Jetzt senden</button>
+          <button id="inventoryOutboxClear" class="btn ghost small" type="button" title="Offline-Aktionen verwerfen">Verwerfen</button>
+        </div>
         <div id="inventoryBody" class="inventory-body"><div class="check-empty">Nicht geladen – „Aktualisieren“ drücken (setzt Anmeldung voraus).</div></div>
         <div class="inventory-pad-hint" aria-hidden="true">
           <span><kbd>A</kbd> Öffnen</span>

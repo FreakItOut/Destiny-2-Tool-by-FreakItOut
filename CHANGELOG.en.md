@@ -6,6 +6,39 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] – 2026-11-26
+
+### Added
+
+- **Offline outbox** – failed transfers and equips are buffered locally and
+  retried on the next connection, on refresh, or via button. A visible bar
+  shows the count and last error, with “Send now” and “Discard” actions.
+- **HUD editor in the overlay** – reorder chips with ↑/↓, hide them
+  individually, choose Small/Normal/Large/XL, save profiles (All/PvP/Raid),
+  apply them, and optionally switch automatically by detected activity.
+  “Reset” restores the default layout.
+- **Dashboard cards** – size S/M/L, a live filter across all cards with a
+  match count, and a **PNG export** for the activity analytics.
+- Version **1.7.0**.
+
+### Changed
+
+- The overlay chip order now covers every chip: reset, weekly, stopwatch,
+  session, status, champion, battery, vault, mini dashboard and focus.
+- The chip order in settings lists the same elements.
+
+### Removed
+
+- The invisible legacy web bar (`#legacyBrowser`) and its event wiring, web
+  error buttons and tray page opening. The app starts without a web container;
+  the smoke test no longer expects tabs.
+- Dead web focus/page paths in the startup flow.
+
+### Technical
+
+- Portable and setup builds now use **maximum compression** and active ASAR.
+- App feature test expanded to **83** checks, E2E to **495** steps.
+
 ## [1.6.0] – 2026-11-26
 
 ### Added

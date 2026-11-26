@@ -1,6 +1,6 @@
 {
   "name": "frakitouts-destiny-2-tool",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Destiny 2 Tool by FreakItOut – Webseiten-Overlay mit Tastatur- und Controller-Steuerung",
   "main": "electron/main.js",
   "author": "FreakItOut",
@@ -138,6 +138,8 @@
     "asarUnpack": [
       "electron/gamepad-helper/GamepadHelper-prebuilt-*.exe"
     ],
+    "compression": "maximum",
+    "asar": true,
     "win": {
       "icon": "build/icon.ico",
       "target": [

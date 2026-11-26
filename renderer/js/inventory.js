@@ -100,6 +100,10 @@ const INVENTORY_CSS = `
 .inventory-result .r-err { color: #ff6b6b; }
 .loadout-queue-bar { margin: 6px 14px 0; padding: 5px 10px; border: 1px solid var(--brand); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text); font-size: 11.5px; flex-shrink: 0; }
 .loadout-queue-bar.hidden { display: none !important; }
+.inventory-outbox { display: flex; align-items: center; gap: 8px; margin: 6px 14px 0; padding: 4px 10px; border: 1px solid #f3c66a; border-radius: 6px; background: rgba(243,198,106,0.10); color: #f3c66a; font-size: 11.5px; flex-shrink: 0; }
+.inventory-outbox.hidden { display: none !important; }
+.inventory-outbox-text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inventory-outbox .btn { color: #f3c66a; border-color: rgba(243,198,106,0.5); }
 .inventory-loadout-list { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 14px 0; flex-shrink: 0; max-height: 100px; overflow-y: auto; }
 .inv-loadout { display: flex; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid #2a3548; border-radius: 5px; font-size: 11px; }
 .inv-loadout-name { font-weight: 600; color: #e8ecf2; }
@@ -955,6 +959,8 @@ export function createInventory(ctx) {
   const loadoutList = qs('#inventoryLoadoutList');
   const resultBox = qs('#inventoryResult');
   const loadoutQueueBar = qs('#loadoutQueueBar');
+  const outboxBar = qs('#inventoryOutbox');
+  const outboxText = qs('#inventoryOutboxText');
   const tooltipEl = qs('#inventoryTooltip');
   const inventoryBtn = qs('#inventoryBtn');
   const godrollBtn = qs('#inventoryGodrollFilter');
@@ -2610,13 +2616,159 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     data.equipped[characterId] = equipped;
   }
 
+  // ---------- Offline-Ausgang (Transfers und Ausrüsten) ----------
+  // Schlägt eine Aktion wegen Netzwerk, Rate-Limit oder abgelaufener
+  // Anmeldung fehl, landet sie hier und wird beim nächsten Online-Event,
+  // beim Inventar-Refresh oder per Knopf erneut gesendet. Rein lokal –
+  // keine zusätzlichen Bungie-Aufrufe im Hintergrund.
+  const OUTBOX_KEY = 'd2tool.outbox';
+  const OUTBOX_MAX = 20;
+  let outboxRunning = false;
+
+  function readOutbox() {
+    try {
+      const list = JSON.parse(window.localStorage.getItem(OUTBOX_KEY) || '[]');
+      return Array.isArray(list) ? list.filter((entry) => entry && entry.kind) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function writeOutbox(list) {
+    try {
+      window.localStorage.setItem(OUTBOX_KEY, JSON.stringify((list || []).slice(-OUTBOX_MAX)));
+    } catch (error) {
+      // localStorage voll → Ausgang bleibt im Speicher nutzlos, aber die App läuft.
+    }
+    renderOutbox();
+    window.dispatchEvent(new CustomEvent('d2-outbox-change'));
+  }
+
+  function outboxRetryable(message) {
+    return /offline|nicht erreichbar|netzwerk|network|timeout|timed out|ECONN|ENOTFOUND|EAI_AGAIN|fetch failed|429|rate.?limit|zu viele anfragen|wartung|maintenance|502|503|504|abgelaufen|nicht angemeldet|anmeldung/i
+      .test(String(message || ''));
+  }
+
+  function outboxLabel(entry) {
+    const target = entry.kind === 'equip'
+      ? (entry.characterName ? `anlegen: ${entry.characterName}` : 'anlegen')
+      : (entry.toVault ? 'Tresor' : (entry.characterName || 'Charakter'));
+    return `${entry.itemName || 'Item'} → ${target}`;
+  }
+
+  function characterLabel(characterId) {
+    const character = ((data && data.characters) || []).find((entry) => String(entry.id) === String(characterId));
+    if (!character) return '';
+    const className = DIM.CLASS_NAMES[Number(character.classType)] || 'Hüter';
+    return `${className}${character.light ? ` ${character.light}` : ''}`;
+  }
+
+  function enqueueOutbox(entry) {
+    const list = readOutbox();
+    const key = `${entry.kind}:${entry.payload && entry.payload.itemId}:${entry.toVault ? 1 : 0}:${entry.characterId || ''}`;
+    const existing = list.find((item) => `${item.kind}:${item.payload && item.payload.itemId}:${item.toVault ? 1 : 0}:${item.characterId || ''}` === key);
+    if (existing) {
+      existing.at = Date.now();
+      existing.tries = (Number(existing.tries) || 0) + 1;
+      existing.lastError = entry.lastError || existing.lastError || '';
+    } else {
+      list.push({ ...entry, id: `ob-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, at: Date.now(), tries: 1 });
+    }
+    writeOutbox(list);
+    return list.length;
+  }
+
+  function renderOutbox() {
+    if (!outboxBar) return;
+    const list = readOutbox();
+    if (!list.length) {
+      outboxBar.classList.add('hidden');
+      if (outboxText) outboxText.textContent = '';
+      return;
+    }
+    const transfers = list.filter((entry) => entry.kind === 'transfer').length;
+    const equips = list.length - transfers;
+    const parts = [];
+    if (transfers) parts.push(`${transfers} Transfer${transfers === 1 ? '' : 's'}`);
+    if (equips) parts.push(`${equips} Ausrüsten`);
+    const lastError = list.map((entry) => entry.lastError).filter(Boolean).slice(-1)[0];
+    if (outboxText) {
+      outboxText.textContent = `Offline-Ausgang: ${list.length} Aktion${list.length === 1 ? '' : 'en'} warten (${parts.join(', ')})${lastError ? ` – ${lastError}` : ''}`;
+    }
+    outboxBar.classList.remove('hidden');
+  }
+
+  async function runOutbox(manual = false) {
+    if (outboxRunning) return;
+    const queue = readOutbox();
+    if (!queue.length) {
+      renderOutbox();
+      return;
+    }
+    if (!manual && !navigator.onLine) return;
+    outboxRunning = true;
+    const remaining = [];
+    const report = [];
+    let done = 0;
+    for (const entry of queue) {
+      let result;
+      try {
+        result = entry.kind === 'equip'
+          ? await api.bungieEquip(entry.payload)
+          : await api.bungieTransfer(entry.payload);
+      } catch (error) {
+        result = { ok: false, error: error.message || String(error) };
+      }
+      if (result && result.ok) {
+        done += 1;
+        report.push({ ok: true, text: outboxLabel(entry) });
+        continue;
+      }
+      const message = (result && result.error) || 'Aktion fehlgeschlagen.';
+      if (outboxRetryable(message)) {
+        remaining.push({ ...entry, lastError: message, tries: (Number(entry.tries) || 0) + 1 });
+      } else {
+        // Endgültig abgelehnt (z. B. Item nicht mehr vorhanden): nicht
+        // ewig wiederholen, aber sichtbar melden.
+        report.push({ ok: false, text: `${outboxLabel(entry)}: ${message}` });
+      }
+    }
+    writeOutbox(remaining);
+    outboxRunning = false;
+    if (done) {
+      await refresh(true).catch(() => {});
+      render();
+      syncToolsView();
+    }
+    if (report.length) showResult('Offline-Ausgang', report);
+    if (done || report.some((entry) => !entry.ok)) {
+      toast(
+        `Offline-Ausgang: ${done} gesendet${remaining.length ? `, ${remaining.length} warten weiter` : ''}.`,
+        remaining.length ? 'warning' : 'success',
+        3200
+      );
+    }
+  }
+
   async function doTransfer(item, toVault, characterId) {
     if (!data || !characterId) return;
-    const result = await api.bungieTransfer({
+    const payload = {
       itemHash: item.hash, itemId: item.instanceId,
       stackSize: item.instanceId ? 1 : Math.max(1, item.quantity),
       toVault, characterId, membershipType: data.membershipType
-    });
+    };
+    if (!navigator.onLine) {
+      const count = enqueueOutbox({
+        kind: 'transfer', payload, toVault, characterId,
+        characterName: characterLabel(characterId),
+        itemName: item.name || 'Item'
+      });
+      const msg = `Offline – in den Ausgang gelegt (${count} warten).`;
+      toast(msg, 'warning', 3000);
+      showResult('Transfer', [{ ok: false, text: msg }]);
+      return;
+    }
+    const result = await api.bungieTransfer(payload);
     if (result && result.ok) {
       toast(toVault ? 'Item in den Tresor gelegt.' : 'Item zum Charakter geholt.', 'success', 1600);
       hideResult();
@@ -2627,6 +2779,17 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       syncToolsView();
     } else {
       const msg = (result && result.error) || 'Übertragung fehlgeschlagen.';
+      if (outboxRetryable(msg)) {
+        const count = enqueueOutbox({
+          kind: 'transfer', payload, toVault, characterId,
+          characterName: characterLabel(characterId),
+          itemName: item.name || 'Item', lastError: msg
+        });
+        const queued = `${msg} – in den Ausgang gelegt (${count} warten).`;
+        toast(queued, 'warning', 3400);
+        showResult('Transfer', [{ ok: false, text: queued }]);
+        return;
+      }
       toast(msg, 'error', 3200);
       showResult('Transfer', [{ ok: false, text: msg }]);
     }
@@ -2634,7 +2797,19 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
 
   async function doEquip(item, characterId) {
     if (!data || !characterId) return;
-    const result = await api.bungieEquip({ itemId: item.instanceId, characterId, membershipType: data.membershipType });
+    const payload = { itemId: item.instanceId, characterId, membershipType: data.membershipType };
+    if (!navigator.onLine) {
+      const count = enqueueOutbox({
+        kind: 'equip', payload, characterId,
+        characterName: characterLabel(characterId),
+        itemName: item.name || 'Item'
+      });
+      const msg = `Offline – in den Ausgang gelegt (${count} warten).`;
+      toast(msg, 'warning', 3000);
+      showResult('Ausrüsten', [{ ok: false, text: msg }]);
+      return;
+    }
+    const result = await api.bungieEquip(payload);
     if (result && result.ok) {
       toast('Item angelegt.', 'success', 1600);
       hideResult();
@@ -2645,6 +2820,17 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       syncToolsView();
     } else {
       const msg = (result && result.error) || 'Ausrüsten fehlgeschlagen.';
+      if (outboxRetryable(msg)) {
+        const count = enqueueOutbox({
+          kind: 'equip', payload, characterId,
+          characterName: characterLabel(characterId),
+          itemName: item.name || 'Item', lastError: msg
+        });
+        const queued = `${msg} – in den Ausgang gelegt (${count} warten).`;
+        toast(queued, 'warning', 3400);
+        showResult('Ausrüsten', [{ ok: false, text: queued }]);
+        return;
+      }
       toast(msg, 'error', 3200);
       showResult('Ausrüsten', [{ ok: false, text: msg }]);
     }
@@ -7690,6 +7876,10 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       closePopup();
       try { render(); } catch (error) { if (body) body.innerHTML = `<div style="padding:20px;color:#ff6b6b">Render-Fehler: ${esc(error.message || String(error))}</div>`; }
       renderLoadouts();
+      if (navigator.onLine && readOutbox().length && !outboxRunning) {
+        // Nach erfolgreicher Verbindung/Aktualisierung den Ausgang senden.
+        setTimeout(() => { runOutbox(false).catch(() => {}); }, 600);
+      }
       try {
         renderEditorTab();
         if (drawerRoot && !drawerRoot.classList.contains('hidden')) { renderDrawer(); renderSheet(); }
@@ -9662,6 +9852,41 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       if (event.target.closest('[data-inv-result-close]')) hideResult();
     });
   }
+
+  // Offline-Ausgang: Knöpfe und automatischer Versand nach Verbindung.
+  if (outboxBar) {
+    const runBtn = qs('#inventoryOutboxRun');
+    const clearBtn = qs('#inventoryOutboxClear');
+    if (runBtn) {
+      runBtn.addEventListener('click', () => {
+        runOutbox(true).catch(() => {});
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', async () => {
+        const list = readOutbox();
+        if (!list.length) return;
+        const confirmed = typeof confirmAction === 'function'
+          ? await confirmAction({
+            title: 'Offline-Ausgang verwerfen?',
+            lines: [`${list.length} wartende Aktion${list.length === 1 ? '' : 'en'} werden gelöscht.`],
+            confirmLabel: 'Verwerfen',
+            cancelLabel: 'Behalten',
+            danger: true
+          })
+          : window.confirm('Offline-Ausgang verwerfen?');
+        if (!confirmed) return;
+        writeOutbox([]);
+        toast('Offline-Ausgang verworfen.', 'info', 2000);
+      });
+    }
+    renderOutbox();
+  }
+  window.addEventListener('online', () => {
+    renderOutbox();
+    if (readOutbox().length) runOutbox(false).catch(() => {});
+  });
+  window.addEventListener('d2-outbox-change', renderOutbox);
   if (view) {
     view.addEventListener('click', (event) => {
       if (event.target.closest('[data-inv-new-folder]') && selectedItem) {

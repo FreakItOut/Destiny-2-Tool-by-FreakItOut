@@ -41,6 +41,13 @@
             <button type="button" class="btn ghost small" data-dash-action="postmaster">📬 Poststelle</button>
             <button type="button" class="btn ghost small" data-dash-action="tools">🧭 Werkzeuge</button>
             <button type="button" class="btn ghost small" data-dash-action="refresh">↻ Daten neu laden</button>
+            <select id="dashCardSize" aria-label="Kartengröße">
+              <option value="s">Karten: Klein</option>
+              <option value="m">Karten: Normal</option>
+              <option value="l">Karten: Groß</option>
+            </select>
+            <input id="dashCardSearch" type="search" placeholder="Karten filtern …">
+            <span id="dashCardSearchCount" class="dash-h4-meta"></span>
           </div>
         </div>
       </section>
@@ -138,12 +145,18 @@
     <div id="inventoryStatus" class="inventory-status"></div>
     <div class="inventory-toolbar"></div>
     <div id="inventoryResult" class="inventory-result hidden"></div>
-    <div id="inventoryDetail" class="inventory-detail hidden"></div>
+    <div id="loadoutQueueBar" class="loadout-queue-bar hidden"></div>
+    <div id="inventoryOutbox" class="inventory-outbox hidden" aria-live="polite">
+      <span id="inventoryOutboxText" class="inventory-outbox-text"></span>
+      <button id="inventoryOutboxRun" class="btn ghost small" type="button">Jetzt senden</button>
+      <button id="inventoryOutboxClear" class="btn ghost small" type="button">Verwerfen</button>
+    </div>
     <div id="inventoryLoadoutList" class="inventory-loadout-list"></div>
     <div id="inventoryBody" class="inventory-body"></div>
     <div class="inventory-pad-hint" aria-hidden="true"><span><kbd>A</kbd> Öffnen</span><span><kbd>D-Pad</kbd> Navigieren</span></div>
     <span id="inventorySearchCount" class="inventory-search-count" aria-live="polite"></span>
     <div id="inventoryTooltip" class="hidden"></div>
+    <button id="inventoryTopBtn" class="inventory-top-btn hidden" type="button">↑</button>
   </div>
   <button id="inventoryBtn" type="button">Inventar</button>
   <div id="toasts"></div>

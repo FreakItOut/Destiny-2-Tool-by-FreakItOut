@@ -873,6 +873,52 @@ body:not(.overlay-minimal) #overlayMoreBtn { display: none !important; }
   display: none;
 }
 
+/* HUD-Layout-Editor: Chips anordnen, ausblenden, Größe und Profile. */
+.hud-editor {
+  position: absolute;
+  top: 48px;
+  right: 12px;
+  width: 340px;
+  max-height: 62vh;
+  overflow: auto;
+  background: var(--panel-bg, rgba(12, 16, 24, 0.97));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 102;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+}
+.hud-editor.hidden { display: none; }
+.hud-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); }
+.hud-editor-body { display: flex; flex-direction: column; gap: 8px; }
+.hud-editor-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.hud-editor-row > span { min-width: 44px; }
+.hud-editor-row select { flex: 1 1 auto; min-width: 0; height: 26px; }
+.hud-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.hud-seg button { height: 24px; padding: 0 8px; border: 0; border-right: 1px solid var(--line); background: rgba(255,255,255,0.04); color: var(--text); font-size: 11px; cursor: pointer; }
+.hud-seg button:last-child { border-right: 0; }
+.hud-seg button.on { background: var(--brand); color: var(--accent-contrast); }
+.hud-chip-list { display: flex; flex-direction: column; gap: 4px; }
+.hud-chip-row { display: flex; align-items: center; gap: 5px; padding: 3px 5px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,0.03); font-size: 11px; }
+.hud-chip-row.hidden-chip { opacity: 0.5; }
+.hud-chip-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-chip-row button { width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 5px; background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; font-size: 11px; line-height: 1; }
+.hud-chip-row button:disabled { opacity: 0.35; cursor: default; }
+.hud-chip-row input[type="checkbox"] { accent-color: var(--brand); }
+.hud-editor-check { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.hud-editor-save { display: flex; gap: 5px; align-items: center; }
+.hud-editor-save input { flex: 1 1 auto; min-width: 0; height: 26px; }
+.hud-editor-save select { width: 112px; height: 26px; }
+.hud-editor-actions { display: flex; align-items: center; gap: 8px; }
+.hud-editor-hint { flex: 1 1 auto; min-width: 0; font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.hud-scale-s .overlay-bar { zoom: 0.88; width: calc(100% / 0.88); }
+body.hud-scale-l .overlay-bar { zoom: 1.12; width: calc(100% / 1.12); }
+body.hud-scale-xl .overlay-bar { zoom: 1.25; width: calc(100% / 1.25); }
+body.overlay-minimal:not(.overlay-more) #overlayHudEditBtn { display: none !important; }
+
 .overlay-lo-head {
   display: flex;
   align-items: center;
@@ -3058,6 +3104,21 @@ body.inventory-open #toolbar { display: none !important; }
 .dashboard.dash-focus .dash-card[data-dash-focus="hide"] { display: none !important; }
 .dashboard .dash-card [data-dash-action="focus"].active { background: var(--accent); color: var(--accent-contrast); }
 .dash-card .btn.small { padding: 2px 8px; font-size: 11px; }
+/* Dashboard-Karten: S/M/L + Suche. */
+.dash-card-search { height: 26px; min-width: 150px; max-width: 220px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255, 255, 255, 0.04); color: var(--text); font-size: 11px; }
+.dashboard.dash-size-s .dash-shell { gap: 8px; max-width: 1500px; }
+.dashboard.dash-size-s .dash-card { padding: 8px 10px; border-radius: 8px; }
+.dashboard.dash-size-s .dash-card h4 { font-size: 10px; margin-bottom: 5px; }
+.dashboard.dash-size-s .dash-body { font-size: 11px; gap: 2px; }
+.dashboard.dash-size-s .dash-columns { gap: 8px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.dashboard.dash-size-s .dash-row { font-size: 11.5px; gap: 7px; }
+.dashboard.dash-size-l .dash-shell { gap: 16px; max-width: 1180px; }
+.dashboard.dash-size-l .dash-card { padding: 16px 18px; }
+.dashboard.dash-size-l .dash-card h4 { font-size: 12px; }
+.dashboard.dash-size-l .dash-body { font-size: 13.5px; gap: 6px; }
+.dashboard.dash-size-l .dash-row { font-size: 14px; }
+.dashboard .dash-card.dash-filtered,
+.dashboard .dash-fold.dash-filtered { display: none !important; }
 .dash-body { display: flex; flex-direction: column; gap: 4px; }
 .dash-row { display: flex; gap: 10px; align-items: center; font-size: 12.5px; }
 .dash-row strong { color: var(--accent); min-width: 52px; }

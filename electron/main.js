@@ -13872,14 +13872,35 @@ ipcMain.handle('bungie:farming', (event, payload) => fetchBungieFarmingInventory
     }
   });
 
+  // Dashboard-/Analysekarte als PNG erfassen (Renderer speichert sie).
+  ipcMain.handle('dashboard:capture', async (event, rect) => {
+    if (!win || win.isDestroyed()) return { ok: false, error: 'Fenster nicht verfügbar.' };
+    try {
+      const value = rect && typeof rect === 'object' ? rect : null;
+      const bounds = value ? {
+        x: Math.max(0, Math.floor(Number(value.x) || 0)),
+        y: Math.max(0, Math.floor(Number(value.y) || 0)),
+        width: Math.max(1, Math.ceil(Number(value.width) || 0)),
+        height: Math.max(1, Math.ceil(Number(value.height) || 0))
+      } : undefined;
+      if (bounds && (bounds.width > 8000 || bounds.height > 8000)) {
+        return { ok: false, error: 'Ungültiger Bildbereich.' };
+      }
+      const image = await win.webContents.capturePage(bounds);
+      return { ok: true, dataUrl: `data:image/png;base64,${image.toPNG().toString('base64')}` };
+    } catch (error) {
+      return { ok: false, error: error.message || String(error) };
+    }
+  });
+
   // Webseiten-Screenshot (PNG) speichern.
   ipcMain.handle('screenshot:save', async (event, dataUrl) => {
     if (!win) return { ok: false };
     const value = String(dataUrl || '');
     if (!/^data:image\/png;base64,/.test(value)) return { ok: false, error: 'Ungültige Bilddaten.' };
     const result = await dialog.showSaveDialog(win, {
-      title: 'Webseiten-Screenshot speichern',
-      defaultPath: path.join(app.getPath('documents'), `destiny2tool-screenshot-${new Date().toISOString().slice(0, 10)}.png`),
+      title: 'Bild speichern',
+      defaultPath: path.join(app.getPath('documents'), `destiny2tool-analyse-${new Date().toISOString().slice(0, 10)}.png`),
       filters: [{ name: 'PNG', extensions: ['png'] }]
     });
     if (result.canceled || !result.filePath) return { ok: false, canceled: true };
@@ -15081,7 +15102,7 @@ async function runSmoke() {
         // Es gibt nur noch die eigene App-Ansicht, keine Webseiten.
         diag.categories >= 1 &&
         diag.sites === 0 &&
-        diag.tabs >= 1 &&
+        diag.tabs === 0 &&
         diag.siteOptions === 0 &&
         uiOk &&
         overlayOk &&

@@ -6,6 +6,40 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.7.0] – 2026-11-26
+
+### Hinzugefügt
+
+- **Offline-Ausgang** – fehlgeschlagene Transfers und Ausrüstungswechsel
+  werden lokal gepuffert und nach der nächsten Verbindung, beim Aktualisieren
+  oder per Knopf erneut gesendet. Eine sichtbare Leiste zeigt Anzahl und
+  letzte Fehlermeldung; „Jetzt senden“ und „Verwerfen“ sind direkt erreichbar.
+- **HUD-Editor im Overlay** – Chips mit ↑/↓ anordnen, einzeln ausblenden,
+  Größe Klein/Normal/Groß/XL wählen, Profile (Alle/PvP/Raid) speichern,
+  anwenden und optional automatisch nach erkannter Aktivität umschalten.
+  „Zurücksetzen“ stellt das Standardlayout wieder her.
+- **Dashboard-Karten** – Größe S/M/L, Live-Filter über alle Karten mit
+  Trefferzahl sowie **PNG-Export** der Aktivitäts-Analyse.
+- Version **1.7.0**.
+
+### Geändert
+
+- Die Overlay-Chip-Reihenfolge umfasst jetzt alle Chips: Reset, Weekly,
+  Stoppuhr, Session, Status, Champion, Akku, Tresor, Mini-Dashboard und Fokus.
+- Die Chip-Reihenfolge in den Einstellungen listet dieselben Elemente.
+
+### Entfernt
+
+- Die unsichtbare Alt-Webseiten-Leiste (`#legacyBrowser`) samt ihrer
+  Event-Verdrahtung, Web-Fehlerknöpfe und Tray-Seitenöffnung. Die App startet
+  ohne Web-Container; der Smoke-Test erwartet keine Tabs mehr.
+- Tote Web-Fokus-/Seitenpfade im Startablauf.
+
+### Technik
+
+- Portable- und Setup-Build mit **maximaler Kompression** und aktivem ASAR.
+- App-Feature-Test auf **83** Prüfungen, E2E auf **495** Schritte erweitert.
+
 ## [1.6.0] – 2026-11-26
 
 ### Hinzugefügt

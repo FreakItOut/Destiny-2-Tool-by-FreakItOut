@@ -455,7 +455,7 @@ const api = {
   xurOpen: async () => { xurOverlayOpened += 1; return { ok: true, open: true }; },
   statsHudOpen: async (payload) => { statsHudPayload = payload; return { ok: true, open: true }; },
   bungieFarming: async () => { farmCalls += 1; return { ok: true, items: [...payload.backpack.c1, ...(farmExtra ? [farmExtra] : [])] }; },
-  bungieTransfer: async () => ({ ok: true }),
+  bungieTransfer: async () => transferResponse || { ok: true },
   bungieEquip: async () => ({ ok: true }),
   bungieInsertPlug: async () => { insertPlugCalls += 1; return { ok: true }; },
   bungieLock: async () => ({ ok: true }),
@@ -472,6 +472,7 @@ const api = {
 };
 let farmExtra = null;
 let farmCalls = 0;
+let transferResponse = null;
 
 let cfg = { bungie: { loadouts: [], itemSort: 'power', favs: {} }, overlay: {} };
 const setConfig = (patch) => { cfg = deepMerge(cfg, patch); };
@@ -1909,6 +1910,31 @@ async function run() {
   check('Anlegen ohne vollen Neuabruf', inventoryCalls === callsBeforeMove, `${inventoryCalls}/${callsBeforeMove}`);
   check('Item lokal angelegt', Boolean(document.querySelector('.dinv-tile.equipped[data-inv-select="i-k2"]')));
 
+  // --- Offline-Ausgang: fehlgeschlagener Transfer wird gepuffert ---
+  transferResponse = { ok: false, error: 'Netzwerk nicht erreichbar' };
+  const queueTile = document.querySelector('.dinv-tile[data-inv-select="i-arms2"][data-inv-kind="backpack"]');
+  if (queueTile) {
+    queueTile.click();
+    await wait(120);
+    document.querySelector('.inv-popup [data-inv-act="to-vault"]')?.click();
+    await wait(350);
+  }
+  let outboxStored = [];
+  try { outboxStored = JSON.parse(localStorage.getItem('d2tool.outbox') || '[]'); } catch (error) { outboxStored = []; }
+  check('Offline-Ausgang puffert fehlgeschlagenen Transfer',
+    outboxStored.length === 1 && /Netzwerk/.test(outboxStored[0].lastError || ''),
+    JSON.stringify(outboxStored));
+  check('Offline-Ausgang sichtbar',
+    Boolean(document.querySelector('#inventoryOutbox')) && !document.querySelector('#inventoryOutbox').classList.contains('hidden'));
+  check('Item bleibt bei Fehler in der Beutetasche',
+    Boolean(document.querySelector('.dinv-tile[data-inv-select="i-arms2"][data-inv-kind="backpack"]')));
+  transferResponse = null;
+  document.querySelector('#inventoryOutboxRun')?.click();
+  await wait(450);
+  let outboxAfter = [];
+  try { outboxAfter = JSON.parse(localStorage.getItem('d2tool.outbox') || '[]'); } catch (error) { outboxAfter = []; }
+  check('Offline-Ausgang sendet nach Erfolg', outboxAfter.length === 0, JSON.stringify(outboxAfter));
+
   // --- Dashboard 2.0: Kommandostand mit Prioritäten + Aktionen ---
   let dashOpenedInventory = 0;
   cfg.bungie.apiKey = 'test-key';
@@ -1984,6 +2010,35 @@ async function run() {
     `${enDict['Jäger']}/${enDict.Warlock}`);
   check('Dashboard ohne Schnellzugriff', !/Schnellzugriff/.test(dashText()));
   check('Dashboard berechnet Godroll-Priorität', /Godroll/.test(dashText()), dashText().slice(0, 220));
+
+  // --- Dashboard-Karten: Größe und Suche ---
+  const sizeSelect = dashPanel.querySelector('#dashCardSize');
+  if (sizeSelect) {
+    sizeSelect.value = 'l';
+    sizeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  check('Dashboard-Kartengröße L', dashPanel.classList.contains('dash-size-l') && cfg.dashboardCardSize === 'l', dashPanel.className);
+  const cardSearch = dashPanel.querySelector('#dashCardSearch');
+  if (cardSearch) {
+    cardSearch.value = 'Champion';
+    cardSearch.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  const championCard = dashPanel.querySelector('#dashChampions');
+  const powerCard = dashPanel.querySelector('#dashPower');
+  check('Dashboard-Kartensuche filtert',
+    Boolean(championCard) && !championCard.classList.contains('dash-filtered') &&
+    Boolean(powerCard) && powerCard.classList.contains('dash-filtered'),
+    `champ=${championCard?.className} power=${powerCard?.className}`);
+  check('Dashboard-Kartensuche zeigt Trefferzahl', /\d+\/\d+/.test(dashPanel.querySelector('#dashCardSearchCount')?.textContent || ''),
+    dashPanel.querySelector('#dashCardSearchCount')?.textContent || '');
+  if (cardSearch) {
+    cardSearch.value = '';
+    cardSearch.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  if (sizeSelect) {
+    sizeSelect.value = 'm';
+    sizeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  }
   const dashGodBtn = dashPanel && dashPanel.querySelector('[data-dash-action="godrolls"]');
   check('Dashboard-Aktion „Godrolls“ vorhanden', Boolean(dashGodBtn));
   if (dashGodBtn) dashGodBtn.click();

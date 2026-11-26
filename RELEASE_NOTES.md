@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.6.0
+# Destiny 2 Tool by FreakItOut 1.7.0
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,29 +6,33 @@
 
 ## Deutsch
 
-Version 1.6.0 bringt die Inventar-Pflege: Champion-Prüfung, Sticky-Köpfe, Nach-oben-Knopf, sichtbare Loadout-Warteschlange und CSV-Export.
+Version 1.7.0 schließt die offenen Baustellen: Offline-Ausgang, HUD-Editor,
+Dashboard-Karten in S/M/L mit Suche und PNG-Export sowie der entfernte
+Alt-Web-Rest.
 
-### Neu in 1.6.0
+### Neu in 1.7.0
 
-- **Champion-Prüfung** – `is:nochamp` und der Schnellfilter „Ohne Champion“
-  zeigen Waffen ohne erkannten Brecher; Tooltip nennt die Quelle.
-- **Sticky-Köpfe** – Hüter/Tresor bleiben beim Scrollen sichtbar.
-- **Nach-oben-Knopf** ab 400 px Scrolltiefe.
-- **Loadout-Warteschlange** – sichtbare Statusleiste mit Fortschritt und
-  übersprungenen Einträgen.
-- **CSV-Export** für den 90-Tage-Verlauf.
+- **Offline-Ausgang** – fehlgeschlagene Transfers/Ausrüstungen werden lokal
+  gepuffert und automatisch nach Verbindung oder per Knopf gesendet; die
+  Leiste zeigt Anzahl und letzten Fehler.
+- **HUD-Editor im Overlay** – Chips anordnen, ausblenden, Größe S/M/L/XL,
+  Profile für Alle/PvP/Raid inklusive automatischer Aktivitätswahl.
+- **Dashboard-Karten** – Größe S/M/L, Live-Suche mit Trefferzahl und
+  PNG-Export der Aktivitäts-Analyse.
+- **Aufgeräumt** – die unsichtbare Alt-Webseiten-Leiste und ihre Verdrahtung
+  sind entfernt; Portable/Setup nutzen maximale Kompression.
 
-### Enthalten aus 1.5.6
+### Enthalten aus 1.6.0
 
-- Fokus-Dashboard, Einfach-/Erweitert-Einstellungen, Loadout-Warteschlange
-  mit Konflikterkennung, 90-Tage-Analyse und SBOM.
+- Champion-Prüfung, Sticky-Köpfe, Nach-oben-Knopf, Loadout-Warteschlange,
+  CSV-Export, Fokus-Dashboard, Einfach-/Erweitert-Einstellungen und SBOM.
 
 ### Downloads
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.6.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.6.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.7.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.7.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -36,7 +40,7 @@ Version 1.6.0 bringt die Inventar-Pflege: Champion-Prüfung, Sticky-Köpfe, Nach
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.6.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.7.0.exe`).
 
 ### Voraussetzungen
 
@@ -69,28 +73,33 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.6.0 focuses on inventory care: Champion audit, sticky headers, back-to-top, a visible loadout queue and CSV export.
+Version 1.7.0 closes the open workstreams: offline outbox, HUD editor,
+dashboard cards in S/M/L with search and PNG export, and the removed legacy
+web shell.
 
-### New in 1.6.0
+### New in 1.7.0
 
-- **Champion audit** – `is:nochamp` and the “No Champion” quick filter show
-  weapons without a detected breaker; the tooltip names the source.
-- **Sticky headers** – Guardian/vault headers stay visible while scrolling.
-- **Back-to-top** after 400 px of scrolling.
-- **Loadout queue** – visible status bar with progress and skipped entries.
-- **CSV export** for the 90-day history.
+- **Offline outbox** – failed transfers/equips are buffered locally and sent
+  automatically after reconnect or via button; the bar shows the count and
+  last error.
+- **HUD editor in the overlay** – reorder and hide chips, size S/M/L/XL, and
+  profiles for All/PvP/Raid with automatic activity selection.
+- **Dashboard cards** – size S/M/L, live search with a match count and PNG
+  export for the activity analytics.
+- **Cleaned up** – the invisible legacy web bar and its wiring are gone;
+  portable/setup builds use maximum compression.
 
-### Included from 1.5.6
+### Included from 1.6.0
 
-- Focus dashboard, simple/advanced settings, loadout queue with conflict
-  detection, 90-day analytics and SBOM.
+- Champion audit, sticky headers, back-to-top, loadout queue, CSV export,
+  focus dashboard, simple/advanced settings and SBOM.
 
 ### Downloads
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.6.0.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.6.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.7.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.7.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -98,7 +107,7 @@ Version 1.6.0 focuses on inventory care: Champion audit, sticky headers, back-to
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.6.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.7.0.exe`).
 
 ### Requirements
 

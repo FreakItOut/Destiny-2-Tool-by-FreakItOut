@@ -150,6 +150,7 @@ const api = {
   clearAlarmSound: () => ipcRenderer.invoke('alarm:soundClear'),
   getAlarmSoundData: () => ipcRenderer.invoke('alarm:soundData'),
   saveScreenshot: (dataUrl) => ipcRenderer.invoke('screenshot:save', dataUrl),
+  captureDashboard: (rect) => ipcRenderer.invoke('dashboard:capture', rect),
   saveBuildCard: (payload) => ipcRenderer.invoke('image:saveCard', payload),
   saveSession: (siteIds) => ipcRenderer.send('session:save', siteIds),
   backupsCreate: () => ipcRenderer.invoke('backup:create'),

@@ -366,13 +366,13 @@ export function createDashboard(ctx) {
     }
     dashboardPanel.classList.remove('hidden');
     ctx.web.hide();
-    ctx.emptyState.classList.add('hidden');
+    if (ctx.emptyState) ctx.emptyState.classList.add('hidden');
     ctx.hideError();
-    ctx.loadingBar.classList.add('hidden');
-    ctx.loadState.textContent = '';
-    ctx.pageTitle.textContent = 'Dashboard';
+    if (ctx.loadingBar) ctx.loadingBar.classList.add('hidden');
+    if (ctx.loadState) ctx.loadState.textContent = '';
+    if (ctx.pageTitle) ctx.pageTitle.textContent = 'Dashboard';
     ctx.updateWindowTitle();
-    ctx.siteDesc.textContent = '';
+    if (ctx.siteDesc) ctx.siteDesc.textContent = '';
     renderDashboard();
     updateDashboardClocks();
     if (dashboardTimer) clearInterval(dashboardTimer);
@@ -1364,6 +1364,12 @@ export function createDashboard(ctx) {
 
   if (dashboardPanel) {
     dashboardPanel.addEventListener('change', (event) => {
+      const sizeSelect = event.target.closest('#dashCardSize');
+      if (sizeSelect) {
+        setConfig({ dashboardCardSize: ['s', 'm', 'l'].includes(sizeSelect.value) ? sizeSelect.value : 'm' });
+        applyDashboardCardView();
+        return;
+      }
       const preset = event.target.closest('[data-dash-preset]');
       if (preset) {
         const presets = {
@@ -1378,6 +1384,11 @@ export function createDashboard(ctx) {
         renderDashboard();
         return;
       }
+    });
+    dashboardPanel.addEventListener('input', (event) => {
+      if (!event.target.closest('#dashCardSearch')) return;
+      setConfig({ dashboardCardSearch: String(event.target.value || '').slice(0, 60) });
+      applyDashboardCardView();
     });
     dashboardPanel.addEventListener('contextmenu', (event) => {
       const card = event.target.closest('.dash-card, .dash-fold');
@@ -1410,6 +1421,10 @@ export function createDashboard(ctx) {
       }
       if (event.target.closest('[data-dash-analytics-csv]')) {
         exportAnalyticsCsv();
+        return;
+      }
+      if (event.target.closest('[data-dash-analytics-png]')) {
+        exportAnalyticsPng().catch(() => {});
         return;
       }
       if (event.target.closest('[data-dash-more]')) {
@@ -1734,6 +1749,61 @@ export function createDashboard(ctx) {
   // ------------------------------------------------------------
   // Gesamt-Render
   // ------------------------------------------------------------
+  // Karten-Suche und Größe (S/M/L) – rein visuell, keine Datenänderung.
+  function applyDashboardCardView() {
+    if (!dashboardPanel) return;
+    const size = ['s', 'm', 'l'].includes(String(getConfig().dashboardCardSize)) ? String(getConfig().dashboardCardSize) : 'm';
+    dashboardPanel.classList.remove('dash-size-s', 'dash-size-m', 'dash-size-l');
+    dashboardPanel.classList.add(`dash-size-${size}`);
+    const sizeSelect = qs('#dashCardSize');
+    if (sizeSelect) sizeSelect.value = size;
+    const query = String(getConfig().dashboardCardSearch || '').trim().toLowerCase();
+    const searchInput = qs('#dashCardSearch');
+    if (searchInput && searchInput.value !== String(getConfig().dashboardCardSearch || '')) {
+      searchInput.value = String(getConfig().dashboardCardSearch || '');
+    }
+    let visible = 0;
+    let total = 0;
+    for (const card of dashboardPanel.querySelectorAll(':scope > .dash-shell > .dash-card, :scope > .dash-shell > .dash-fold')) {
+      if (card.id === 'dashTour') continue;
+      total += 1;
+      const text = `${card.querySelector('h4, summary')?.textContent || ''} ${card.textContent || ''}`.toLowerCase();
+      const match = !query || text.includes(query);
+      card.classList.toggle('dash-filtered', !match);
+      if (match) visible += 1;
+    }
+    const count = qs('#dashCardSearchCount');
+    if (count) count.textContent = query ? `${visible}/${total}` : '';
+  }
+
+  async function exportAnalyticsPng() {
+    const card = qs('#dashAnalytics');
+    if (!card || !dashboardPanel) return;
+    try { card.scrollIntoView({ block: 'start' }); } catch (error) { /* egal */ }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const rect = card.getBoundingClientRect();
+    const x = Math.max(0, Math.floor(rect.left));
+    const y = Math.max(0, Math.floor(rect.top));
+    const width = Math.min(Math.ceil(rect.width), window.innerWidth - x);
+    const height = Math.min(Math.ceil(rect.height), window.innerHeight - y);
+    if (width < 60 || height < 60) {
+      toast('Analyse ist gerade nicht sichtbar – bitte Karte öffnen.', 'info', 2800);
+      return;
+    }
+    if (typeof ctx.api.captureDashboard !== 'function') {
+      toast('PNG-Export ist in dieser Version nicht verfügbar.', 'info', 2600);
+      return;
+    }
+    const capture = await ctx.api.captureDashboard({ x, y, width, height });
+    if (!capture || !capture.ok || !capture.dataUrl) {
+      toast((capture && capture.error) || 'PNG konnte nicht erstellt werden.', 'error', 3000);
+      return;
+    }
+    const saved = await ctx.api.saveScreenshot(capture.dataUrl);
+    if (saved && saved.ok) toast(`Analyse als PNG gespeichert: ${saved.path}`, 'success', 3600);
+    else if (!saved || !saved.canceled) toast('PNG konnte nicht gespeichert werden.', 'error', 3000);
+  }
+
   function renderDashboard() {
     const tour = qs('#dashTour');
     if (tour) tour.classList.toggle('hidden', getConfig().tourDone === true);
@@ -1808,6 +1878,7 @@ export function createDashboard(ctx) {
         });
       }
     }
+    applyDashboardCardView();
     updateDashboardClocks();
     renderHero();
     renderCharacters();

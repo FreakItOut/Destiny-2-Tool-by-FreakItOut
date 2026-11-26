@@ -62,6 +62,8 @@ let offlineReloadDone = false;
 let paletteItems = [];
 let paletteIndex = 0;
 let findDebounce = 0;
+// Der HUD-Editor darf erst nach seinen Konstanten arbeiten (Auto-Profil).
+let hudEditorReady = false;
 // Dashboard-/Checklisten- und Aktions-Buttons ebenfalls vorab
 // verankern (Interleaving durch Top-Level-Awaits möglich).
 // Die Checklisten-Elemente liegen jetzt im Checklisten-Modul
@@ -693,6 +695,7 @@ function updateActivityStatus() {
   } else {
     el.hidden = true;
   }
+  maybeApplyAutoHudProfile();
 }
 
 // Live-Aktivität aus der Bungie-API (Komponente 204) für den Status-Chip.
@@ -1472,29 +1475,277 @@ function applyOverlayVisibility() {
 }
 
 // Chips rechts in der Leiste gemäß Einstellung anordnen.
+const HUD_CHIPS = [
+  ['clock', 'Reset'],
+  ['weekly', 'Weekly'],
+  ['stopwatch', 'Stoppuhr'],
+  ['session', 'Session'],
+  ['activity', 'Status'],
+  ['champion', 'Champion'],
+  ['battery', 'Akku'],
+  ['vault', 'Tresor'],
+  ['minidash', 'Mini-Dash'],
+  ['focus', 'Fokus']
+];
+const HUD_CHIP_SELECTORS = {
+  clock: '#overlayClock',
+  weekly: '#overlayWeekly',
+  stopwatch: '#overlayStopwatch',
+  session: '#overlaySession',
+  activity: '#overlayActivity',
+  champion: '#overlayChampion',
+  battery: '#overlayBattery',
+  vault: '#overlayVault',
+  minidash: '#overlayMiniDash',
+  focus: '#overlayFocus'
+};
+const HUD_DEFAULT_ORDER = HUD_CHIPS.map(([key]) => key);
+const HUD_SCALE_LABELS = { s: 'Klein', m: 'Normal', l: 'Groß', xl: 'XL' };
+const HUD_HIDEABLE = ['clock', 'session', 'activity', 'champion', 'battery', 'focus'];
+
+function hudOverlay() {
+  if (!cfg.overlay || typeof cfg.overlay !== 'object') cfg.overlay = {};
+  return cfg.overlay;
+}
+
+function hudOrder() {
+  const raw = Array.isArray(hudOverlay().chipOrder) ? hudOverlay().chipOrder : [];
+  const order = raw.filter((key) => HUD_CHIP_SELECTORS[key]);
+  for (const key of HUD_DEFAULT_ORDER) if (!order.includes(key)) order.push(key);
+  return order;
+}
+
+function hudScale() {
+  const value = hudOverlay().hudScale;
+  return ['s', 'm', 'l', 'xl'].includes(value) ? value : 'm';
+}
+
+function applyHudScale() {
+  document.body.classList.remove('hud-scale-s', 'hud-scale-m', 'hud-scale-l', 'hud-scale-xl');
+  document.body.classList.add(`hud-scale-${hudScale()}`);
+}
+
 function applyOverlayChipOrder() {
   const bar = qs('#overlayBar');
   if (!bar) return;
-  const selectors = {
-    clock: '#overlayClock',
-    session: '#overlaySession',
-    activity: '#overlayActivity',
-    champion: '#overlayChampion',
-    battery: '#overlayBattery'
-  };
-  const order = (cfg.overlay && Array.isArray(cfg.overlay.chipOrder))
-    ? cfg.overlay.chipOrder
-    : ['clock', 'session', 'activity', 'champion', 'battery'];
-  const nodes = order.map((key) => qs(selectors[key])).filter(Boolean);
+  const nodes = hudOrder().map((key) => qs(HUD_CHIP_SELECTORS[key])).filter(Boolean);
   if (!nodes.length) return;
   for (const node of nodes) bar.appendChild(node);
-  // Stoppuhr bleibt direkt hinter dem Session-Chip, Weekly hinter Reset.
-  const stopwatch = qs('#overlayStopwatch');
-  const session = qs('#overlaySession');
-  if (stopwatch && session) session.after(stopwatch);
-  const weekly = qs('#overlayWeekly');
-  const clock = qs('#overlayClock');
-  if (weekly && clock) clock.after(weekly);
+  applyHudScale();
+}
+
+// ------------------------------------------------------------
+// HUD-Layout-Editor
+// ------------------------------------------------------------
+function hudProfiles() {
+  return Array.isArray(hudOverlay().profiles) ? hudOverlay().profiles : [];
+}
+
+function applyHudProfile(profile, options = {}) {
+  if (!profile) return;
+  const overlay = hudOverlay();
+  setConfig({
+    overlay: {
+      width: Number(profile.width) || overlay.width,
+      height: Number(profile.height) || overlay.height,
+      opacity: Number(profile.opacity) || overlay.opacity,
+      anchor: profile.anchor || overlay.anchor,
+      monitor: Number.isFinite(Number(profile.monitor)) ? Number(profile.monitor) : overlay.monitor,
+      chipOrder: Array.isArray(profile.chipOrder) ? profile.chipOrder : hudOrder(),
+      showItems: { ...(overlay.showItems || {}), ...(profile.showItems || {}) },
+      hudScale: profile.hudScale || hudScale()
+    }
+  });
+  renderHudEditor();
+  if (!options.silent) toast(`HUD-Profil „${profile.name}“ angewendet.`, 'success', 1800);
+}
+
+let lastAutoHudKey = '';
+function maybeApplyAutoHudProfile() {
+  if (!hudEditorReady) return;
+  if (hudOverlay().hudAutoProfile !== true) return;
+  const label = `${liveActivityName || ''} ${String(hudOverlay().activityStatus || '')}`.trim();
+  if (!label) return;
+  const key = label.toLowerCase();
+  if (key === lastAutoHudKey) return;
+  const match = /raid|dungeon|könig|king'?s fall|krise|root of nightmares|salvation|tiefstein|pit of heresy|duality|spire|ghost of the deep|warlord/i.test(label)
+    ? 'raid'
+    : /schmelztiegel|crucible|pvp|trials|eiserner banner|iron banner|competitive|rival|osiris/i.test(label)
+      ? 'pvp'
+      : '';
+  if (!match) return;
+  const profile = hudProfiles().find((entry) => entry.match === match)
+    || hudProfiles().find((entry) => entry.match === 'all');
+  if (!profile) return;
+  lastAutoHudKey = key;
+  applyHudProfile(profile, { silent: true });
+}
+
+function renderHudEditor() {
+  const panel = qs('#hudEditorPanel');
+  if (!panel) return;
+  for (const button of panel.querySelectorAll('[data-hud-scale]')) {
+    button.classList.toggle('on', button.dataset.hudScale === hudScale());
+  }
+  const list = qs('#hudChipList');
+  if (list) {
+    const order = hudOrder();
+    const showItems = hudOverlay().showItems || {};
+    list.innerHTML = order.map((key, index) => {
+      const label = (HUD_CHIPS.find(([chip]) => chip === key) || [key, key])[1];
+      const visible = showItems[key] !== false;
+      const toggle = HUD_HIDEABLE.includes(key)
+        ? `<input type="checkbox" data-hud-visible="${key}" ${visible ? 'checked' : ''} title="Chip anzeigen">`
+        : '';
+      return `<div class="hud-chip-row${visible ? '' : ' hidden-chip'}" data-hud-chip="${key}">
+        <span class="hud-chip-name">${escapeHtml(label)}</span>
+        ${toggle}
+        <button type="button" data-hud-move="up" data-hud-key="${key}" ${index === 0 ? 'disabled' : ''} title="Nach vorne">↑</button>
+        <button type="button" data-hud-move="down" data-hud-key="${key}" ${index === order.length - 1 ? 'disabled' : ''} title="Nach hinten">↓</button>
+      </div>`;
+    }).join('');
+  }
+  const select = qs('#hudProfileSelect');
+  if (select) {
+    const current = String(select.value || '');
+    select.innerHTML = '<option value="">Profil wählen …</option>' + hudProfiles()
+      .map((profile) => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.name)}${profile.match === 'pvp' ? ' · PvP' : profile.match === 'raid' ? ' · Raid' : ''}</option>`)
+      .join('');
+    if (current && hudProfiles().some((profile) => profile.id === current)) select.value = current;
+  }
+  const auto = qs('#hudAutoProfile');
+  if (auto) auto.checked = hudOverlay().hudAutoProfile === true;
+  const hint = qs('#hudEditorHint');
+  if (hint) hint.textContent = `${hudOrder().length} Chips · ${HUD_SCALE_LABELS[hudScale()]}`;
+}
+
+function toggleHudEditor(force) {
+  const panel = qs('#hudEditorPanel');
+  if (!panel) return;
+  const show = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !show);
+  const button = qs('#overlayHudEditBtn');
+  if (button) button.setAttribute('aria-expanded', show ? 'true' : 'false');
+  document.body.classList.toggle('hud-edit', show);
+  if (show) renderHudEditor();
+}
+
+function moveHudChip(key, direction) {
+  const order = hudOrder();
+  const index = order.indexOf(key);
+  const target = direction === 'up' ? index - 1 : index + 1;
+  if (index < 0 || target < 0 || target >= order.length) return;
+  const next = order.slice();
+  [next[index], next[target]] = [next[target], next[index]];
+  setConfig({ overlay: { chipOrder: next } });
+  renderHudEditor();
+}
+
+function saveHudProfileFromEditor() {
+  const nameInput = qs('#hudProfileName');
+  const name = String((nameInput && nameInput.value) || '').trim().slice(0, 30);
+  if (!name) {
+    toast('Bitte einen Profilnamen eingeben.', 'info', 2000);
+    nameInput?.focus();
+    return;
+  }
+  const overlay = hudOverlay();
+  const match = String(qs('#hudProfileMatch')?.value || 'all');
+  const profiles = hudProfiles().slice();
+  const profile = {
+    id: `hud-${Date.now().toString(36)}`,
+    name,
+    width: overlay.width,
+    height: overlay.height,
+    opacity: overlay.opacity,
+    anchor: overlay.anchor,
+    monitor: Number(overlay.monitor) || 0,
+    chipOrder: hudOrder(),
+    showItems: { ...(overlay.showItems || {}) },
+    hudScale: hudScale(),
+    match: ['pvp', 'raid'].includes(match) ? match : 'all'
+  };
+  const existingIndex = profiles.findIndex((entry) => String(entry.name || '').toLowerCase() === name.toLowerCase());
+  if (existingIndex >= 0) profiles[existingIndex] = profile;
+  else profiles.push(profile);
+  setConfig({ overlay: { profiles: profiles.slice(-8) } });
+  if (nameInput) nameInput.value = '';
+  renderHudEditor();
+  toast(`HUD-Profil „${name}“ gespeichert.`, 'success', 2000);
+}
+
+function resetHudLayout() {
+  const overlay = hudOverlay();
+  const showItems = { ...(overlay.showItems || {}) };
+  for (const key of HUD_HIDEABLE) showItems[key] = true;
+  setConfig({
+    overlay: {
+      chipOrder: HUD_DEFAULT_ORDER.slice(),
+      hudScale: 'm',
+      showItems
+    }
+  });
+  renderHudEditor();
+  toast('HUD-Layout zurückgesetzt.', 'success', 1800);
+}
+
+{
+  const panel = qs('#hudEditorPanel');
+  if (panel) {
+    qs('#overlayHudEditBtn')?.addEventListener('click', () => toggleHudEditor());
+    qs('#hudEditorClose')?.addEventListener('click', () => toggleHudEditor(false));
+    panel.addEventListener('click', (event) => {
+      const scaleBtn = event.target.closest('[data-hud-scale]');
+      if (scaleBtn) {
+        setConfig({ overlay: { hudScale: scaleBtn.dataset.hudScale } });
+        renderHudEditor();
+        return;
+      }
+      const moveBtn = event.target.closest('[data-hud-move]');
+      if (moveBtn) {
+        moveHudChip(String(moveBtn.dataset.hudKey || ''), String(moveBtn.dataset.hudMove || ''));
+        return;
+      }
+      if (event.target.closest('#hudProfileApply')) {
+        const id = String(qs('#hudProfileSelect')?.value || '');
+        applyHudProfile(hudProfiles().find((profile) => profile.id === id));
+        return;
+      }
+      if (event.target.closest('#hudProfileSave')) {
+        saveHudProfileFromEditor();
+        return;
+      }
+      if (event.target.closest('#hudReset')) {
+        resetHudLayout();
+      }
+    });
+    panel.addEventListener('change', (event) => {
+      const visible = event.target.closest('[data-hud-visible]');
+      if (visible) {
+        const key = String(visible.dataset.hudVisible || '');
+        setConfig({ overlay: { showItems: { [key]: visible.checked === true } } });
+        renderHudEditor();
+        return;
+      }
+      if (event.target.closest('#hudAutoProfile')) {
+        setConfig({ overlay: { hudAutoProfile: event.target.checked === true } });
+        lastAutoHudKey = '';
+        maybeApplyAutoHudProfile();
+      }
+    });
+  }
+  window.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const panelEl = qs('#hudEditorPanel');
+    if (panelEl && !panelEl.classList.contains('hidden')) {
+      event.stopPropagation();
+      toggleHudEditor(false);
+    }
+  });
+  hudEditorReady = true;
+  applyHudScale();
+  renderHudEditor();
+  maybeApplyAutoHudProfile();
 }
 
 // ------------------------------------------------------------
@@ -1893,19 +2144,8 @@ function sendSiteCatalog() {
   }
 }
 
-// Aus dem Tray gewählte Seite öffnen: bekannte Seite -> passender
-// Tab, unbekannte Adresse -> Navigation im aktiven Tab.
-api.onOpenInApp?.(({ url } = {}) => {
-  if (!url) return;
-  for (const category of categories) {
-    const site = category.sites.find((entry) => entry.url === url);
-    if (site) {
-      selectCategory(category.id, site.id);
-      return;
-    }
-  }
-  if (web.navigate(url)) toast(`Seite geöffnet.`, 'info', 1600);
-});
+// Aus dem Tray gewählte Seite öffnen: Die Webseiten-Ansicht wurde
+// entfernt; der Tray öffnet nur noch Dashboard/Inventar.
 
 initClock({
   onToday: () => dashboard.open(),
@@ -1947,6 +2187,7 @@ function applyCategoryOrder() {
 // ------------------------------------------------------------
 
 function renderTabs() {
+  if (!tabbar) return;
   tabbar.innerHTML = categories
     .map(
       (category) => `
@@ -1980,8 +2221,7 @@ function renderTabs() {
   overlayCategorySelect.innerHTML = categories
     .map((category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.name)}</option>`)
     .join('') + '<option value="__inventory__">🎒 Inventar</option>';
-  overlayCategorySelect.value = inventoryPageOpen ? '__inventory__' : current.category;
-}
+  overlayCategorySelect.value = inventoryPageOpen ? '__inventory__' : current.category;}
 
 // ------------------------------------------------------------
 // Inventar-Seite: eigener Reiter im Hauptbereich
@@ -1996,18 +2236,22 @@ function showInventoryPage() {
   if (!inventoryView || inventoryPageOpen) return;
   if (dashboard && !dashboard.hidden()) dashboard.hide();
   web.hide();
-  emptyState.classList.add('hidden');
+  if (emptyState) emptyState.classList.add('hidden');
   hideError();
-  loadingBar.classList.add('hidden');
-  loadState.textContent = '';
-  loadState.classList.remove('loading');
-  pageTitle.textContent = 'Inventar';
-  siteDesc.textContent = '';
+  if (loadingBar) loadingBar.classList.add('hidden');
+  if (loadState) {
+    loadState.textContent = '';
+    loadState.classList.remove('loading');
+  }
+  if (pageTitle) pageTitle.textContent = 'Inventar';
+  if (siteDesc) siteDesc.textContent = '';
   inventoryPageOpen = true;
   inventoryView.classList.remove('hidden');
   try { api.inventorySetOpen?.(true); } catch (error) { /* egal */ }
-  for (const button of qsa('.tab', tabbar)) {
-    button.classList.toggle('active', button.dataset.cat === '__inventory__');
+  if (tabbar) {
+    for (const button of qsa('.tab', tabbar)) {
+      button.classList.toggle('active', button.dataset.cat === '__inventory__');
+    }
   }
   updateWindowTitle();
   inventory.open();
@@ -2035,6 +2279,7 @@ function toggleInventoryPage() {
 }
 
 function syncSiteSelects() {
+  if (!siteSelect && !overlaySiteSelect) return;
   const category = currentCategory();
   const sites = category ? category.sites : [];
   const options = sites.length
@@ -2046,7 +2291,7 @@ function syncSiteSelects() {
         .join('')
     : '<option value="">Keine Seiten</option>';
 
-  for (const select of [siteSelect, overlaySiteSelect]) {
+  for (const select of [siteSelect, overlaySiteSelect].filter(Boolean)) {
     select.innerHTML = options;
     select.disabled = sites.length === 0;
     if (current.site) select.value = current.site;
@@ -2054,9 +2299,9 @@ function syncSiteSelects() {
 
   const site = currentSite();
   if (site) {
-    siteSelect.title = site.url;
-    overlaySiteSelect.title = site.url;
-    siteDesc.textContent = site.desc || '';
+    if (siteSelect) siteSelect.title = site.url;
+    if (overlaySiteSelect) overlaySiteSelect.title = site.url;
+    if (siteDesc) siteDesc.textContent = site.desc || '';
   }
 }
 
@@ -2198,9 +2443,9 @@ function selectCategory(categoryId, siteId, options = {}) {
   renderFavorites();
 
   if (site) {
-    emptyState.classList.add('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
     web.show(site);
-    pageTitle.textContent = site.name;
+    if (pageTitle) pageTitle.textContent = site.name;
   } else {
     showEmpty();
   }
@@ -2218,13 +2463,13 @@ function selectSite(siteId) {
   }
   current.site = site.id;
   dashboard.hide();
-  siteSelect.value = site.id;
-  overlaySiteSelect.value = site.id;
-  siteDesc.textContent = site.desc || '';
+  if (siteSelect) siteSelect.value = site.id;
+  if (overlaySiteSelect) overlaySiteSelect.value = site.id;
+  if (siteDesc) siteDesc.textContent = site.desc || '';
   hideError();
-  emptyState.classList.add('hidden');
+  if (emptyState) emptyState.classList.add('hidden');
   web.show(site);
-  pageTitle.textContent = site.name;
+  if (pageTitle) pageTitle.textContent = site.name;
   // Nutzungszähler für Webseiten-Vorladen erhöhen.
   trackSiteUsage(site.id);
   refreshAutoRefreshTimer();
@@ -2272,6 +2517,7 @@ setTimeout(preloadTopSites, 2000);
 
 function showEmpty() {
   web.hide();
+  if (!emptyState) return;
   emptyState.classList.remove('hidden');
   const category = currentCategory();
   const text = emptyState.querySelector('p');
@@ -2280,12 +2526,14 @@ function showEmpty() {
   } else {
     text.textContent = 'In dieser Kategorie gibt es noch keine Webseiten.';
   }
-  qs('#emptyAddBtn').classList.toggle('hidden', !(category && category.id === 'custom'));
-  siteDesc.textContent = '';
-  pageTitle.textContent = '';
-  loadState.classList.remove('loading');
-  loadState.textContent = 'Keine Seiten';
-  loadingBar.classList.add('hidden');
+  qs('#emptyAddBtn')?.classList.toggle('hidden', !(category && category.id === 'custom'));
+  if (siteDesc) siteDesc.textContent = '';
+  if (pageTitle) pageTitle.textContent = '';
+  if (loadState) {
+    loadState.classList.remove('loading');
+    loadState.textContent = 'Keine Seiten';
+  }
+  if (loadingBar) loadingBar.classList.add('hidden');
   hideError();
 }
 
@@ -2306,6 +2554,7 @@ function friendlyError(error) {
 
 function showError(error) {
   lastError = error || {};
+  if (!webError) return;
   webError.classList.remove('hidden');
   webErrorTitle.textContent = error && error.site ? `${error.site.name} ist nicht erreichbar` : 'Seite nicht erreichbar';
   webErrorText.textContent = `${friendlyError(error)}${error && error.url ? `\n${error.url}` : ''}`;
@@ -2329,7 +2578,7 @@ function showError(error) {
 }
 
 function hideError() {
-  webError.classList.add('hidden');
+  if (webError) webError.classList.add('hidden');
 }
 
 // ------------------------------------------------------------
@@ -2894,61 +3143,12 @@ function closeHelp() {
 // ------------------------------------------------------------
 // Ereignisse
 // ------------------------------------------------------------
+// Die frühere Webseiten-Leiste ist entfernt. Kategorien/Seiten haben
+// keine Oberfläche mehr; nur die App-Schalter bleiben verdrahtet.
 
-tabbar.addEventListener('keydown', (event) => {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
-  const button = event.target.closest('.tab');
-  if (button) {
-    event.preventDefault();
-    selectCategory(button.dataset.cat);
-  }
-});
-
-siteSelect.addEventListener('change', (event) => selectSite(event.target.value));
-overlaySiteSelect.addEventListener('change', (event) => selectSite(event.target.value));
-if (favoriteBtn) favoriteBtn.addEventListener('click', toggleFavorite);
-if (siteSearch) {
-  siteSearch.addEventListener('change', () => {
-    const value = siteSearch.value.trim().toLowerCase();
-    if (!value) return;
-    let found = null;
-    for (const category of categories) {
-      const site = category.sites.find((entry) => entry.name.toLowerCase() === value);
-      if (site) {
-        found = { category, site };
-        break;
-      }
-    }
-    if (!found) {
-      for (const category of categories) {
-        const site = category.sites.find((entry) => entry.name.toLowerCase().includes(value));
-        if (site) {
-          found = { category, site };
-          break;
-        }
-      }
-    }
-    if (found) {
-      selectCategory(found.category.id, found.site.id);
-      siteSearch.value = '';
-    } else {
-      toast('Keine passende Seite gefunden.', 'warning', 1600);
-    }
-  });
-}
-overlayCategorySelect.addEventListener('change', (event) => selectCategory(event.target.value));
-
-qs('#backBtn').addEventListener('click', () => web.goBack());
-qs('#forwardBtn').addEventListener('click', () => web.goForward());
-qs('#reloadBtn').addEventListener('click', () => {
-  hideError();
-  web.reload();
-});
-qs('#homeBtn').addEventListener('click', () => web.home());
-qs('#externalBtn').addEventListener('click', () => web.openExternal());
-qs('#overlayBtn').addEventListener('click', () => api.enterOverlay().catch(() => {}));
-qs('#settingsBtn').addEventListener('click', () => settings.open('overlay'));
-qs('#helpBtn').addEventListener('click', openHelp);
+if (qs('#overlayBtn')) qs('#overlayBtn').addEventListener('click', () => api.enterOverlay().catch(() => {}));
+if (qs('#settingsBtn')) qs('#settingsBtn').addEventListener('click', () => settings.open('overlay'));
+if (qs('#helpBtn')) qs('#helpBtn').addEventListener('click', openHelp);
 
 // ------------------------------------------------------------
 // Bild-in-Bild (PiP)
@@ -3049,44 +3249,22 @@ if (unloadOthersBtn) {
   });
 }
 
-qs('#overlayBackBtn').addEventListener('click', () => web.goBack());
-qs('#overlayForwardBtn').addEventListener('click', () => web.goForward());
-qs('#overlayReloadBtn').addEventListener('click', () => {
-  hideError();
-  web.reload();
-});
-qs('#overlayHomeBtn').addEventListener('click', () => web.home());
-qs('#overlayLockBtn').addEventListener('click', () => api.toggleClickThrough().catch(() => {}));
-qs('#overlaySettingsBtn').addEventListener('click', () => settings.open('overlay'));
-qs('#overlayHideBtn').addEventListener('click', () => api.hideOverlay().catch(() => {}));
-qs('#overlayExitBtn').addEventListener('click', () => api.leaveOverlay().catch(() => {}));
+if (qs('#overlayLockBtn')) qs('#overlayLockBtn').addEventListener('click', () => api.toggleClickThrough().catch(() => {}));
+if (qs('#overlaySettingsBtn')) qs('#overlaySettingsBtn').addEventListener('click', () => settings.open('overlay'));
+if (qs('#overlayHideBtn')) qs('#overlayHideBtn').addEventListener('click', () => api.hideOverlay().catch(() => {}));
+if (qs('#overlayExitBtn')) qs('#overlayExitBtn').addEventListener('click', () => api.leaveOverlay().catch(() => {}));
 
 qs('#gameLaunchBtn').addEventListener('click', async () => {
   const result = await api.launchGame();
   if (!result || !result.ok) toast((result && result.error) || 'Spiel konnte nicht gestartet werden.', 'error');
 });
 
-qs('#webErrorRetry').addEventListener('click', () => {
-  hideError();
-  web.reload();
-});
-qs('#webErrorExternal').addEventListener('click', () => {
-  web.openExternal((lastError && lastError.url) || (lastError && lastError.site && lastError.site.url));
-});
-qs('#webErrorCopy').addEventListener('click', () => {
-  const text = `${friendlyError(lastError || {})}${lastError && lastError.url ? `\n${lastError.url}` : ''}`;
-  api.copyToClipboard(text).then((result) => {
-    if (result && result.ok) toast('Fehlerdetails kopiert.', 'success', 1600);
-  });
-});
-qs('#emptyAddBtn').addEventListener('click', () => settings.open('custom'));
-
-qs('#helpCloseBtn').addEventListener('click', closeHelp);
-qs('#helpOpenSettingsBtn').addEventListener('click', () => {
+if (qs('#helpCloseBtn')) qs('#helpCloseBtn').addEventListener('click', closeHelp);
+if (qs('#helpOpenSettingsBtn')) qs('#helpOpenSettingsBtn').addEventListener('click', () => {
   closeHelp();
   settings.open('overlay');
 });
-qs('#helpOpenControllerBtn').addEventListener('click', () => {
+if (qs('#helpOpenControllerBtn')) qs('#helpOpenControllerBtn').addEventListener('click', () => {
   closeHelp();
   settings.open('controller');
 });
@@ -3733,7 +3911,7 @@ window.__D2_DIAG__ = () => ({
   categories: categories.length,
   sites: 0,
   tabs: document.querySelectorAll('.tab').length,
-  siteOptions: siteSelect.options.length,
+  siteOptions: siteSelect ? siteSelect.options.length : 0,
   customSites: (cfg.customSites || []).length,
   webviews: document.querySelectorAll('webview').length,
   overlayMode: overlayState.mode,
