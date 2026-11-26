@@ -6,6 +6,33 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.14.0] – 2026-11-27
+
+### Hinzugefügt
+
+- **Live-Badges für Offline-Ausgang und Loadout-Queue** – die lokale API
+  liefert `/key/outbox` und `/key/loadoutqueue` sowie passende SVG-Badges;
+  `/state` und `/state.txt` enthalten beide Werte. Der Renderer wird gebündelt
+  mit kurzem Cache abgefragt; ohne Fenster bleibt der letzte bekannte Wert
+  stehen (`—`, solange unbekannt). Stream-Deck-Plugin und Doku kennen die
+  neuen Keys.
+- **Installer-Upgrade-Test** – ein neuer Test kompiliert den echten
+  NSIS-Übernahme-Code in einen isolierten Mini-Installer und prüft Übernahme,
+  `config.json.bak`, Backups und „vorhandene neuere Config nicht überschreiben“.
+  Im Release läuft zusätzlich ein echtes Setup-Upgrade in einem temporären
+  Ordner; eine alte Setup-Version kann über `D2_OLD_SETUP_EXE` eingebunden
+  werden.
+
+### Geändert
+
+- **CI und Release** führen den Upgrade-Test aus; `verify` bekam einen
+  direkten Node-Schritt ohne `package.json`-Änderung.
+
+### Technik
+
+- Stream-Deck-API auf **110** Befehle erweitert, Installer-Upgrade-Test mit
+  **20** Prüfungen.
+
 ## [1.13.0] – 2026-11-27
 
 ### Hinzugefügt

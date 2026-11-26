@@ -53,6 +53,9 @@ jobs:
       - name: Installer-Datenerhalt
         run: npm run test:installer
 
+      - name: Installer-Upgrade (NSIS-Code + Migration)
+        run: node tools/installer-upgrade-test.js
+
       - name: Daten-Migration
         run: npm run test:migration
 
@@ -95,3 +98,7 @@ jobs:
       - name: Build (portable + Installer)
         if: github.event_name == 'workflow_dispatch'
         run: npm run dist
+
+      - name: Installer-Upgrade (echtes Setup)
+        if: github.event_name == 'workflow_dispatch'
+        run: node tools/installer-upgrade-test.js --real

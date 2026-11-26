@@ -47,6 +47,7 @@ const ALL = [
   { script: 'test:config', label: 'Konfiguration', timeout: 300000 },
   { script: 'test:bundle', label: 'Bundle-Budget', timeout: 120000 },
   { script: 'test:installer', label: 'Installer-Datenerhalt', timeout: 120000 },
+  { script: 'test:installer-upgrade', node: 'tools/installer-upgrade-test.js', label: 'Installer-Upgrade', timeout: 180000 },
   { script: 'test:migration', label: 'Daten-Migration', timeout: 120000 },
   { script: 'test:icons', label: 'Icon-Cache', timeout: 120000 },
   { script: 'test:secrets', label: 'Secret-Redaction', timeout: 120000 },
@@ -84,8 +85,10 @@ const startedAll = Date.now();
 
 for (const step of steps) {
   const started = Date.now();
-  process.stdout.write(`\n=== ${step.label} (npm run ${step.script}) …\n`);
-  const result = spawnSync('cmd.exe', ['/c', `npm run ${step.script}`], {
+  const direct = Boolean(step.node);
+  const invocation = direct ? `node ${step.node}` : `npm run ${step.script}`;
+  process.stdout.write(`\n=== ${step.label} (${invocation}) …\n`);
+  const result = spawnSync(direct ? process.execPath : 'cmd.exe', direct ? [step.node] : ['/c', `npm run ${step.script}`], {
     cwd: ROOT,
     encoding: 'utf8',
     timeout: step.timeout,
@@ -116,13 +119,13 @@ const report = [
   '',
   '| Schritt | Skript | Status | Dauer |',
   '|---|---|---|---|',
-  ...results.map((result) => `| ${result.label} | \`npm run ${result.script}\` | ${result.ok ? '✅' : result.timedOut ? '⏱️' : '❌'} | ${(result.ms / 1000).toFixed(1)} s |`),
+  ...results.map((result) => `| ${result.label} | ${result.node ? `\`node ${result.node}\`` : `\`npm run ${result.script}\``} | ${result.ok ? '✅' : result.timedOut ? '⏱️' : '❌'} | ${(result.ms / 1000).toFixed(1)} s |`),
   ''
 ];
 if (failed.length) {
   report.push('## Fehlschläge', '');
   for (const result of failed) {
-    report.push(`### ${result.label} (\`npm run ${result.script}\`)`, '```', tail(result.output), '```', '');
+    report.push(`### ${result.label} (${result.node ? `node ${result.node}` : `npm run ${result.script}`})`, '```', tail(result.output), '```', '');
   }
 }
 fs.writeFileSync(REPORT, report.join('\n'), 'utf8');

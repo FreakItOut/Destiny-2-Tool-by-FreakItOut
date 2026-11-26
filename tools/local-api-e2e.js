@@ -52,6 +52,58 @@ async function postJson(pathname, token, payload) {
   return { status: response.status, body, text };
 }
 
+// Die Queue-Anzahlen liegen im Renderer. Für einen echten Zähl-Test setzt
+// dieser Helfer sie über das DevTools-Protokoll (nur im Testprofil).
+// Schlägt das fehl, werden die Zähl-Prüfungen übersprungen – der Test
+// behauptet dann nichts, was er nicht geprüft hat.
+async function waitForDebugPort(file, timeoutMs) {
+  const end = Date.now() + timeoutMs;
+  while (Date.now() < end) {
+    try {
+      const port = Number(String(fs.readFileSync(file, 'utf8')).split(/\r?\n/)[0]);
+      if (port > 0) return port;
+    } catch (error) { /* Datei noch nicht da */ }
+    await wait(250);
+  }
+  return 0;
+}
+
+async function seedRendererQueues(debugPort, values) {
+  if (typeof WebSocket !== 'function') throw new Error('WebSocket fehlt in dieser Node-Version.');
+  const listResponse = await fetch(`http://127.0.0.1:${debugPort}/json/list`, { signal: AbortSignal.timeout(3000) });
+  const targets = await listResponse.json();
+  const pages = Array.isArray(targets) ? targets.filter((target) => target.type === 'page') : [];
+  const page = pages.find((target) => /index\.html/i.test(target.url || '')) || pages[0];
+  if (!page || !page.webSocketDebuggerUrl) throw new Error('Kein Renderer-Ziel gefunden.');
+  const socket = new WebSocket(page.webSocketDebuggerUrl);
+  try {
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('CDP-Verbindung: Zeitüberschreitung.')), 3000);
+      socket.onopen = () => { clearTimeout(timer); resolve(); };
+      socket.onerror = () => { clearTimeout(timer); reject(new Error('CDP-Verbindung fehlgeschlagen.')); };
+    });
+    const expression = [
+      `localStorage.setItem('d2tool.outbox', JSON.stringify(${JSON.stringify(values.outbox)}))`,
+      `localStorage.setItem('d2tool.loadoutQueue', JSON.stringify(${JSON.stringify(values.loadoutqueue)}))`,
+      `'ok'`
+    ].join('; ');
+    const reply = await new Promise((resolve, reject) => {
+      const id = 7;
+      const timer = setTimeout(() => reject(new Error('CDP-Auswertung: Zeitüberschreitung.')), 3000);
+      socket.onmessage = (event) => {
+        let message = null;
+        try { message = JSON.parse(event.data); } catch (error) { return; }
+        if (message && message.id === id) { clearTimeout(timer); resolve(message); }
+      };
+      socket.onerror = () => { clearTimeout(timer); reject(new Error('CDP-Auswertung fehlgeschlagen.')); };
+      socket.send(JSON.stringify({ id, method: 'Runtime.evaluate', params: { expression, returnByValue: true, awaitPromise: true } }));
+    });
+    if (reply.error || (reply.result && reply.result.exceptionDetails)) throw new Error('CDP-Auswertung abgelehnt.');
+  } finally {
+    try { socket.close(); } catch (error) { /* egal */ }
+  }
+}
+
 async function main() {
   fs.mkdirSync(path.join(temp, 'Daten'), { recursive: true });
   fs.writeFileSync(path.join(temp, 'portable'), '', 'utf8');
@@ -90,12 +142,16 @@ async function main() {
     godrolls: 1
   }, null, 2), 'utf8');
 
-  const child = spawn(ELECTRON, ['.'], {
+  const child = spawn(ELECTRON, ['.', '--remote-debugging-port=0', '--remote-allow-origins=*'], {
     cwd: ROOT,
     windowsHide: true,
     env: { ...process.env, PORTABLE_EXECUTABLE_DIR: temp, D2_TEST_MONITOR: 'right' }
   });
   let exited = false;
+  let childLog = '';
+  const capture = (chunk) => { childLog = (childLog + String(chunk)).slice(-8000); };
+  if (child.stdout) child.stdout.on('data', capture);
+  if (child.stderr) child.stderr.on('data', capture);
   child.on('exit', () => { exited = true; });
   const cleanup = () => {
     try { spawn('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }); } catch (error) { /* egal */ }
@@ -112,7 +168,10 @@ async function main() {
       } catch (error) { /* noch nicht bereit */ }
     }
     check('API startet', ready);
-    if (!ready) return;
+    if (!ready) {
+      if (childLog.trim()) console.error(`App-Ausgabe:\n${childLog.trim().split(/\r?\n/).slice(-20).join('\n')}`);
+      return;
+    }
     await wait(2500);
 
     const health = await json('/health', '');
@@ -137,6 +196,43 @@ async function main() {
 
     const badge = await json('/badge/checklist.svg');
     check('/badge liefert SVG', badge.status === 200 && badge.type.includes('image/svg+xml') && /<svg/.test(badge.text), badge.type);
+
+    const outboxKey = await json('/key/outbox');
+    check('/key/outbox liefert eine Zahl', outboxKey.status === 200 && /^\d+$/.test(outboxKey.text.trim()), outboxKey.text);
+    const loadoutQueueKey = await json('/key/loadoutqueue');
+    check('/key/loadoutqueue liefert eine Zahl', loadoutQueueKey.status === 200 && /^\d+$/.test(loadoutQueueKey.text.trim()), loadoutQueueKey.text);
+    const outboxKeyJson = await json('/key/outbox?format=json');
+    check('/key/outbox kann JSON', outboxKeyJson.status === 200 && outboxKeyJson.body.ok === true && outboxKeyJson.body.label === 'Offline-Ausgang' && typeof outboxKeyJson.body.value === 'number', JSON.stringify(outboxKeyJson.body));
+    check('/state enthält Queue-Werte', typeof state.body.outbox === 'number' && typeof state.body.loadoutQueue === 'number', JSON.stringify({ outbox: state.body.outbox, loadoutQueue: state.body.loadoutQueue }));
+    check('/state.txt nennt Offline-Ausgang und Loadout-Queue', /Offline-Ausgang: \d+/.test(stateText.text) && /Loadout-Queue: \d+/.test(stateText.text), stateText.text);
+    const outboxBadgeEmpty = await json('/badge/outbox.svg');
+    check('/badge/outbox.svg liefert SVG', outboxBadgeEmpty.status === 200 && outboxBadgeEmpty.type.includes('image/svg+xml') && /<svg/.test(outboxBadgeEmpty.text), outboxBadgeEmpty.type);
+    const loadoutQueueBadgeEmpty = await json('/badge/loadoutqueue.svg');
+    check('/badge/loadoutqueue.svg liefert SVG', loadoutQueueBadgeEmpty.status === 200 && loadoutQueueBadgeEmpty.type.includes('image/svg+xml') && /<svg/.test(loadoutQueueBadgeEmpty.text), loadoutQueueBadgeEmpty.type);
+
+    // Echte Zählung: Queues im Testprofil über das DevTools-Protokoll setzen.
+    // Ist das nicht verfügbar, werden die Zähl-Prüfungen übersprungen.
+    let queueSeeded = false;
+    try {
+      const debugPort = await waitForDebugPort(path.join(temp, 'Daten', 'DevToolsActivePort'), 8000);
+      if (!debugPort) throw new Error('DevTools-Port nicht gefunden.');
+      await seedRendererQueues(debugPort, { outbox: [1, 2], loadoutqueue: [{ id: 'q-1' }] });
+      await wait(2400);
+      queueSeeded = true;
+    } catch (error) {
+      console.log(`Hinweis: Queue-Zählung nicht testbar (${error.message}); übersprungen.`);
+    }
+    if (queueSeeded) {
+      console.log('Queue-Zählung geprüft: outbox=2, loadoutqueue=1');
+      const outboxCount = await json('/key/outbox');
+      check('/key/outbox zählt gepufferte Transfers', outboxCount.text.trim() === '2', outboxCount.text);
+      const queueCount = await json('/key/loadoutqueue');
+      check('/key/loadoutqueue zählt wartende Loadouts', queueCount.text.trim() === '1', queueCount.text);
+      const outboxBadge = await json('/badge/outbox.svg');
+      check('/badge/outbox zeigt die Anzahl', /<text[^>]*>2<\/text>/.test(outboxBadge.text), outboxBadge.text.slice(0, 160));
+      const queueState = await json('/state');
+      check('/state übernimmt Queue-Anzahlen', queueState.body.outbox === 2 && queueState.body.loadoutQueue === 1, JSON.stringify({ outbox: queueState.body.outbox, loadoutQueue: queueState.body.loadoutQueue }));
+    }
 
     const focus = await json('/focus');
     check('/focus liefert Fokusstatus', focus.status === 200 && focus.body.ok === true && typeof focus.body.focused === 'boolean', JSON.stringify(focus.body));

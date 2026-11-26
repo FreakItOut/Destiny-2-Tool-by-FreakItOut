@@ -6,6 +6,31 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.14.0] – 2026-11-27
+
+### Added
+
+- **Live badges for outbox and loadout queue** – the local API serves
+  `/key/outbox` and `/key/loadoutqueue` plus matching SVG badges; `/state`
+  and `/state.txt` include both values. The renderer is queried in one batch
+  with a short cache; without a window the last known value stays (`—` while
+  unknown). The Stream Deck plugin and docs cover the new keys.
+- **Installer upgrade test** – a new test compiles the real NSIS migration
+  code into an isolated mini installer and checks migration,
+  `config.json.bak`, backups and "never overwrite a newer config". The release
+  also runs a real setup upgrade in a temporary folder; an old setup version
+  can be supplied via `D2_OLD_SETUP_EXE`.
+
+### Changed
+
+- **CI and release** run the upgrade test; `verify` gained a direct Node step
+  without a `package.json` change.
+
+### Technical
+
+- Stream Deck API expanded to **110** commands, installer upgrade test with
+  **20** checks.
+
 ## [1.13.0] – 2026-11-27
 
 ### Added

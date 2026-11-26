@@ -49,13 +49,14 @@ const DEFAULT_SETTINGS = {
   autoProfile: false,
   profilePrefix: ''
 };
-const KEY_CYCLE = ['postmaster', 'vault', 'checklist', 'week', 'reset', 'xur', 'focus', 'controller', 'activity', 'game', 'godrolls', 'loadouts', 'loadout', 'nightfall', 'season', 'crafting', 'champion', 'data', 'security', 'backup', 'session', 'watch'];
+const KEY_CYCLE = ['postmaster', 'vault', 'checklist', 'week', 'reset', 'xur', 'focus', 'controller', 'activity', 'game', 'godrolls', 'loadouts', 'loadout', 'nightfall', 'season', 'crafting', 'champion', 'data', 'security', 'backup', 'session', 'watch', 'outbox', 'loadoutqueue'];
 const LABELS = {
   postmaster: 'Postfach', vault: 'Tresor', checklist: 'Checkliste', week: 'Woche',
   reset: 'Reset', weekly: 'Weekly', xur: 'Xûr', focus: 'Fokus', controller: 'Controller',
   activity: 'Aktivität', game: 'Spiel', godrolls: 'Godrolls', loadouts: 'Loadouts',
   loadout: 'Loadout', nightfall: 'Nightfall', season: 'Saison', crafting: 'Crafting',
   'xur-wishlist': 'Xûr-Wunschliste', champion: 'Champion', data: 'Daten', security: 'Sicherheit', backup: 'Backup', session: 'Session-Ziel', watch: 'Beobachtung',
+  outbox: 'Offline-Ausgang', loadoutqueue: 'Loadout-Queue',
   health: 'Verbindung'
 };
 const LABELS_EN = {
@@ -64,6 +65,7 @@ const LABELS_EN = {
   activity: 'Activity', game: 'Game', godrolls: 'Godrolls', loadouts: 'Loadouts',
   loadout: 'Loadout', nightfall: 'Nightfall', season: 'Season', crafting: 'Crafting',
   'xur-wishlist': 'Xûr wishlist', champion: 'Champion', data: 'Data', security: 'Security', backup: 'Backup', session: 'Session goal', watch: 'Watch',
+  outbox: 'Outbox', loadoutqueue: 'Loadout queue',
   health: 'Connection'
 };
 const titleState = new Map();
@@ -229,6 +231,8 @@ function statusValue(key, state) {
       return goal ? `${Number(goal.progress) || 0}/${Number(goal.target) || 1}` : 'keins';
     }
     case 'watch': return Array.isArray(state.watchlist) ? state.watchlist.length : 0;
+    case 'outbox': return state.outbox == null ? '—' : (Number.isFinite(Number(state.outbox)) ? Number(state.outbox) : '—');
+    case 'loadoutqueue': return state.loadoutQueue == null ? '—' : (Number.isFinite(Number(state.loadoutQueue)) ? Number(state.loadoutQueue) : '—');
     default: return '—';
   }
 }

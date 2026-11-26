@@ -79,6 +79,23 @@ check('Detail-Aktionen im Renderer', ['toast', 'vendor', 'collection', 'week', '
 check('Tools-Detailnavigation vorhanden', fs.readFileSync(path.join(ROOT, 'renderer', 'js', 'tools.js'), 'utf8').includes("d2-tools-detail"));
 check('Inventar bietet Missing-Loadout', fs.readFileSync(path.join(ROOT, 'renderer', 'js', 'inventory.js'), 'utf8').includes('applyLoadoutMissingById(id)'));
 
+const rendererInventory = fs.readFileSync(path.join(ROOT, 'renderer', 'js', 'inventory.js'), 'utf8');
+check('Queue-Speicherkeys stimmen mit dem Renderer überein',
+  rendererInventory.includes("'d2tool.outbox'") && rendererInventory.includes("'d2tool.loadoutQueue'") &&
+  main.includes("outbox: 'd2tool.outbox'") && main.includes("loadoutqueue: 'd2tool.loadoutQueue'"));
+check('Queue-Anzahl wird gebündelt aus dem Renderer gelesen',
+  main.includes('function refreshRendererQueues') && main.includes('executeJavaScript(rendererQueueScript()') &&
+  main.includes('function rendererQueueCount'));
+check('Queue-Cache ist kurz und ausfallsicher',
+  /RENDERER_QUEUE_TTL_MS\s*=\s*2000/.test(main) && main.includes('RENDERER_QUEUE_TIMEOUT_MS') &&
+  main.includes('rendererQueueCache.pending') && main.includes("return result(label, 0, '—', '#71819a')"));
+check('Queue-Werte stehen in /state und /state.txt',
+  main.includes("outbox: rendererQueueCount('outbox')") && main.includes("loadoutQueue: rendererQueueCount('loadoutqueue')") &&
+  main.includes("localApiKeyValue('outbox'") && main.includes("localApiKeyValue('loadoutqueue'"));
+check('Queue-Endpunkte werden vor der Ausgabe aktualisiert',
+  main.includes("url.pathname === '/state' || url.pathname === '/state.txt'") &&
+  main.includes('await refreshRendererQueues()'));
+
 if (failures) {
   console.error(`\n${failures} von ${checks} Prüfungen fehlgeschlagen.`);
   process.exit(1);

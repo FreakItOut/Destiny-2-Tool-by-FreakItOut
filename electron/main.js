@@ -2341,6 +2341,94 @@ function localApiChampionSummary(snapshot) {
   };
 }
 
+// ------------------------------------------------------------
+// Warteschlangen aus dem Renderer (Offline-Ausgang, Loadout-Queue)
+// ------------------------------------------------------------
+// Beide Listen liegen im Renderer in localStorage. Der Hauptprozess liest
+// nur die Anzahl, damit Stream-Deck-Keys und Badges sie anzeigen können.
+// Die Abfrage läuft gebündelt über executeJavaScript und wird kurz
+// zwischengespeichert, damit Polling nicht bei jeder Anfrage den
+// Renderer beschäftigt. Ohne Fenster bleibt der letzte Wert erhalten.
+const RENDERER_QUEUE_STORAGE = {
+  outbox: 'd2tool.outbox',
+  loadoutqueue: 'd2tool.loadoutQueue'
+};
+const RENDERER_QUEUE_TTL_MS = 2000;
+const RENDERER_QUEUE_TIMEOUT_MS = 1500;
+const rendererQueueCache = { at: 0, values: {}, pending: null, lastError: '' };
+
+function rendererQueueContents() {
+  if (!win || (typeof win.isDestroyed === 'function' && win.isDestroyed())) return null;
+  const contents = win.webContents;
+  if (!contents || (typeof contents.isDestroyed === 'function' && contents.isDestroyed())) return null;
+  return contents;
+}
+
+function rendererQueueScript() {
+  const keys = JSON.stringify(RENDERER_QUEUE_STORAGE);
+  return `(() => {
+    const keys = ${keys};
+    const counts = {};
+    for (const name of Object.keys(keys)) {
+      let value = null;
+      try {
+        const parsed = JSON.parse(localStorage.getItem(keys[name]) || '[]');
+        value = Array.isArray(parsed) ? parsed.length : null;
+      } catch (error) {
+        value = null;
+      }
+      counts[name] = value;
+    }
+    return counts;
+  })()`;
+}
+
+function refreshRendererQueues(force = false) {
+  const now = Date.now();
+  if (!force && now - rendererQueueCache.at < RENDERER_QUEUE_TTL_MS) {
+    return Promise.resolve(rendererQueueCache.values);
+  }
+  if (rendererQueueCache.pending) return rendererQueueCache.pending;
+  const contents = rendererQueueContents();
+  if (!contents) return Promise.resolve(null);
+  const run = contents.executeJavaScript(rendererQueueScript());
+  let timer = null;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(null), RENDERER_QUEUE_TIMEOUT_MS);
+    if (timer.unref) timer.unref();
+  });
+  rendererQueueCache.pending = Promise.race([run, timeout])
+    .then((counts) => {
+      if (counts && typeof counts === 'object') {
+        for (const name of Object.keys(RENDERER_QUEUE_STORAGE)) {
+          const count = Number(counts[name]);
+          if (Number.isFinite(count) && count >= 0) {
+            rendererQueueCache.values[name] = Math.round(count);
+          }
+        }
+        rendererQueueCache.at = Date.now();
+        rendererQueueCache.lastError = '';
+      }
+      return rendererQueueCache.values;
+    })
+    .catch((error) => {
+      rendererQueueCache.lastError = (error && error.message) || String(error);
+      return rendererQueueCache.values;
+    })
+    .finally(() => {
+      if (timer) clearTimeout(timer);
+      rendererQueueCache.pending = null;
+    });
+  return rendererQueueCache.pending;
+}
+
+function rendererQueueCount(name) {
+  const key = name === 'outbox' ? 'outbox' : name === 'loadoutqueue' ? 'loadoutqueue' : '';
+  if (!key) return null;
+  const value = rendererQueueCache.values[key];
+  return Number.isFinite(value) ? value : null;
+}
+
 function localApiState() {
   const base = localApiPayload();
   const snapshot = loadInventorySnapshot();
@@ -2416,6 +2504,8 @@ function localApiState() {
     postmaster,
     vault: (snapshot && Array.isArray(snapshot.vault)) ? snapshot.vault.length : 0,
     godrolls: Number(snapshot && snapshot.godrolls) || 0,
+    outbox: rendererQueueCount('outbox'),
+    loadoutQueue: rendererQueueCount('loadoutqueue'),
     xurActive: Boolean(xurCache.data && xurCache.data.active),
     reset: {
       dailyAt: nextDailyResetMs(),
@@ -2464,8 +2554,8 @@ function localApiKeyValue(key, options = {}) {
   const normalized = String(key || '').toLowerCase();
   const lang = options.lang === 'en' ? 'en' : 'de';
   const L = lang === 'en'
-    ? { postmaster: 'Postmaster', vault: 'Vault', checklist: 'Checklist', week: 'Week', reset: 'Reset', weekly: 'Weekly', xur: 'Xûr', focus: 'Focus', activity: 'Activity', controller: 'Controller', game: 'Game', godrolls: 'Godrolls', loadouts: 'Loadouts', version: 'Version', loadout: 'Loadout', nightfall: 'Nightfall', season: 'Season', crafting: 'Crafting', xurWishlist: 'Xûr wishlist', here: 'here', gone: 'gone', mouseThrough: 'Mouse through', overlay: 'Overlay', gameWord: 'Game', noController: 'no controller', running: 'running', off: 'off', empty: 'empty', low: 'low', medium: 'medium', full: 'full', unknown: 'unknown' }
-    : { postmaster: 'Postfach', vault: 'Tresor', checklist: 'Checkliste', week: 'Woche', reset: 'Reset', weekly: 'Weekly', xur: 'Xûr', focus: 'Fokus', activity: 'Aktivität', controller: 'Controller', game: 'Spiel', godrolls: 'Godrolls', loadouts: 'Loadouts', version: 'Version', loadout: 'Loadout', nightfall: 'Nightfall', season: 'Saison', crafting: 'Crafting', xurWishlist: 'Xûr-Wunschliste', here: 'da', gone: 'weg', mouseThrough: 'Maus durch', overlay: 'Overlay', gameWord: 'Spiel', noController: 'kein Controller', running: 'läuft', off: 'aus', empty: 'leer', low: 'niedrig', medium: 'mittel', full: 'voll', unknown: 'unbekannt' };
+    ? { postmaster: 'Postmaster', vault: 'Vault', checklist: 'Checklist', week: 'Week', reset: 'Reset', weekly: 'Weekly', xur: 'Xûr', focus: 'Focus', activity: 'Activity', controller: 'Controller', game: 'Game', godrolls: 'Godrolls', loadouts: 'Loadouts', version: 'Version', loadout: 'Loadout', nightfall: 'Nightfall', season: 'Season', crafting: 'Crafting', xurWishlist: 'Xûr wishlist', outbox: 'Outbox', loadoutqueue: 'Loadout queue', here: 'here', gone: 'gone', mouseThrough: 'Mouse through', overlay: 'Overlay', gameWord: 'Game', noController: 'no controller', running: 'running', off: 'off', empty: 'empty', low: 'low', medium: 'medium', full: 'full', unknown: 'unknown' }
+    : { postmaster: 'Postfach', vault: 'Tresor', checklist: 'Checkliste', week: 'Woche', reset: 'Reset', weekly: 'Weekly', xur: 'Xûr', focus: 'Fokus', activity: 'Aktivität', controller: 'Controller', game: 'Spiel', godrolls: 'Godrolls', loadouts: 'Loadouts', version: 'Version', loadout: 'Loadout', nightfall: 'Nightfall', season: 'Saison', crafting: 'Crafting', xurWishlist: 'Xûr-Wunschliste', outbox: 'Offline-Ausgang', loadoutqueue: 'Loadout-Queue', here: 'da', gone: 'weg', mouseThrough: 'Maus durch', overlay: 'Overlay', gameWord: 'Spiel', noController: 'kein Controller', running: 'läuft', off: 'aus', empty: 'leer', low: 'niedrig', medium: 'mittel', full: 'voll', unknown: 'unbekannt' };
   const batteryLabel = (value) => (value >= 0 && value <= 3 ? [L.empty, L.low, L.medium, L.full][value] : '');
   const warnAt = Number(options.warnAt) || 0;
   const result = (label, value, text, color) => ({ ok: true, key: normalized, label, value, text: String(text), color });
@@ -2517,6 +2607,13 @@ function localApiKeyValue(key, options = {}) {
   if (normalized === 'loadouts') {
     const count = ((config.get().bungie && config.get().bungie.loadouts) || []).length;
     return result(L.loadouts, count, count, '#9fb0c8');
+  }
+  if (normalized === 'outbox' || normalized === 'loadoutqueue') {
+    const isOutbox = normalized === 'outbox';
+    const label = isOutbox ? L.outbox : L.loadoutqueue;
+    const value = rendererQueueCount(normalized);
+    if (value == null) return result(label, 0, '—', '#71819a');
+    return result(label, value, value, value ? '#f3c66a' : '#5fe0a0');
   }
   if (normalized === 'loadout') {
     return result(L.loadout, currentLoadoutName, currentLoadoutName || '—', currentLoadoutName ? '#5fe0a0' : '#71819a');
@@ -2592,7 +2689,9 @@ function localApiStateText(lang = 'de') {
   const week = localApiKeyValue('week', { lang, state });
   const xur = localApiKeyValue('xur', { lang, state });
   const reset = localApiKeyValue('reset', { lang, state });
-  return `Overlay: ${state.overlay.visible ? (en ? 'on' : 'an') : (en ? 'off' : 'aus')} | ${focus.label}: ${focus.text} | ${postmaster.label}: ${postmaster.text} | ${vault.label}: ${vault.text} | ${week.label}: ${week.text} | ${xur.label}: ${xur.text} | ${reset.label}: ${reset.text}`;
+  const outbox = localApiKeyValue('outbox', { lang, state });
+  const loadoutQueue = localApiKeyValue('loadoutqueue', { lang, state });
+  return `Overlay: ${state.overlay.visible ? (en ? 'on' : 'an') : (en ? 'off' : 'aus')} | ${focus.label}: ${focus.text} | ${postmaster.label}: ${postmaster.text} | ${vault.label}: ${vault.text} | ${week.label}: ${week.text} | ${xur.label}: ${xur.text} | ${reset.label}: ${reset.text} | ${outbox.label}: ${outbox.text} | ${loadoutQueue.label}: ${loadoutQueue.text}`;
 }
 
 function localApiOpenApiDocument() {
@@ -3488,6 +3587,12 @@ function startLocalApi() {
       }
       if (isActionRequest) {
         res.d2Audit = { action: actionPath, tokenId: tokenId || 'anonymous', scope: tokenScope, ip };
+      }
+
+      // Stream-Deck-Werte aus dem Renderer nur für die Endpunkte lesen,
+      // die sie anzeigen. Der Cache verhindert eine Abfrage pro Poll.
+      if (url.pathname === '/state' || url.pathname === '/state.txt' || url.pathname.startsWith('/key/') || url.pathname.startsWith('/badge/')) {
+        try { await refreshRendererQueues(); } catch (error) { /* letzter Cache bleibt */ }
       }
 
       if (url.pathname === '/state.txt') {
@@ -15113,8 +15218,8 @@ async function runSmoke() {
     );
 
     // XInput-Bridge prüfen: dieselbe Meldung wie vom Hilfsprozess.
-    // Der Cursor muss sich bewegen UND sichtbar bleiben, wenn der
-    // Stick wieder zur Ruhe kommt.
+    // Der Cursor wird erst nach links aus dem Randbereich gefahren, dann
+    // nach rechts bewegt und muss nach dem Loslassen sichtbar stehen.
     enterOverlay();
     await delay(300);
     const xinputState = await win.webContents.executeJavaScript(`(async () => {
@@ -15133,15 +15238,34 @@ async function runSmoke() {
         buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })),
         axes: [ax, ay, 0, 0]
       });
-      const start = read();
-      window.__smokeSend(snapshot(0.9, 0));
-      await wait(200);
-      const moved = read();
-      // Stick loslassen: es kommt ein neuer Snapshot mit 0/0.
-      window.__smokeSend(snapshot(0, 0));
-      await wait(400);
-      const idle = read();
-      return { start, moved, idle };
+      // Der Smoke-Renderer kann im Fenstermodus laufen; dort blendet eine
+      // echte Mausbewegung oder ein Fokusverlust den Controller-Cursor aus
+      // (Produktverhalten). Für diese Messung werden solche Umgebungs-
+      // ereignisse ferngehalten, damit die Prüfung nicht vom Testrechner
+      // abhängt. Die Cursor-Prüfung selbst bleibt unverändert scharf.
+      const ignoreEnvironment = (event) => event.stopImmediatePropagation();
+      window.addEventListener('mousemove', ignoreEnvironment, true);
+      window.addEventListener('blur', ignoreEnvironment, true);
+      try {
+        // Erst mit dem Stick nach links aus dem Randbereich: In kleinen
+        // Fenstern startet der Cursor am rechten Anschlag, dann kann +0.9
+        // ihn nicht weiter nach rechts bewegen. Die Richtungsprüfung bleibt
+        // erhalten, wird aber fenstergrößenunabhängig.
+        window.__smokeSend(snapshot(-0.9, 0));
+        await wait(350);
+        const start = read();
+        window.__smokeSend(snapshot(0.9, 0));
+        await wait(300);
+        const moved = read();
+        // Stick loslassen: es kommt ein neuer Snapshot mit 0/0.
+        window.__smokeSend(snapshot(0, 0));
+        await wait(400);
+        const idle = read();
+        return { start, moved, idle };
+      } finally {
+        window.removeEventListener('mousemove', ignoreEnvironment, true);
+        window.removeEventListener('blur', ignoreEnvironment, true);
+      }
     })()`);
     const xinputOk = Boolean(
       xinputState.moved.visible === true &&

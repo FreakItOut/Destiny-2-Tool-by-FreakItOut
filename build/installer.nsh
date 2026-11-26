@@ -7,15 +7,37 @@
 
 !include "LogicLib.nsh"
 
+; Zielordner der Nutzerdaten. Im normalen Betrieb ist das immer
+; %APPDATA%\FreakItOut's Destiny 2 Tool. Für den automatisierten
+; Upgrade-Test (tools/installer-upgrade-test.js) kann ein isolierter
+; Ordner über die Umgebungsvariable D2TESTAPPDATA gesetzt werden.
+; Ohne diese Variable ändert sich nichts am Produktionsverhalten.
+;
+; Im Deinstaller-Pass (BUILD_UNINSTALLER) werden customInit/customInstall
+; nicht eingebunden. Eine globale Variable wäre dort ungenutzt und löst
+; die von electron-builder als Fehler behandelte NSIS-Warnung 6001 aus.
+!ifndef BUILD_UNINSTALLER
+  Var D2UserDataDir
+!endif
+
+!macro d2ResolveUserDataDir
+  StrCpy $D2UserDataDir "$APPDATA\FreakItOut's Destiny 2 Tool"
+  ReadEnvStr $0 "D2TESTAPPDATA"
+  ${If} $0 != ""
+    StrCpy $D2UserDataDir "$0"
+  ${EndIf}
+!macroend
+
 !macro copyOldD2Data
+  !insertmacro d2ResolveUserDataDir
   ${If} ${FileExists} "$INSTDIR\Daten\config.json"
-    CreateDirectory "$APPDATA\FreakItOut's Destiny 2 Tool"
-    ${IfNot} ${FileExists} "$APPDATA\FreakItOut's Destiny 2 Tool\config.json"
-      CopyFiles /SILENT "$INSTDIR\Daten\config.json" "$APPDATA\FreakItOut's Destiny 2 Tool"
-      CopyFiles /SILENT "$INSTDIR\Daten\config.json" "$APPDATA\FreakItOut's Destiny 2 Tool\config.json.bak"
+    CreateDirectory "$D2UserDataDir"
+    ${IfNot} ${FileExists} "$D2UserDataDir\config.json"
+      CopyFiles /SILENT "$INSTDIR\Daten\config.json" "$D2UserDataDir"
+      CopyFiles /SILENT "$INSTDIR\Daten\config.json" "$D2UserDataDir\config.json.bak"
       ${If} ${FileExists} "$INSTDIR\Daten\backups\*.*"
-        CreateDirectory "$APPDATA\FreakItOut's Destiny 2 Tool\backups"
-        CopyFiles /SILENT "$INSTDIR\Daten\backups\*.*" "$APPDATA\FreakItOut's Destiny 2 Tool\backups"
+        CreateDirectory "$D2UserDataDir\backups"
+        CopyFiles /SILENT "$INSTDIR\Daten\backups\*.*" "$D2UserDataDir\backups"
       ${EndIf}
     ${EndIf}
   ${EndIf}

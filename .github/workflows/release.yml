@@ -58,6 +58,7 @@ jobs:
           npm run test:app-features
           npm run test:bundle
           npm run test:installer
+          node tools/installer-upgrade-test.js
           npm run test:migration
           npm run test:icons
           npm run test:perf
@@ -68,6 +69,9 @@ jobs:
 
       - name: Portable-Smoke der gebauten App
         run: npm run test:package
+
+      - name: Installer-Upgrade (echtes Setup)
+        run: node tools/installer-upgrade-test.js --real
 
       - name: SBOM und Prüfsummen
         run: |

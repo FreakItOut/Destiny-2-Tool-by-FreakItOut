@@ -112,6 +112,8 @@ http://127.0.0.1:7331/action/batch?do=overlay/show,vendors:wishlist=1&token=DEIN
 /badge/postmaster.svg
 /badge/vault.svg?warnAt=1000&theme=light&size=120
 /badge/xur.svg?style=compact&label=X%C3%BBr
+/badge/outbox.svg
+/badge/loadoutqueue.svg?style=compact&theme=light
 /items?filter=godroll&limit=20
 /search?q=Gjallarhorn
 /auth/status
@@ -129,6 +131,29 @@ Event-Typen. `Last-Event-ID` wird für Replays der letzten Events unterstützt.
 
 `/openapi.json`, `/openapi.yaml` und `/commands.txt` liefern die aktuelle
 API-Beschreibung. `docs/local-api-client.js` ist ein generierter JS-Client.
+
+### Offline-Ausgang und Loadout-Queue
+
+Zwei weitere Live-Werte zeigen die Warteschlangen aus dem Tool:
+
+```text
+/key/outbox
+/key/loadoutqueue
+/badge/outbox.svg
+/badge/loadoutqueue.svg
+```
+
+`/key/outbox` zählt die gepufferten Transfers im Offline-Ausgang,
+`/key/loadoutqueue` die wartenden Loadouts. Beide Werte stehen zusätzlich
+als `outbox` und `loadoutQueue` in `/state` sowie in `/state.txt`.
+
+Die Listen liegen im Renderer (`localStorage`: `d2tool.outbox` und
+`d2tool.loadoutQueue`). Der Hauptprozess liest nur die Anzahl, gebündelt
+und mit einem Cache von 2 Sekunden. Läuft kein Fenster (z. B. während des
+Startens), liefert der Key `—` statt einer Zahl; der letzte bekannte Wert
+bleibt bis zur nächsten Abfrage erhalten. Ein Wert über 0 färbt Key und
+Badge gelb, 0 grün. Die Badges nutzen dieselben Parameter wie alle anderen
+(`lang`, `theme`, `size`, `style`, `label`).
 
 ## Fortgeschritten
 
@@ -363,8 +388,9 @@ die HTTP-API nutzt. Installation:
 Das Plugin nutzt globale Einstellungen für URL/Token, Sprache und Theme,
 abonniert `/events` (SSE) und fällt bei Problemen auf langsames Polling
 zurück. Status-Keys zeigen Postfach, Tresor, Checkliste, Xûr, Fokus,
-Controller, Nightfall, Saison und Crafting. Optional lässt sich ein
-Badge-Bild laden und direkt testen. Der Drehregler `Status wählen`
+Controller, Nightfall, Saison, Crafting, Offline-Ausgang und
+Loadout-Queue. Optional lässt sich ein Badge-Bild laden und direkt testen.
+Der Drehregler `Status wählen`
 wechselt den Status-Key; ein langer Druck kann einen zweiten API-Pfad
 auslösen. Diagnosen landen in `%TEMP%\d2tool-streamdeck.log`.
 `dist/streamdeck-profile.json` enthält eine Beispielbelegung als Blueprint.
