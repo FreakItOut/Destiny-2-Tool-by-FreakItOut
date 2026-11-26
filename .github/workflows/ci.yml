@@ -49,6 +49,7 @@ jobs:
 
       - name: Bundle-Budget
         run: npm run test:bundle
+          npm run test:perf
 
       - name: Stream-Deck-Plugin
         run: npm run test:plugin
