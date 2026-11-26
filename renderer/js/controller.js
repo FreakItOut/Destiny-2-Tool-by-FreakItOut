@@ -684,10 +684,12 @@ let lastDpadDownAt = 0;
       '.inv-dw-backdrop:not(.hidden)',
       '.modal:not(.hidden) .modal-card',
       '.modal:not(.hidden)',
-      '#inventoryView:not(.hidden)',
-      '#dashboardPanel:not(.hidden)',
       '#notesPanel:not(.hidden)'
     ];
+    // Inventar und Dashboard bewusst NICHT als eigenen Root nehmen:
+    // sonst sind Titelleiste, Toolbar und Overlay-Leiste für den
+    // Controller unerreichbar. Versteckte Panels werden in
+    // appNavCandidates ohnehin herausgefiltert.
     let root = document.body;
     for (const selector of selectors) {
       try {
@@ -766,7 +768,8 @@ let lastDpadDownAt = 0;
 
   function navigateFocus(direction) {
     const root = appNavRoot(true);
-    if (root === document.body) return false;
+    // document.body ist inzwischen der normale Root für Inventar und
+    // Dashboard; versteckte Bereiche filtert appNavCandidates heraus.
     // Sofort den Pad-Modus aktivieren: dadurch werden alle Inventar-
     // Zeilen gelayoutet (content-visibility) und der Fokusring sichtbar.
     showCursor();

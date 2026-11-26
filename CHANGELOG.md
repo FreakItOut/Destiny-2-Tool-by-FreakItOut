@@ -6,6 +6,18 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.3] – 2026-11-26
+
+### Behoben
+
+- **Controller erreichte nicht alle Inventar-Elemente** – die Fokusnavigation
+  war auf `#inventoryView` begrenzt; Titelleiste, App-Leiste und Overlay-Leiste
+  lagen außerhalb. Jetzt navigiert das D-Pad über die gesamte sichtbare
+  Oberfläche, während versteckte Panels weiterhin gefiltert werden.
+- **E2E** prüft zusätzlich, dass Off-Screen-Kacheln im Controller-Modus
+  fokussierbar bleiben.
+- Version **1.5.3**.
+
 ## [1.5.2] – 2026-11-26
 
 ### Behoben

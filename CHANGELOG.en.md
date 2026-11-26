@@ -6,6 +6,18 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.3] – 2026-11-26
+
+### Fixed
+
+- **Controller could not reach all inventory elements** – focus navigation was
+  limited to `#inventoryView`; title bar, app bar and overlay bar were outside.
+  The D-pad now navigates the entire visible interface while hidden panels stay
+  filtered out.
+- **E2E** additionally checks that off-screen tiles remain focusable in
+  controller mode.
+- Version **1.5.3**.
+
 ## [1.5.2] – 2026-11-26
 
 ### Fixed

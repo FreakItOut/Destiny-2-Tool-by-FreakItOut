@@ -2169,6 +2169,29 @@ async function run() {
     check('TV-Inventar nutzt die Zellbreite', false, String((error && error.message) || error));
   }
 
+  // --- Controller: auch Off-Screen-Kacheln müssen erreichbar sein ------
+  try {
+    const tabEl = document.querySelector('.dinv-tab.on');
+    const tabBack = tabEl ? tabEl.dataset.tab : 'tools';
+    document.body.classList.add('pad-active');
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
+    await wait(220);
+    const tiles = [...document.querySelectorAll('#inventoryBody .dinv-tile')];
+    const probe = tiles[Math.min(50, Math.max(0, tiles.length - 1))];
+    const rect = probe ? probe.getBoundingClientRect() : { width: 0, height: 0 };
+    const wrap = probe ? probe.closest('.dinv-tile-wrap') : null;
+    const visibility = wrap ? getComputedStyle(wrap).contentVisibility : '';
+    check('Controller erreicht Off-Screen-Kacheln',
+      Boolean(probe) && rect.width > 3 && rect.height > 3 && visibility === 'visible',
+      `${Math.round(rect.width)}x${Math.round(rect.height)} · ${visibility}`);
+    document.body.classList.remove('pad-active');
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: tabBack } }));
+    await wait(160);
+  } catch (error) {
+    document.body.classList.remove('pad-active');
+    check('Controller erreicht Off-Screen-Kacheln', false, String((error && error.message) || error));
+  }
+
   // --- Overlay-Inventar: kompakt und ohne doppelte Leisten --------------
   try {
     const tabEl = document.querySelector('.dinv-tab.on');

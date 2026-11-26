@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.5.2
+# Destiny 2 Tool by FreakItOut 1.5.3
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,19 +6,19 @@
 
 ## Deutsch
 
-Version 1.5.2 macht das Inventar im Overlay nutzbar: opak, kompakt, ohne doppelte Leisten und mit deutlich mehr Items pro Zeile.
+Version 1.5.3 behebt die Controller-Navigation: Das D-Pad erreicht im Inventar jetzt auch Titelleiste, App-Leiste und Overlay-Leiste.
 
-### Neu in 1.5.2
+### Neu in 1.5.3
 
-- **Overlay-Inventar opak und kompakt** – eigene Titel-/Status-/Legendenzeilen
-  entfallen im Overlay, die Kopfzeile wird kleiner und die Overlay-Leiste
-  schrumpft auf die nötigen Aktionen.
-- **Mehr Items sichtbar** – 64-px-Kacheln mit `auto-fill` über die volle
-  Zellbreite; die Poststelle rendert nur belegte Slots plus Puffer.
-- **TV-Modus bleibt verbessert** – 76-px-Kacheln und volle Zellbreite.
-- **E2E-Tests** prüfen TV- und Overlay-Spalten, Kachelgröße und Leisten.
+- **Controller erreicht alle sichtbaren Elemente** – die Fokusnavigation ist
+  nicht mehr auf das Inventar-Panel begrenzt; Titelleiste, App-Leiste und
+  Overlay-Leiste sind per D-Pad erreichbar.
+- **Versteckte Panels bleiben ausgeschlossen** – Dashboard, Dialoge und
+  eingeklappte Bereiche werden weiterhin korrekt gefiltert.
+- **E2E** prüft fokussierbare Off-Screen-Kacheln.
+- **Enthalten:** Overlay-Inventar und TV-Dichte aus 1.5.2.
 
-### Enthalten aus 1.5.1
+### Enthalten aus 1.5.2
 
 - Fokus-Dashboard, Einfach-/Erweitert-Einstellungen, Loadout-Warteschlange
   mit Konflikterkennung, 90-Tage-Analyse und SBOM.
@@ -27,8 +27,8 @@ Version 1.5.2 macht das Inventar im Overlay nutzbar: opak, kompakt, ohne doppelt
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.2.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.2.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.3.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.3.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -36,7 +36,7 @@ Version 1.5.2 macht das Inventar im Overlay nutzbar: opak, kompakt, ohne doppelt
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.5.2.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.3.exe`).
 
 ### Voraussetzungen
 
@@ -69,20 +69,20 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.5.2 makes the overlay inventory usable: opaque, compact, without
-duplicate bars and with many more items per row.
+Version 1.5.3 fixes controller navigation: the D-pad now also reaches the
+title bar, app bar and overlay bar in the inventory.
 
-### New in 1.5.2
+### New in 1.5.3
 
-- **Opaque, compact overlay inventory** – its own title/status/legend rows
-  are hidden in the overlay, the header is smaller and the overlay bar shrinks
-  to the necessary actions.
-- **More items visible** – 64 px tiles with `auto-fill` across the full cell
-  width; the postmaster renders only occupied slots plus a buffer.
-- **TV mode remains improved** – 76 px tiles and full cell width.
-- **E2E tests** check TV and overlay columns, tile size and bars.
+- **Controller reaches all visible elements** – focus navigation is no longer
+  limited to the inventory panel; title bar, app bar and overlay bar are
+  reachable with the D-pad.
+- **Hidden panels stay excluded** – dashboard, dialogs and collapsed areas
+  remain filtered out.
+- **E2E** checks focusable off-screen tiles.
+- **Included:** overlay inventory and TV density from 1.5.2.
 
-### Included from 1.5.1
+### Included from 1.5.2
 
 - Focus dashboard, simple/advanced settings, loadout queue with conflict
   detection, 90-day analytics and SBOM.
@@ -91,8 +91,8 @@ duplicate bars and with many more items per row.
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.2.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.2.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.3.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.3.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -100,7 +100,7 @@ duplicate bars and with many more items per row.
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.5.2.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.3.exe`).
 
 ### Requirements
 

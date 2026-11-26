@@ -121,6 +121,8 @@ check('Einstellungen haben Einfach/Erweitert',
   index.includes('settingsAdvancedBtn') && settings.includes('settings-simple') && index.includes('data-settings-advanced'));
 check('Loadout-Warteschlange und Konflikte',
   inventory.includes('queueLoadout') && inventory.includes('loadoutConflicts') && inventory.includes('data-loadout-queue'));
+check('Controller erreicht Titelleiste und Toolbar im Inventar',
+  controller.includes('Inventar und Dashboard bewusst NICHT') && !controller.includes("'#inventoryView:not(.hidden)'"));
 check('SBOM-Werkzeug vorhanden', fs.existsSync(path.join(ROOT, 'tools', 'make-sbom.js')));
 check('Destiny-2-Beenden vollständig entfernt', !/quitGame|game:quit|overlayQuitGameBtn/.test(app + index + main + preload + config + settings));
 check('Händler-Verfügbarkeit erklärt', tools.includes('dim-vendors-hint') && tools.includes('Xûr erscheint Freitag bis Dienstag'));
