@@ -5,10 +5,17 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: windows-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,6 +37,28 @@ jobs:
 
       - name: Übersetzungen prüfen
         run: npm run test:i18n
+
+      - name: Lint
+        run: npm run test:lint
+
+      - name: App-Features
+        run: npm run test:app-features
+
+      - name: Bundle-Budget
+        run: npm run test:bundle
+
+      - name: Stream-Deck-Plugin
+        run: npm run test:plugin
+
+      - name: SBOM erzeugen
+        run: npm run sbom
+
+      - name: SBOM hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: dist/sbom.cdx.json
+          if-no-files-found: error
 
       - name: OAuth-Tests (Fake-Bungie)
         run: npm run test:oauth
