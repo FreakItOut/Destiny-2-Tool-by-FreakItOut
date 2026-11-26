@@ -1,6 +1,9 @@
 import { BUTTONS } from './controller.js';
 import { icon } from './icons.js';
 import { qs, qsa, escapeHtml, formatAccelerator, toast, modalOpen, modalClose, clamp, debounce } from './ui.js';
+import { BINDING_ACTIONS } from './settings-bindings.js';
+
+export { BINDING_ACTIONS };
 
 const DEFAULT_HOTKEY = 'Alt+D';
 const DEFAULT_CLICK_THROUGH_HOTKEY = 'Alt+Shift+D';
@@ -21,25 +24,8 @@ async function copySensitive(text, message) {
   }
 }
 
-// Belegungs-Tabelle (Aktion -> Taste). Exportiert, damit die
-// Tasten-Legende (HUD) im Hauptfenster und das Cheatsheet in der
-// Hilfe dieselbe Liste verwenden.
-export const BINDING_ACTIONS = [
-  { key: 'click', label: 'Klicken' },
-  { key: 'back', label: 'Zurück' },
-  { key: 'reload', label: 'Seite neu laden' },
-  { key: 'precision', label: 'Präzisionsmodus' },
-  { key: 'categoryPrev', label: 'Kategorie zurück' },
-  { key: 'categoryNext', label: 'Kategorie weiter' },
-  { key: 'sitePrev', label: 'Webseite zurück' },
-  { key: 'siteNext', label: 'Webseite weiter' },
-  { key: 'settings', label: 'Einstellungen' },
-  { key: 'hide', label: 'Overlay ausblenden' },
-  { key: 'notes', label: 'Notizen öffnen' },
-  { key: 'pip', label: 'Mini-Fenster (PiP)' },
-  { key: 'unloadOthers', label: 'Andere Seiten entladen' },
-  { key: 'hud', label: 'Tasten-Legende ein-/aus' }
-];
+// Belegungs-Tabelle (Aktion -> Taste) liegt in settings-bindings.js,
+// damit app.js sie ohne den großen Einstellungs-Code laden kann.
 
 const QUICK_MENU_ACTIONS = [
   { key: 'to-vault', label: 'Tresor' },
@@ -371,7 +357,8 @@ export function initSettings({
     qs('#gamepadSpeedValue').textContent = String(config.gamepad.speed);
     qs('#gamepadDeadzoneValue').textContent = `${Math.round(config.gamepad.deadzone * 100)} %`;
     qs('#gamepadTriggerThresholdValue').textContent = `${Math.round((Number(config.gamepad.triggerThreshold) || 0.35) * 100)} %`;
-    qs('#webZoomValue').textContent = `${Math.round(config.web.zoom * 100)} %`;
+    const webZoomValueText = qs('#webZoomValue');
+    if (webZoomValueText) webZoomValueText.textContent = `${Math.round(config.web.zoom * 100)} %`;
     qs('#uiScaleValue').textContent = `${Math.round((Number(config.appearance && config.appearance.uiScale) || 1) * 100)} %`;
   const colorblind = qs('#colorblindMode');
   if (colorblind) colorblind.checked = Boolean(config.appearance && config.appearance.colorblind);
@@ -578,7 +565,8 @@ export function initSettings({
         monitor: profile.monitor,
         chipOrder: profile.chipOrder,
         showItems: profile.showItems,
-        hudScale: profile.hudScale || 'm'
+        hudScale: profile.hudScale || 'm',
+        chipStyles: profile.chipStyles || {}
       }
     });
     const widthInput = qs('#overlayWidth');
@@ -671,12 +659,15 @@ export function initSettings({
     }
     qs('#gamepadXinput').checked = config.gamepad.xinput !== false;
     qs('#gamepadStealFocus').checked = config.gamepad.stealFocus !== false;
-    qs('#webKeepAlive').value = String(config.web.keepAlive);
-  const idleSelect = qs('#webIdleUnload');
-  if (idleSelect) idleSelect.value = String(Number(config.web && config.web.idleUnloadMinutes) || 0);
-    qs('#webZoom').value = Math.round(config.web.zoom * 100);
-    qs('#webDark').checked = config.web.dark !== false;
-    qs('#webReaderMode').checked = config.web.readerMode === true || config.behavior.readerMode === true;
+    const webKeepAliveInput = qs('#webKeepAlive');
+    if (webKeepAliveInput) {
+      webKeepAliveInput.value = String(config.web.keepAlive);
+      const idleSelect = qs('#webIdleUnload');
+      if (idleSelect) idleSelect.value = String(Number(config.web && config.web.idleUnloadMinutes) || 0);
+      qs('#webZoom').value = Math.round(config.web.zoom * 100);
+      qs('#webDark').checked = config.web.dark !== false;
+      qs('#webReaderMode').checked = config.web.readerMode === true || config.behavior.readerMode === true;
+    }
     qs('#uiScale').value = Math.round((Number(config.appearance && config.appearance.uiScale) || 1) * 100);
   const fontScaleInput = qs('#fontScale');
   if (fontScaleInput) fontScaleInput.value = Math.round((Number(config.appearance && config.appearance.fontScale) || 1) * 100);
@@ -815,6 +806,7 @@ export function initSettings({
   }
 
   function refreshCustomCategories() {
+    if (!customCategory) return;
     const categories = getCategories();
     const previous = customCategory.value;
     customCategory.innerHTML = categories
@@ -829,6 +821,7 @@ export function initSettings({
   let editingCustomId = null;
 
   function renderCustomList() {
+    if (!customList) return;
     const config = cfg();
     const categories = getCategories();
     const sites = Array.isArray(config.customSites) ? config.customSites : [];
@@ -893,7 +886,7 @@ export function initSettings({
     toast('Eigene Seite aktualisiert.', 'success', 1600);
   }
 
-  customList.addEventListener('click', (event) => {
+  customList?.addEventListener('click', (event) => {
     const editButton = event.target.closest('[data-custom-edit]');
     if (editButton) {
       editingCustomId = editButton.dataset.customEdit;
@@ -1020,7 +1013,8 @@ export function initSettings({
     qs('#aboutElectron').textContent = appInfo ? appInfo.electron : '—';
     qs('#aboutChrome').textContent = appInfo ? appInfo.chrome : '—';
     updateAboutHotkeys();
-    qs('#webInfo').textContent = `Aktuell geladene Seiten: ${web ? web.count : 0}`;
+    const webInfo = qs('#webInfo');
+    if (webInfo) webInfo.textContent = `Aktuell geladene Seiten: ${web ? web.count : 0}`;
   }
 
   async function refresh() {
@@ -1197,6 +1191,7 @@ export function initSettings({
   }
 
   function addCustomSite() {
+    if (!qs('#customName') || !qs('#customUrl') || !customCategory) return;
     const name = qs('#customName').value.trim();
     const url = normalizeUrl(qs('#customUrl').value);
     const category = customCategory.value || 'custom';
@@ -1595,7 +1590,7 @@ export function initSettings({
     toast('Controller-Kombo zurückgesetzt: L3 + R3.', 'success');
   });
 
-  qs('#webKeepAlive').addEventListener('change', (event) => setConfig({ web: { keepAlive: Number(event.target.value) } }));
+  qs('#webKeepAlive')?.addEventListener('change', (event) => setConfig({ web: { keepAlive: Number(event.target.value) } }));
   const idleUnloadSelect = qs('#webIdleUnload');
   if (idleUnloadSelect) {
     idleUnloadSelect.addEventListener('change', (event) => setConfig({ web: { idleUnloadMinutes: Number(event.target.value) || 0 } }));
@@ -1616,24 +1611,26 @@ export function initSettings({
       }).catch((error) => { list.textContent = error.message || String(error); });
     });
   }
-  qs('#webZoom').addEventListener('input', (event) => {
-    qs('#webZoomValue').textContent = `${event.target.value} %`;
+  qs('#webZoom')?.addEventListener('input', (event) => {
+    const zoomValue = qs('#webZoomValue');
+    if (zoomValue) zoomValue.textContent = `${event.target.value} %`;
     setConfig({ web: { zoom: Number(event.target.value) / 100 } });
     if (web) web.applyZoom();
   });
-  qs('#webDark').addEventListener('change', (event) => setConfig({ web: { dark: event.target.checked } }));
-  qs('#webReaderMode').addEventListener('change', (event) => {
+  qs('#webDark')?.addEventListener('change', (event) => setConfig({ web: { dark: event.target.checked } }));
+  qs('#webReaderMode')?.addEventListener('change', (event) => {
     setConfig({ web: { readerMode: event.target.checked }, behavior: { readerMode: event.target.checked } });
     if (web && web.applyReaderMode) web.applyReaderMode();
   });
-  qs('#unloadAllBtn').addEventListener('click', () => {
+  qs('#unloadAllBtn')?.addEventListener('click', () => {
     if (!web) return;
     web.unloadAll();
     if (onReloadCurrentSite) onReloadCurrentSite();
     toast('Alle Webseiten entladen.', 'info');
-    qs('#webInfo').textContent = 'Aktuell geladene Seiten: 0';
+    const webInfo = qs('#webInfo');
+    if (webInfo) webInfo.textContent = 'Aktuell geladene Seiten: 0';
   });
-  qs('#clearWebDataBtn').addEventListener('click', async () => {
+  qs('#clearWebDataBtn')?.addEventListener('click', async () => {
     if (!window.confirm('Cookies und Anmeldungen aller Webseiten löschen? Das Tool selbst bleibt unberührt.')) return;
     const result = await api.clearWebData();
     if (!result || !result.ok) {
@@ -1645,11 +1642,11 @@ export function initSettings({
     toast('Website-Daten gelöscht.', 'success');
   });
 
-  qs('#customAddBtn').addEventListener('click', addCustomSite);
-  qs('#customName').addEventListener('keydown', (event) => {
+  qs('#customAddBtn')?.addEventListener('click', addCustomSite);
+  qs('#customName')?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') addCustomSite();
   });
-  qs('#customUrl').addEventListener('keydown', (event) => {
+  qs('#customUrl')?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') addCustomSite();
   });
 
@@ -2323,6 +2320,8 @@ export function initSettings({
         chipOrder: current.chipOrder,
         showItems: current.showItems,
         hudScale: current.hudScale || 'm',
+        chipStyles: current.chipStyles || {},
+        display: '',
         match: 'all'
       };
       const next = profiles.concat([profile]).slice(-8);

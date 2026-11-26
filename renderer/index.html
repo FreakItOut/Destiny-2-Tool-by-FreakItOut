@@ -156,6 +156,13 @@
           </select>
           <button id="hudProfileSave" class="btn primary small" type="button">Speichern</button>
         </div>
+        <label class="hud-editor-check"><input id="hudProfileDisplay" type="checkbox"> Nur dieser Monitor</label>
+        <div class="hud-editor-actions">
+          <button id="hudProfileExport" class="btn ghost small" type="button">Export</button>
+          <button id="hudProfileImport" class="btn ghost small" type="button">Import</button>
+          <input id="hudProfileFile" type="file" accept=".json,application/json" hidden>
+          <span class="hud-editor-hint">Profile als JSON sichern/teilen.</span>
+        </div>
         <div class="hud-editor-actions">
           <button id="hudReset" class="btn ghost small" type="button">Zurücksetzen</button>
           <span id="hudEditorHint" class="hud-editor-hint"></span>
@@ -364,6 +371,7 @@
           </div>
           <div class="inventory-head-controls">
             <button id="inventoryGodrollFilter" class="btn ghost small" title="Godrolls hervorheben (andere Items werden gedimmt)">✓ Godrolls</button>
+            <button id="inventoryChampionAudit" class="btn ghost small" title="Waffen ohne erkannten Champion-Brecher prüfen und korrigieren">Champions</button>
             <button id="inventoryWishlistRefresh" class="btn ghost small" data-icon="reload" title="Wunschlisten-Cache verwerfen und neu laden">Wunschliste</button>
             <button id="inventoryDuplicatesBtn" class="btn ghost small" title="Identische Items (gleicher Hash) aus Beutetaschen in den Tresor">Duplikate → Tresor</button>
             <button id="inventoryRefresh" class="btn ghost small" data-icon="reload">Aktualisieren</button>
@@ -400,11 +408,61 @@
         <div id="inventoryStatus" class="inventory-status" aria-live="polite"></div>
         <div id="inventoryLoadoutList" class="inventory-loadout-list"></div>
         <div id="inventoryResult" class="inventory-result hidden" aria-live="polite"></div>
-        <div id="loadoutQueueBar" class="loadout-queue-bar hidden" aria-live="polite"></div>
+        <div id="loadoutQueueBar" class="loadout-queue-bar hidden" aria-live="polite">
+          <span id="loadoutQueueText"></span>
+          <button id="loadoutQueueDetails" class="btn ghost small" type="button" title="Loadout-Warteschlange öffnen">Details</button>
+        </div>
+        <div id="loadoutQueuePanel" class="loadout-queue-panel hidden" role="dialog" aria-label="Loadout-Warteschlange">
+          <div class="loadout-queue-head">
+            <strong>Loadout-Warteschlange</strong>
+            <button id="loadoutQueueClose" class="icon-btn" type="button" title="Schließen" aria-label="Schließen">✕</button>
+          </div>
+          <div class="loadout-queue-toolbar">
+            <button id="loadoutQueuePause" class="btn ghost small" type="button">Anhalten</button>
+            <button id="loadoutQueueClearDone" class="btn ghost small" type="button">Erledigte entfernen</button>
+          </div>
+          <div id="loadoutQueueList" class="loadout-queue-list"></div>
+        </div>
         <div id="inventoryOutbox" class="inventory-outbox hidden" aria-live="polite">
           <span id="inventoryOutboxText" class="inventory-outbox-text"></span>
+          <button id="inventoryOutboxDetails" class="btn ghost small" type="button" title="Offline-Ausgang im Detail öffnen">Details</button>
           <button id="inventoryOutboxRun" class="btn ghost small" type="button" title="Offline-Aktionen jetzt an Bungie senden">Jetzt senden</button>
           <button id="inventoryOutboxClear" class="btn ghost small" type="button" title="Offline-Aktionen verwerfen">Verwerfen</button>
+        </div>
+        <div id="championAuditPanel" class="champion-audit hidden" role="dialog" aria-label="Champion-Prüfung">
+          <div class="champion-audit-head">
+            <strong>Champion-Prüfung</strong>
+            <button id="championAuditClose" class="icon-btn" type="button" title="Schließen" aria-label="Schließen">✕</button>
+          </div>
+          <p class="champion-audit-hint">Waffen ohne erkannten Brecher. Auswahl markieren und einen Typ zuweisen – die Korrektur gilt lokal und überschreibt die Automatik.</p>
+          <div class="champion-audit-toolbar">
+            <label class="champion-audit-check"><input id="championAuditSelectAll" type="checkbox"> Alle</label>
+            <select id="championAuditType" aria-label="Champion-Typ">
+              <option value="1">Barriere</option>
+              <option value="2">Überladung</option>
+              <option value="3">Unaufhaltsam</option>
+            </select>
+            <button id="championAuditApply" class="btn primary small" type="button">Zuweisen</button>
+            <button id="championAuditClear" class="btn ghost small" type="button">Override entfernen</button>
+          </div>
+          <div id="championAuditList" class="champion-audit-list"></div>
+          <div class="champion-audit-foot">
+            <button id="championAuditExport" class="btn ghost small" type="button">Export</button>
+            <button id="championAuditImport" class="btn ghost small" type="button">Import</button>
+            <input id="championAuditFile" type="file" accept=".json,application/json" hidden>
+            <span id="championAuditCount" class="champion-audit-count"></span>
+          </div>
+        </div>
+        <div id="inventoryOutboxPanel" class="inventory-outbox-panel hidden" role="dialog" aria-label="Offline-Ausgang">
+          <div class="inventory-outbox-head">
+            <strong>Offline-Ausgang</strong>
+            <button id="inventoryOutboxClose" class="icon-btn" type="button" title="Schließen" aria-label="Schließen">✕</button>
+          </div>
+          <div id="inventoryOutboxList" class="inventory-outbox-list"></div>
+          <div class="inventory-outbox-foot">
+            <button id="inventoryOutboxRunAll" class="btn primary small" type="button">Alle senden</button>
+            <button id="inventoryOutboxClearAll" class="btn ghost small" type="button">Alle verwerfen</button>
+          </div>
         </div>
         <div id="inventoryBody" class="inventory-body"><div class="check-empty">Nicht geladen – „Aktualisieren“ drücken (setzt Anmeldung voraus).</div></div>
         <div class="inventory-pad-hint" aria-hidden="true">
@@ -490,8 +548,6 @@
           <button class="settings-tab" data-settings-tab="overlaybar" data-icon="columns">Overlay-Leiste</button>
           <button class="settings-tab" data-settings-tab="controller" data-icon="gamepad">Controller</button>
           <button class="settings-tab" data-settings-tab="steam" data-settings-advanced data-icon="gamepad">Steam Input</button>
-          <button class="settings-tab" data-settings-tab="web" data-icon="monitor" hidden>Webseiten</button>
-          <button class="settings-tab" data-settings-tab="custom" data-icon="star" hidden>Eigene Seiten</button>
           <button class="settings-tab" data-settings-tab="display" data-icon="eye">Darstellung</button>
           <button class="settings-tab" data-settings-tab="behavior" data-icon="settings">Verhalten</button>
           <button class="settings-tab" data-settings-tab="security" data-settings-advanced data-icon="lock">Sicherheit</button>
@@ -1154,161 +1210,7 @@
                 <div><kbd>Alt+P</kbd><span>Postfach öffnen</span></div>
               </div>
             </details>
-          </section>
-
-          <section class="settings-panel" data-settings-panel="web">
-            <h3>Webseiten</h3>
-            <p class="panel-hint">Alle Seiten teilen sich eine Sitzung. Anmeldungen bei Bungie, Reddit und Co. bleiben deshalb erhalten.</p>
-
-            <div class="field-row two">
-              <div class="field">
-                <label for="webKeepAlive">Gleichzeitig geladene Seiten</label>
-                <select id="webKeepAlive" class="control">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                </select>
-                <span class="field-hint">Mehr Seiten = schnellerer Wechsel, aber mehr Arbeitsspeicher.</span>
-              </div>
-              <div class="field">
-                <label for="webZoom">Seiten-Zoom <span id="webZoomValue" class="value-badge">100 %</span></label>
-                <input id="webZoom" type="range" min="50" max="200" step="5" value="100">
-              </div>
-            </div>
-
-            <label class="check-row">
-              <input id="webDark" type="checkbox">
-              <span>Webseiten bevorzugen dunkles Design</span>
-            </label>
-            <label class="check-row">
-              <input id="webReaderMode" type="checkbox">
-              <span>Lesemodus (vereinfachte Darstellung, blendet Seitenleisten/Werbung aus)</span>
-            </label>
-
-            <div class="field">
-              <label for="autoRefreshSelect">Auto-Refresh pro Webseite</label>
-              <div class="input-row">
-                <select id="autoRefreshSelect" class="control"></select>
-                <select id="autoRefreshMinutes" class="control">
-                  <option value="0">Aus</option>
-                  <option value="2">Alle 2 Min</option>
-                  <option value="5">Alle 5 Min</option>
-                  <option value="10">Alle 10 Min</option>
-                  <option value="15">Alle 15 Min</option>
-                  <option value="30">Alle 30 Min</option>
-                </select>
-              </div>
-              <span class="field-hint">Lädt die gewählte Seite im Hintergrund regelmäßig neu – z. B. Raid-Report offen lassen und es aktualisiert sich selbst.</span>
-            </div>
-
-            <div class="field">
-              <label for="siteZoomSelect">Zoom pro Webseite</label>
-              <div class="input-row">
-                <select id="siteZoomSelect" class="control"></select>
-                <input id="siteZoomValue" type="number" min="50" max="200" step="5" class="control" style="max-width: 90px" aria-label="Zoom-Wert">
-                <button id="siteZoomResetBtn" class="btn ghost">Global</button>
-              </div>
-              <span class="field-hint">Leer = globaler Seiten-Zoom (oben). Praktisch: DIM etwas kleiner, News-Seiten größer.</span>
-            </div>
-
-            <div class="field">
-              <label for="siteReaderSelect">Lesemodus pro Webseite</label>
-              <div class="input-row">
-                <select id="siteReaderSelect" class="control"></select>
-                <select id="siteReaderValue" class="control">
-                  <option value="">Wie global</option>
-                  <option value="on">An</option>
-                  <option value="off">Aus</option>
-                </select>
-              </div>
-              <span class="field-hint">Überschreibt den globalen Lesemodus für die gewählte Seite (News-Seiten im Reader, DIM ohne).</span>
-            </div>
-
-            <div class="field">
-              <label for="blockerSiteSelect">Blocker-Ausnahmen pro Webseite</label>
-              <div class="input-row">
-                <select id="blockerSiteSelect" class="control"></select>
-              </div>
-              <label class="check-row">
-                <input id="blockerAdOff" type="checkbox">
-                <span>AdBlock für diese Seite aus (wenn Inhalte fehlen)</span>
-              </label>
-              <label class="check-row">
-                <input id="blockerCookieOff" type="checkbox">
-                <span>Cookie-Banner-Blocker für diese Seite aus</span>
-              </label>
-              <div class="field-actions-row">
-                <button id="blockerResetBtn" class="btn ghost">Ausnahmen entfernen</button>
-              </div>
-              <span class="field-hint">Gilt nur für die gewählte Seite. Nach Änderung die Seite einmal neu laden (F5).</span>
-            </div>
-
-            <details class="compat-details">
-              <summary>Webseiten-Kompatibilität im Overlay</summary>
-              <div class="compat-list">
-                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>DIM (Destiny Item Manager)</strong><span>Voll funktionsfähig. Anmelden, Items verwalten, Loadouts wechseln.</span></div>
-                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>Braytech</strong><span>Voll funktionsfähig. Alle Seiten laden korrekt.</span></div>
-                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>Light.gg</strong><span>Funktioniert gut. Einzelne Popups evtl. abgeschnitten.</span></div>
-                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>D2Checklist</strong><span>Voll funktionsfähig. Checklisten abhaken funktioniert.</span></div>
-                <div class="compat-item ok"><span class="compat-icon">✓</span><strong>Today in Destiny</strong><span>Voll funktionsfähig. Alle Rotationen korrekt.</span></div>
-                <div class="compat-item warn"><span class="compat-icon">⚠</span><strong>Raid Report</strong><span>Funktioniert, aber lange Ladezeiten bei vielen Raid-Einträgen.</span></div>
-                <div class="compat-item warn"><span class="compat-icon">⚠</span><strong>Bungie.net</strong><span>Anmeldung funktioniert, aber einige Popups/Dialoge evtl. nicht klickbar.</span></div>
-                <div class="compat-item warn"><span class="compat-icon">⚠</span><strong>Mobalytics</strong><span>Builds anzeigen funktioniert, Editor evtl. eingeschränkt.</span></div>
-                <div class="compat-item bad"><span class="compat-icon">✗</span><strong>YouTube / Twitch</strong><span>Video-Wiedergabe funktioniert, aber Fullscreen-Modus nicht empfohlen.</span></div>
-                <div class="compat-item bad"><span class="compat-icon">✗</span><strong>Reddit</strong><span>Alte Version wird angezeigt. Anmelden nur eingeschränkt möglich.</span></div>
-              </div>
-              <p class="small-note">Bewertung basiert auf Community-Erfahrung. Cookie-Banner werden automatisch ausgeblendet.</p>
-            </details>
-
-            <div class="field-actions-row">
-              <button id="unloadAllBtn" class="btn ghost" data-icon="reload">Alle Seiten entladen</button>
-              <button id="clearWebDataBtn" class="btn danger" data-icon="trash">Website-Daten löschen</button>
-            </div>
-            <p class="small-note">Website-Daten löschen entfernt Cookies und Anmeldungen aller Seiten. Das Tool selbst bleibt unberührt.</p>
-            <p id="webInfo" class="small-note"></p>
-            <div class="field">
-              <label for="webIdleUnload">Inaktive Seiten entladen</label>
-              <select id="webIdleUnload" class="control">
-                <option value="0">Nie</option>
-                <option value="15">Nach 15 Minuten</option>
-                <option value="30">Nach 30 Minuten</option>
-                <option value="60">Nach 60 Minuten</option>
-              </select>
-              <span class="field-hint">Entlädt Seiten, die lange nicht benutzt wurden – sie laden beim nächsten Öffnen neu.</span>
-            </div>
-            <div class="field-actions-row">
-              <button type="button" id="webMemoryBtn" class="btn ghost small">Speicher der Seiten anzeigen</button>
-            </div>
-            <div id="webMemoryList" class="history-list">—</div>
-          </section>
-
-          <section class="settings-panel" data-settings-panel="custom">
-            <h3>Eigene Seiten</h3>
-            <p class="panel-hint">Füge beliebige Webseiten hinzu. Sie erscheinen in der gewählten Kategorie und zusätzlich unter "Eigene".</p>
-
-            <div class="custom-form">
-              <div class="field">
-                <label for="customName">Name</label>
-                <input id="customName" type="text" maxlength="80" placeholder="z. B. Meine Clan-Seite">
-              </div>
-              <div class="field">
-                <label for="customUrl">Adresse</label>
-                <input id="customUrl" type="text" maxlength="2000" placeholder="https://example.com">
-              </div>
-              <div class="field">
-                <label for="customCategory">Kategorie</label>
-                <select id="customCategory" class="control"></select>
-              </div>
-              <button id="customAddBtn" class="btn primary" data-icon="plus">Hinzufügen</button>
-            </div>
-
-            <div id="customList" class="custom-list"></div>
-          </section>
+          </section>
 
           <section class="settings-panel" data-settings-panel="display">
             <h3>Darstellung</h3>

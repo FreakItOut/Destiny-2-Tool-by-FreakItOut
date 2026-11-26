@@ -6,6 +6,44 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.8.0] – 2026-11-26
+
+### Hinzugefügt
+
+- **Offline-Ausgang mit Detailpanel** – wartende Transfers und
+  Ausrüstungswechsel lassen sich einzeln wiederholen, entfernen und
+  sortieren. Vor dem Senden wird geprüft, ob die Aktion noch nötig ist
+  (Item bereits am Ziel, nicht mehr vorhanden).
+- **Loadout-Warteschlange mit Panel** – anhalten/fortsetzen, Einträge
+  sortieren, fehlgeschlagene wiederholen, einzelne entfernen und erledigte
+  aufräumen.
+- **HUD-Editor ausgebaut** – Chips per Drag & Drop oder ↑/↓ sortieren,
+  Größe und Farbe pro Chip, Profile pro Monitor/DPI, Export/Import als JSON.
+- **Champion-Prüfung** – Sammelansicht aller Waffen ohne erkannten Brecher
+  mit Bulk-Zuweisung sowie Import/Export der manuellen Overrides.
+- **Suche 2.0** – Treffer werden im Tooltip hervorgehoben; das Filtermenü
+  erklärt alle Operatoren und Beispiele.
+- **Release-Workflow** – Tags vom Typ `v*` bauen Portable, Setup, Plugin,
+  SBOM und Prüfsummen automatisch und hängen sie an das GitHub-Release.
+
+### Geändert
+
+- **Einstellungen werden erst beim Öffnen geladen** (dynamischer Import);
+  die Tastenbelegung liegt in einer kleinen eigenen Datei.
+- **HUD-Code ausgelagert** nach `renderer/js/overlay-hud.js`.
+- **Smoke-Test** prüft jetzt die komplette Navigation
+  Dashboard → Inventar → Werkzeuge und den HUD-Editor.
+- **Visuelle Baselines** um Dashboard und Einstellungen erweitert.
+
+### Entfernt
+
+- Die versteckten Einstellungsseiten **„Webseiten“** und **„Eigene Seiten“**
+  samt zugehöriger UI-Verdrahtung. Die App zeigt nur noch eigene Ansichten.
+
+### Technik
+
+- App-Feature-Test auf **91** Prüfungen, E2E auf **512** Schritte erweitert.
+
 ## [1.7.0] – 2026-11-26
 
 ### Hinzugefügt

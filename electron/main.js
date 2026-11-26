@@ -13955,6 +13955,23 @@ ipcMain.handle('bungie:farming', (event, payload) => fetchBungieFarmingInventory
     }
   });
   ipcMain.handle('app:health', () => appHealth());
+  ipcMain.handle('app:displayInfo', () => {
+    try {
+      const display = win && !win.isDestroyed()
+        ? screen.getDisplayMatching(win.getBounds())
+        : screen.getPrimaryDisplay();
+      return {
+        ok: true,
+        id: String(display.id),
+        width: display.bounds.width,
+        height: display.bounds.height,
+        scaleFactor: display.scaleFactor,
+        signature: `${display.bounds.width}x${display.bounds.height}@${display.scaleFactor}`
+      };
+    } catch (error) {
+      return { ok: false, error: error.message || String(error) };
+    }
+  });
 
   // Notizen als Markdown-Datei exportieren.
   ipcMain.handle('notes:export', async (event, markdown) => {    if (!win) return { ok: false };
@@ -14663,6 +14680,20 @@ async function runSmoke() {
         focusToggleOk = before !== after;
       }
       const shellButtonsOk = ['inventoryBtn', 'toolsBtn', 'checklistBtn', 'overlayBtn', 'settingsBtn', 'helpBtn'].every((id) => Boolean(document.getElementById(id)));
+      // Full-Shell-Navigation: Dashboard -> Inventar -> Werkzeuge -> Dashboard.
+      document.querySelector('#inventoryBtn').click();
+      await wait(160);
+      const inventoryView = document.querySelector('#inventoryView');
+      const navInventory = Boolean(inventoryView && !inventoryView.classList.contains('hidden'));
+      document.querySelector('#inventoryCloseBtn')?.click();
+      await wait(160);
+      const doubleBack = !document.querySelector('#dashboardPanel').classList.contains('hidden');
+      document.querySelector('#toolsBtn').click();
+      await wait(320);
+      const navTools = Boolean(document.querySelector('.inventory-tools-tab')) && Boolean(inventoryView && !inventoryView.classList.contains('hidden'));
+      document.querySelector('#inventoryCloseBtn')?.click();
+      await wait(160);
+      const navOk = navInventory && doubleBack && navTools;
       document.querySelector('#settingsBtn').click();
       await wait(80);
       const modal = document.querySelector('#settingsModal');
@@ -14730,6 +14761,10 @@ async function runSmoke() {
         panelActive,
         focusToggleOk,
         shellButtonsOk,
+        navOk,
+        navInventory,
+        navTools,
+        doubleBack,
         added,
         gearBadge,
         removed,
@@ -14776,6 +14811,7 @@ async function runSmoke() {
         ui.panelActive &&
         ui.focusToggleOk &&
         ui.shellButtonsOk &&
+        ui.navOk &&
         ui.closed &&
         ui.profileSaved &&
         ui.backupOk &&
@@ -14846,6 +14882,21 @@ async function runSmoke() {
 
     // Overlay-Zustandsmaschine durchspielen.
     const entered = enterOverlay();
+    let hudEditorSmoke = null;
+    try {
+      hudEditorSmoke = await win.webContents.executeJavaScript(`(async () => {
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        document.querySelector('#overlayHudEditBtn')?.click();
+        await wait(100);
+        const panel = document.querySelector('#hudEditorPanel');
+        const open = Boolean(panel && !panel.classList.contains('hidden'));
+        const rows = panel ? panel.querySelectorAll('[data-hud-chip]').length : 0;
+        document.querySelector('#hudEditorClose')?.click();
+        return { open, rows };
+      })()`);
+    } catch (error) {
+      hudEditorSmoke = null;
+    }
     const through = setClickThrough(true);
     const throughOff = setClickThrough(false);
     const hidden = hideOverlayWindow();
@@ -14854,6 +14905,9 @@ async function runSmoke() {
     const overlayOk = Boolean(
       entered.mode === 'overlay' &&
         entered.visible &&
+        hudEditorSmoke &&
+        hudEditorSmoke.open &&
+        hudEditorSmoke.rows >= 10 &&
         through.clickThrough === true &&
         throughOff.clickThrough === false &&
         hidden.visible === false &&
@@ -15122,6 +15176,7 @@ async function runSmoke() {
       uiOk,
       overlayOk,
       overlay: { entered, through, throughOff, hidden, shown, left },
+      hudEditor: hudEditorSmoke,
       pad,
       padOk,
       xinput: xinputState,

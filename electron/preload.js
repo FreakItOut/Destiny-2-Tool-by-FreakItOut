@@ -157,6 +157,7 @@ const api = {
   backupsList: () => ipcRenderer.invoke('backup:list'),
   backupsRestore: (name) => ipcRenderer.invoke('backup:restore', name),
   getAppHealth: () => ipcRenderer.invoke('app:health'),
+  getDisplayInfo: () => ipcRenderer.invoke('app:displayInfo'),
   saveTextFile: (payload) => ipcRenderer.invoke('app:saveText', payload),
   webviewsMemory: () => ipcRenderer.invoke('webviews:memory'),
   refreshManifest: () => ipcRenderer.invoke('app:manifestRefresh'),

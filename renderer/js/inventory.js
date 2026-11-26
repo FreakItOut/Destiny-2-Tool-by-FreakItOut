@@ -98,12 +98,54 @@ const INVENTORY_CSS = `
 .inventory-result { margin: 8px 14px 0; padding: 6px 10px; border: 1px solid #2a3548; border-radius: 6px; max-height: 180px; overflow-y: auto; font-size: 11px; flex-shrink: 0; }
 .inventory-result .r-ok { color: #29f36a; }
 .inventory-result .r-err { color: #ff6b6b; }
-.loadout-queue-bar { margin: 6px 14px 0; padding: 5px 10px; border: 1px solid var(--brand); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text); font-size: 11.5px; flex-shrink: 0; }
+.loadout-queue-bar { display: flex; align-items: center; gap: 8px; margin: 6px 14px 0; padding: 5px 10px; border: 1px solid var(--brand); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text); font-size: 11.5px; flex-shrink: 0; }
+.loadout-queue-bar > span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .loadout-queue-bar.hidden { display: none !important; }
+.loadout-queue-panel { position: absolute; right: 18px; bottom: 96px; z-index: 41; width: 430px; max-width: calc(100% - 36px); max-height: 58vh; overflow: auto; padding: 10px; border: 1px solid var(--brand); border-radius: 8px; background: rgba(12,18,28,0.98); box-shadow: 0 16px 36px rgba(0,0,0,0.55); }
+.loadout-queue-panel.hidden { display: none !important; }
+.loadout-queue-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--brand); }
+.loadout-queue-toolbar { display: flex; gap: 6px; margin: 7px 0; }
+.loadout-queue-list { display: flex; flex-direction: column; gap: 5px; }
+.loadout-queue-row { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border: 1px solid #2a3548; border-radius: 6px; background: rgba(255,255,255,0.03); }
+.loadout-queue-copy { flex: 1 1 auto; min-width: 0; }
+.loadout-queue-copy strong { display: block; font-size: 11.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.loadout-queue-copy small { display: block; font-size: 10px; color: #9aa6b6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.loadout-queue-state { font-size: 9.5px; letter-spacing: 0.4px; text-transform: uppercase; }
+.loadout-queue-state.pending { color: #9aa6b6; }
+.loadout-queue-state.running { color: #f3c66a; }
+.loadout-queue-state.done { color: #29f36a; }
+.loadout-queue-state.failed { color: #ff6b6b; }
+.loadout-queue-row .outbox-move { width: 22px; height: 22px; border: 1px solid #2a3548; border-radius: 5px; background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; font-size: 11px; }
+.loadout-queue-row .outbox-move:disabled { opacity: 0.35; cursor: default; }
 .inventory-outbox { display: flex; align-items: center; gap: 8px; margin: 6px 14px 0; padding: 4px 10px; border: 1px solid #f3c66a; border-radius: 6px; background: rgba(243,198,106,0.10); color: #f3c66a; font-size: 11.5px; flex-shrink: 0; }
 .inventory-outbox.hidden { display: none !important; }
 .inventory-outbox-text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inventory-outbox .btn { color: #f3c66a; border-color: rgba(243,198,106,0.5); }
+.inventory-outbox-panel { position: absolute; right: 18px; bottom: 96px; z-index: 40; width: 420px; max-width: calc(100% - 36px); max-height: 55vh; overflow: auto; padding: 10px; border: 1px solid #f3c66a; border-radius: 8px; background: rgba(12,18,28,0.98); box-shadow: 0 16px 36px rgba(0,0,0,0.55); }
+.inventory-outbox-panel.hidden { display: none !important; }
+.inventory-outbox-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #f3c66a; }
+.inventory-outbox-list { display: flex; flex-direction: column; gap: 5px; }
+.inventory-outbox-row { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border: 1px solid #2a3548; border-radius: 6px; background: rgba(255,255,255,0.03); }
+.inventory-outbox-copy { flex: 1 1 auto; min-width: 0; }
+.inventory-outbox-copy strong { display: block; font-size: 11.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inventory-outbox-copy small { display: block; font-size: 10px; color: #9aa6b6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inventory-outbox-row .outbox-move { width: 22px; height: 22px; border: 1px solid #2a3548; border-radius: 5px; background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; font-size: 11px; }
+.inventory-outbox-row .outbox-move:disabled { opacity: 0.35; cursor: default; }
+.inventory-outbox-foot { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; }
+.champion-audit { position: absolute; right: 18px; bottom: 96px; z-index: 42; width: 460px; max-width: calc(100% - 36px); max-height: 62vh; overflow: auto; padding: 10px; border: 1px solid var(--brand); border-radius: 8px; background: rgba(12,18,28,0.98); box-shadow: 0 16px 36px rgba(0,0,0,0.55); }
+.champion-audit.hidden { display: none !important; }
+.champion-audit-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--brand); }
+.champion-audit-hint { margin: 5px 0 7px; font-size: 10.5px; line-height: 1.35; color: #9aa6b6; }
+.champion-audit-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.champion-audit-toolbar select { height: 26px; }
+.champion-audit-check { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #9aa6b6; }
+.champion-audit-list { display: flex; flex-direction: column; gap: 4px; }
+.champion-audit-row { display: flex; align-items: center; gap: 6px; padding: 4px 5px; border: 1px solid #2a3548; border-radius: 5px; background: rgba(255,255,255,0.03); font-size: 11px; }
+.champion-audit-row img { width: 22px; height: 22px; border-radius: 4px; object-fit: cover; background: rgba(0,0,0,0.35); }
+.champion-audit-row .champion-audit-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.champion-audit-row small { color: #9aa6b6; font-size: 9.5px; white-space: nowrap; }
+.champion-audit-foot { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.champion-audit-count { margin-left: auto; font-size: 10px; color: #9aa6b6; }
 .inventory-loadout-list { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 14px 0; flex-shrink: 0; max-height: 100px; overflow-y: auto; }
 .inv-loadout { display: flex; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid #2a3548; border-radius: 5px; font-size: 11px; }
 .inv-loadout-name { font-weight: 600; color: #e8ecf2; }
@@ -479,6 +521,12 @@ body.pad-active .inventory-pad-hint { display: flex; }
 .dinv-tag-elem { color: #0b0f16 !important; }
 .dinv-tag-champ { background: rgba(9,14,22,0.88) !important; border: 1px solid #f3c66a !important; }
 .dinv-tag-champ.none { border-color: #4a5568 !important; color: #9aa6b6 !important; }
+.dinv-mark { background: rgba(243,198,106,0.38); color: #fff; border-radius: 2px; padding: 0 1px; }
+.inv-filter-help { margin: 4px 0; font-size: 10.5px; color: #9aa6b6; }
+.inv-filter-help summary { cursor: pointer; color: var(--text); padding: 3px 0; }
+.inv-filter-help-grid { display: grid; grid-template-columns: minmax(110px, auto) 1fr; gap: 3px 8px; align-items: start; }
+.inv-filter-help-grid code { color: #9fc6ff; background: rgba(255,255,255,0.04); border-radius: 3px; padding: 0 3px; font-size: 10px; }
+.inv-filter-help-grid span { color: #9aa6b6; }
 /* Suche: standardmäßig nur Treffer, keine gedimmten Kacheln dazwischen. */
 body.dinv-search-only .dinv-tile-wrap.inv-dim { display: none !important; }
 body.dinv-search-only .dinv-row:not(.dinv-head-row):not(:has(.dinv-tile-wrap:not(.inv-dim))) { display: none !important; }
@@ -959,11 +1007,19 @@ export function createInventory(ctx) {
   const loadoutList = qs('#inventoryLoadoutList');
   const resultBox = qs('#inventoryResult');
   const loadoutQueueBar = qs('#loadoutQueueBar');
+  const loadoutQueueText = qs('#loadoutQueueText');
+  const loadoutQueuePanel = qs('#loadoutQueuePanel');
+  const loadoutQueueList = qs('#loadoutQueueList');
   const outboxBar = qs('#inventoryOutbox');
   const outboxText = qs('#inventoryOutboxText');
+  const outboxPanel = qs('#inventoryOutboxPanel');
+  const outboxList = qs('#inventoryOutboxList');
+  const championAuditPanel = qs('#championAuditPanel');
+  const championAuditList = qs('#championAuditList');
   const tooltipEl = qs('#inventoryTooltip');
   const inventoryBtn = qs('#inventoryBtn');
   const godrollBtn = qs('#inventoryGodrollFilter');
+  const championAuditBtn = qs('#inventoryChampionAudit');
   const wishlistBtn = qs('#inventoryWishlistRefresh');
   const duplicatesBtn = qs('#inventoryDuplicatesBtn');
   const searchOnlyBtn = qs('#inventorySearchOnly');
@@ -2641,6 +2697,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       // localStorage voll → Ausgang bleibt im Speicher nutzlos, aber die App läuft.
     }
     renderOutbox();
+    renderOutboxPanel();
     window.dispatchEvent(new CustomEvent('d2-outbox-change'));
   }
 
@@ -2661,6 +2718,119 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     if (!character) return '';
     const className = DIM.CLASS_NAMES[Number(character.classType)] || 'Hüter';
     return `${className}${character.light ? ` ${character.light}` : ''}`;
+  }
+
+  // ---------- Champion-Prüfung: Waffen ohne erkannten Brecher ----------
+  let championAuditOriginals = new Map();
+
+  function collectInventoryEntries() {
+    if (!data) return [];
+    const map = new Map();
+    const add = (list, where) => {
+      for (const item of list || []) {
+        if (!item) continue;
+        const key = String(item.instanceId || `h-${item.hash}`);
+        if (!map.has(key)) map.set(key, { key, item, where });
+      }
+    };
+    add(data.vault, 'Tresor');
+    for (const [characterId, list] of Object.entries(data.backpack || {})) {
+      add(list, characterLabel(characterId) || 'Beutetasche');
+    }
+    for (const [characterId, list] of Object.entries(data.equipped || {})) {
+      add(list, `${characterLabel(characterId) || 'Hüter'} · angelegt`);
+    }
+    for (const list of Object.values(data.postmaster || {})) add(list, 'Poststelle');
+    return [...map.values()];
+  }
+
+  function championAuditEntries() {
+    return collectInventoryEntries()
+      .filter(({ item }) => DIM.WEAPON_SLOTS.some((slot) => slot.key === Number(item.bucket)))
+      .filter(({ item }) => championTypes(item).length === 0)
+      .sort((a, b) => String(a.item.name || '').localeCompare(String(b.item.name || ''), 'de'));
+  }
+
+  function renderChampionAudit() {
+    if (!championAuditPanel || !championAuditList) return;
+    const entries = championAuditEntries();
+    const allWeapons = collectInventoryEntries()
+      .filter(({ item }) => DIM.WEAPON_SLOTS.some((slot) => slot.key === Number(item.bucket)));
+    championAuditOriginals = new Map(entries.map((entry) => [entry.key, entry]));
+    const count = qs('#championAuditCount');
+    if (count) count.textContent = `${entries.length} ohne Brecher · ${allWeapons.length} Waffen`;
+    if (!entries.length) {
+      championAuditList.innerHTML = '<span class="inv-tool-muted">Alle Waffen haben einen erkannten oder manuell gesetzten Champion-Brecher.</span>';
+      return;
+    }
+    championAuditList.innerHTML = entries.slice(0, 200).map(({ key, item, where }) => `
+      <label class="champion-audit-row">
+        <input type="checkbox" data-champion-audit-key="${esc(key)}">
+        ${item.icon ? `<img src="https://www.bungie.net${esc(item.icon)}" alt="" loading="lazy">` : ''}
+        <span class="champion-audit-name">${esc(item.name || 'Item')}</span>
+        <small>${esc(item.typeName || '')}${where ? ` · ${esc(where)}` : ''}</small>
+      </label>`).join('')
+      + (entries.length > 200 ? `<span class="inv-tool-muted">… und ${entries.length - 200} weitere. Suche nutzt weiterhin „Ohne Champion“.</span>` : '');
+  }
+
+  function openChampionAudit() {
+    if (!championAuditPanel) return;
+    renderChampionAudit();
+    championAuditPanel.classList.remove('hidden');
+  }
+
+  function applyChampionAudit(type) {
+    const selected = [...championAuditList.querySelectorAll('[data-champion-audit-key]:checked')]
+      .map((input) => String(input.dataset.championAuditKey || ''));
+    if (!selected.length) {
+      toast('Erst Waffen auswählen.', 'info', 1800);
+      return;
+    }
+    let changed = 0;
+    for (const key of selected) {
+      const entry = championAuditOriginals.get(key);
+      if (!entry) continue;
+      setChampionOverride(entry.item, type);
+      changed += 1;
+    }
+    render();
+    renderChampionAudit();
+    toast(`${changed} Waffe${changed === 1 ? '' : 'n'} aktualisiert.`, 'success', 2200);
+  }
+
+  function exportChampionOverrides() {
+    let map = {};
+    try { map = JSON.parse(window.localStorage.getItem('d2tool.championOverrides') || '{}'); } catch (error) { map = {}; }
+    const blob = new Blob([JSON.stringify({ format: 'd2tool.championOverrides', version: 1, overrides: map }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `d2tool-champions-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1200);
+    toast('Champion-Overrides exportiert.', 'success', 2000);
+  }
+
+  async function importChampionOverrides(file) {
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const source = data && typeof data === 'object' ? (data.overrides || data) : {};
+      const next = {};
+      for (const [key, value] of Object.entries(source)) {
+        const type = Math.round(Number(value) || 0);
+        if (key && type >= 1 && type <= 3) next[String(key)] = type;
+      }
+      if (!Object.keys(next).length) throw new Error('Keine gültigen Overrides in der Datei.');
+      window.localStorage.setItem('d2tool.championOverrides', JSON.stringify(Object.fromEntries(Object.entries(next).slice(-200))));
+      render();
+      renderChampionAudit();
+      toast(`${Object.keys(next).length} Champion-Override(s) importiert.`, 'success', 2400);
+    } catch (error) {
+      toast(`Import fehlgeschlagen: ${error.message || error}`, 'error', 3000);
+    }
   }
 
   function enqueueOutbox(entry) {
@@ -2684,6 +2854,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     if (!list.length) {
       outboxBar.classList.add('hidden');
       if (outboxText) outboxText.textContent = '';
+      if (outboxPanel) outboxPanel.classList.add('hidden');
       return;
     }
     const transfers = list.filter((entry) => entry.kind === 'transfer').length;
@@ -2698,11 +2869,73 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     outboxBar.classList.remove('hidden');
   }
 
-  async function runOutbox(manual = false) {
+  function renderOutboxPanel() {
+    if (!outboxPanel || !outboxList) return;
+    const list = readOutbox();
+    if (!list.length) {
+      outboxPanel.classList.add('hidden');
+      outboxList.innerHTML = '';
+      return;
+    }
+    outboxList.innerHTML = list.map((entry, index) => `
+      <div class="inventory-outbox-row" data-outbox-id="${esc(entry.id)}">
+        <div class="inventory-outbox-copy">
+          <strong>${esc(outboxLabel(entry))}</strong>
+          <small>${Number(entry.tries) || 0} Versuch${Number(entry.tries) === 1 ? '' : 'e'}${entry.lastError ? ` · ${esc(entry.lastError)}` : ''}</small>
+        </div>
+        <button type="button" class="outbox-move" data-outbox-up="${index}" ${index === 0 ? 'disabled' : ''} title="Nach oben">↑</button>
+        <button type="button" class="outbox-move" data-outbox-down="${index}" ${index === list.length - 1 ? 'disabled' : ''} title="Nach unten">↓</button>
+        <button type="button" class="btn ghost small" data-outbox-retry="${esc(entry.id)}">Erneut</button>
+        <button type="button" class="btn ghost small" data-outbox-remove="${esc(entry.id)}">Entfernen</button>
+      </div>`).join('');
+  }
+
+  // Prüft vor dem erneuten Senden, ob die Aktion noch nötig ist.
+  function itemLocationById(entry) {
+    if (!data) return null;
+    const itemId = String((entry.payload && entry.payload.itemId) || '');
+    if (!itemId || itemId === '0') return null;
+    const matches = (list) => (list || []).some((item) => String(item.instanceId || '') === itemId);
+    if (matches(data.vault)) return { kind: 'vault' };
+    for (const [characterId, list] of Object.entries(data.equipped || {})) {
+      if (matches(list)) return { kind: 'equipped', characterId };
+    }
+    for (const [characterId, list] of Object.entries(data.backpack || {})) {
+      if (matches(list)) return { kind: 'backpack', characterId };
+    }
+    for (const [characterId, list] of Object.entries(data.postmaster || {})) {
+      if (matches(list)) return { kind: 'postmaster', characterId };
+    }
+    return { kind: 'missing' };
+  }
+
+  function outboxConflict(entry) {
+    const location = itemLocationById(entry);
+    if (!location) return null;
+    if (location.kind === 'missing') return { done: false, error: 'Item ist nicht mehr im Inventar.' };
+    if (entry.kind === 'equip') {
+      if (location.kind === 'equipped' && String(location.characterId) === String(entry.characterId)) {
+        return { done: true };
+      }
+      return null;
+    }
+    if (entry.toVault) {
+      if (location.kind === 'vault') return { done: true };
+      return null;
+    }
+    if ((location.kind === 'backpack' || location.kind === 'equipped')
+      && String(location.characterId) === String(entry.characterId)) {
+      return { done: true };
+    }
+    return null;
+  }
+
+  async function runOutbox(manual = false, onlyId = '') {
     if (outboxRunning) return;
     const queue = readOutbox();
     if (!queue.length) {
       renderOutbox();
+      renderOutboxPanel();
       return;
     }
     if (!manual && !navigator.onLine) return;
@@ -2711,6 +2944,20 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const report = [];
     let done = 0;
     for (const entry of queue) {
+      if (onlyId && entry.id !== onlyId) {
+        remaining.push(entry);
+        continue;
+      }
+      const conflict = outboxConflict(entry);
+      if (conflict && conflict.done) {
+        done += 1;
+        report.push({ ok: true, text: `${outboxLabel(entry)} (bereits erledigt)` });
+        continue;
+      }
+      if (conflict && conflict.error) {
+        report.push({ ok: false, text: `${outboxLabel(entry)}: ${conflict.error}` });
+        continue;
+      }
       let result;
       try {
         result = entry.kind === 'equip'
@@ -3043,11 +3290,44 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   }
 
   // ---------- Hover-Tooltip ----------
+  // ---------- Hover-Tooltip ----------
+  function searchHighlightTerms() {
+    const raw = String((searchInput && searchInput.value) || '').trim();
+    if (!raw) return [];
+    const terms = [];
+    const pattern = /"([^"]+)"|(\S+)/g;
+    let match;
+    while ((match = pattern.exec(raw))) {
+      let token = String(match[1] || match[2] || '').replace(/^-/, '');
+      if (!token || token.includes(':') || token.length < 2) continue;
+      if (!terms.includes(token)) terms.push(token);
+    }
+    return terms.slice(0, 5);
+  }
+
+  function highlightSearchText(text) {
+    const value = String(text || '');
+    const terms = searchHighlightTerms();
+    if (!terms.length) return esc(value);
+    const pattern = new RegExp(`(${terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'ig');
+    let html = '';
+    let last = 0;
+    let match;
+    while ((match = pattern.exec(value))) {
+      html += esc(value.slice(last, match.index));
+      html += `<mark class="dinv-mark">${esc(match[0])}</mark>`;
+      last = match.index + match[0].length;
+      if (match.index === pattern.lastIndex) pattern.lastIndex += 1;
+    }
+    html += esc(value.slice(last));
+    return html;
+  }
+
   function tooltipHtml(item) {
     const r = Number(item.rarity) || 0;
     const rn = DIM.RARITY_NAME[r] || '';
-    let html = `<strong class="dinv-tip-name tt${r}">${esc(item.name || 'Item')}</strong>`;
-    html += `<span style="color:#a0aabb">${esc(item.typeName || 'Item')}${item.power ? ` · ${item.power} Power` : ''}${rn ? ` · ${esc(rn)}` : ''}</span>`;
+    let html = `<strong class="dinv-tip-name tt${r}">${highlightSearchText(item.name || 'Item')}</strong>`;
+    html += `<span style="color:#a0aabb">${highlightSearchText(item.typeName || 'Item')}${item.power ? ` · ${item.power} Power` : ''}${rn ? ` · ${esc(rn)}` : ''}</span>`;
     const elemLabel = elementName(item);
     const champLabels = championTypes(item).map((type) => CHAMPION_NAMES[type]);
     const champSourceLabel = { manuell: 'manuell', daten: 'Item-Daten', rahmen: 'Rahmen', keine: 'keine' }[championSource(item)] || 'keine';
@@ -3070,7 +3350,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         const isGod = (item.godPerks || []).includes(Number(perk.hash) || 0);
         return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 4px;border:1px solid ${isGod ? '#29f36a' : '#2a3548'};border-radius:4px;color:${isGod ? '#29f36a' : '#e8ecf2'};background:rgba(255,255,255,0.04)">` +
           (perk.i ? `<img src="https://www.bungie.net${esc(perk.i)}" style="width:18px;height:18px;border-radius:3px;object-fit:contain" alt="">` : '') +
-          `<span>${esc(perk.n)}${isGod ? ' ✓' : ''}</span></span>`;
+          `<span>${highlightSearchText(perk.n)}${isGod ? ' ✓' : ''}</span></span>`;
       }).join('');
       html += `</span>`;
     }
@@ -3642,6 +3922,19 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       '<div class="inv-filter-section"><span class="inv-filter-title">Stat</span><div class="inv-filter-add">' +
         '<input type="text" data-filter-stat-input maxlength="40" placeholder="z. B. gesundheit:>=20" aria-label="Stat und Vergleich">' +
         '<button type="button" class="btn ghost small" data-filter-stat>Einfügen</button></div></div>' +
+      '<details class="inv-filter-help"><summary>Operatoren &amp; Beispiele</summary>' +
+        '<div class="inv-filter-help-grid">' +
+          '<code>is:godroll</code><span>nur Godrolls</span>' +
+          '<code>is:nochamp</code><span>Waffen ohne Champion-Brecher</span>' +
+          '<code>-is:exotic</code><span>Exoten ausschließen</span>' +
+          '<code>perk:"Vorpal Weapon"</code><span>Perk-Name (Anführungszeichen bei Leerzeichen)</span>' +
+          '<code>stat:gesundheit&gt;=20</code><span>Stat-Vergleich</span>' +
+          '<code>slot:kinetic</code><span>Waffen-Slot</span>' +
+          '<code>class:warlock</code><span>Klasse</span>' +
+          '<code>dupe:stats</code><span>gleiche Rüstungs-Stats</span>' +
+          '<code>note:raid</code><span>eigene Notiz</span>' +
+        '</div>' +
+      '</details>' +
       '<div class="inv-filter-foot"><button type="button" class="btn ghost small" data-filter-clear>Suche leeren</button>' +
       '<span class="inv-filter-hint">Mehrere Filter werden kombiniert.</span></div>';
   }
@@ -8170,59 +8463,158 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   // Loadout-Warteschlange: mehrere Loadouts nacheinander anwenden.
   const loadoutQueue = [];
   let loadoutQueueRunning = false;
+  let loadoutQueuePaused = false;
+  let loadoutQueueSeq = 0;
+
+  function loadoutQueueCounts() {
+    return loadoutQueue.reduce((counts, entry) => {
+      counts[entry.state] = (counts[entry.state] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
   function showQueueBar(text, sticky = false) {
     if (!loadoutQueueBar) return;
-    loadoutQueueBar.textContent = text;
+    if (loadoutQueueText) loadoutQueueText.textContent = text;
+    else loadoutQueueBar.textContent = text;
     loadoutQueueBar.classList.remove('hidden');
     if (loadoutQueueBar._hideTimer) clearTimeout(loadoutQueueBar._hideTimer);
     if (!sticky) {
       loadoutQueueBar._hideTimer = setTimeout(() => loadoutQueueBar.classList.add('hidden'), 4200);
     }
   }
+
+  function renderLoadoutQueueBar() {
+    if (!loadoutQueueBar) return;
+    if (!loadoutQueue.length) {
+      loadoutQueueBar.classList.add('hidden');
+      if (loadoutQueuePanel) loadoutQueuePanel.classList.add('hidden');
+      return;
+    }
+    const counts = loadoutQueueCounts();
+    const parts = [];
+    if (counts.pending) parts.push(`${counts.pending} wartend`);
+    if (counts.running) parts.push(`${counts.running} läuft`);
+    if (counts.done) parts.push(`${counts.done} erledigt`);
+    if (counts.failed) parts.push(`${counts.failed} fehlgeschlagen`);
+    showQueueBar(`Loadout-Warteschlange: ${parts.join(', ')}`, true);
+  }
+
+  function renderLoadoutQueuePanel() {
+    if (!loadoutQueuePanel || !loadoutQueueList) return;
+    renderLoadoutQueueBar();
+    if (!loadoutQueue.length) {
+      loadoutQueuePanel.classList.add('hidden');
+      loadoutQueueList.innerHTML = '';
+      return;
+    }
+    const labels = { pending: 'Wartet', running: 'Läuft', done: 'Fertig', failed: 'Fehler' };
+    const pendingIndexes = loadoutQueue.map((entry, index) => ({ entry, index })).filter(({ entry }) => entry.state === 'pending');
+    loadoutQueueList.innerHTML = loadoutQueue.map((entry, index) => {
+      const pending = pendingIndexes.findIndex((item) => item.index === index);
+      const canMove = entry.state === 'pending';
+      return `<div class="loadout-queue-row" data-loadout-queue-id="${esc(entry.id)}">
+        <div class="loadout-queue-copy">
+          <strong>${esc(entry.name)}</strong>
+          <small>${entry.error ? esc(entry.error) : `hinzugefügt ${new Date(entry.at).toLocaleTimeString(window.i18n ? window.i18n.locale() : 'de-DE', { hour: '2-digit', minute: '2-digit' })}`}</small>
+        </div>
+        <span class="loadout-queue-state ${esc(entry.state)}">${labels[entry.state] || entry.state}</span>
+        ${canMove ? `<button type="button" class="outbox-move" data-loadout-up="${index}" ${pending < 1 ? 'disabled' : ''} title="Nach oben">↑</button>
+        <button type="button" class="outbox-move" data-loadout-down="${index}" ${pending < 0 || pending >= pendingIndexes.length - 1 ? 'disabled' : ''} title="Nach unten">↓</button>` : ''}
+        ${entry.state === 'failed' ? `<button type="button" class="btn ghost small" data-loadout-retry="${esc(entry.id)}">Erneut</button>` : ''}
+        ${entry.state !== 'running' ? `<button type="button" class="btn ghost small" data-loadout-remove="${esc(entry.id)}">Entfernen</button>` : ''}
+      </div>`;
+    }).join('');
+    const pauseBtn = qs('#loadoutQueuePause');
+    if (pauseBtn) pauseBtn.textContent = loadoutQueuePaused ? 'Fortsetzen' : 'Anhalten';
+  }
+
   function queueLoadout(loadoutId) {
     const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((entry) => entry.id === loadoutId);
     if (!loadout) return;
-    if (loadoutQueue.includes(loadoutId)) {
+    if (loadoutQueue.some((entry) => entry.loadoutId === loadoutId && ['pending', 'running'].includes(entry.state))) {
       toast(`„${loadout.name}“ ist bereits in der Warteschlange.`, 'info', 2000);
       return;
     }
-    loadoutQueue.push(loadoutId);
-    showQueueBar(`Warteschlange: ${loadoutQueue.length} · „${loadout.name}“ hinzugefügt`, true);
-    toast(`„${loadout.name}“ in Warteschlange (${loadoutQueue.length}).`, 'info', 2000);
+    loadoutQueue.push({
+      id: `lq-${(++loadoutQueueSeq).toString(36)}`,
+      loadoutId,
+      name: loadout.name,
+      state: 'pending',
+      error: '',
+      at: Date.now()
+    });
+    while (loadoutQueue.length > 20) {
+      const finished = loadoutQueue.findIndex((entry) => !['pending', 'running'].includes(entry.state));
+      if (finished < 0) break;
+      loadoutQueue.splice(finished, 1);
+    }
+    showQueueBar(`Warteschlange: ${loadoutQueue.filter((entry) => entry.state === 'pending').length} · „${loadout.name}“ hinzugefügt`, true);
+    toast(`„${loadout.name}“ in Warteschlange (${loadoutQueue.filter((entry) => entry.state === 'pending').length}).`, 'info', 2000);
+    renderLoadoutQueuePanel();
     processLoadoutQueue();
   }
+
+  function moveLoadoutQueueEntry(index, direction) {
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= loadoutQueue.length) return;
+    if (loadoutQueue[index].state !== 'pending' || loadoutQueue[target].state !== 'pending') return;
+    [loadoutQueue[index], loadoutQueue[target]] = [loadoutQueue[target], loadoutQueue[index]];
+    renderLoadoutQueuePanel();
+  }
+
   async function processLoadoutQueue() {
     if (loadoutQueueRunning) return;
     loadoutQueueRunning = true;
     let done = 0;
     let failed = 0;
-    while (loadoutQueue.length) {
-      const id = loadoutQueue.shift();
-      const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((entry) => entry.id === id);
+    while (!loadoutQueuePaused) {
+      const entry = loadoutQueue.find((item) => item.state === 'pending');
+      if (!entry) break;
+      entry.state = 'running';
+      renderLoadoutQueuePanel();
+      const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((item) => item.id === entry.loadoutId);
       if (!loadout || !loadout.characterId) {
+        entry.state = 'failed';
+        entry.error = 'Loadout oder Charakter fehlt.';
         failed += 1;
+        renderLoadoutQueuePanel();
         continue;
       }
       showQueueBar(`Läuft: „${loadout.name}“ · ${done} fertig, ${failed} übersprungen`, true);
-      const blocking = loadoutConflicts(loadout, loadout.characterId).filter((entry) => entry.blocking);
+      const blocking = loadoutConflicts(loadout, loadout.characterId).filter((item) => item.blocking);
       if (blocking.length) {
+        entry.state = 'failed';
+        entry.error = blocking[0].text;
         failed += 1;
         showQueueBar(`Übersprungen: „${loadout.name}“ – ${blocking[0].text}`, true);
         toast(`„${loadout.name}“ übersprungen: ${blocking[0].text}`, 'warning', 3600);
+        renderLoadoutQueuePanel();
         continue;
       }
       try {
-        await applyLoadout(id, { skipConfirm: true, fromQueue: true });
+        await applyLoadout(entry.loadoutId, { skipConfirm: true, fromQueue: true });
+        entry.state = 'done';
         done += 1;
       } catch (error) {
+        entry.state = 'failed';
+        entry.error = (error && error.message) || 'Anwenden fehlgeschlagen.';
         failed += 1;
       }
+      renderLoadoutQueuePanel();
       await new Promise((resolve) => setTimeout(resolve, 350));
     }
     loadoutQueueRunning = false;
-    const summary = `Warteschlange fertig: ${done} angewendet${failed ? `, ${failed} übersprungen` : ''}.`;
-    showQueueBar(summary);
-    toast(summary, failed ? 'warning' : 'success', 3800);
+    renderLoadoutQueuePanel();
+    if (loadoutQueuePaused) {
+      showQueueBar('Warteschlange angehalten – „Fortsetzen“ drücken.', true);
+      return;
+    }
+    if (done || failed) {
+      const summary = `Warteschlange fertig: ${done} angewendet${failed ? `, ${failed} übersprungen` : ''}.`;
+      showQueueBar(summary);
+      toast(summary, failed ? 'warning' : 'success', 3800);
+    }
   }
 
   async function applyLoadout(loadoutId, options = {}) {
@@ -8835,7 +9227,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const failedEntries = entries.filter((entry) => !entry.ok).length;
     const offlineFailure = entries.some((entry) => !entry.ok && /nicht angemeldet|offline|abgelaufen|nicht erreichbar|429|netzwerk/i.test(entry.text));
     if (offlineFailure) {
-      queueLoadout(loadoutName, characterId, items, modList, perkList, subList);
+      queueOfflineLoadout(loadoutName, characterId, items, modList, perkList, subList);
       entries.push({ ok: false, text: 'Offline: Aktion in die Warteschlange gelegt (Diagnose → Offline-Warteschlange).' });
     }
     const retryActions = failedEntries
@@ -9140,7 +9532,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     try { window.localStorage.setItem('d2tool.actionQueue', JSON.stringify(list.slice(-10))); } catch (error) { /* egal */ }
   }
 
-  function queueLoadout(loadoutName, characterId, items, mods, perks, subs) {
+  function queueOfflineLoadout(loadoutName, characterId, items, mods, perks, subs) {
     const queue = readQueue();
     queue.push({
       loadoutName,
@@ -9853,40 +10245,148 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     });
   }
 
-  // Offline-Ausgang: Knöpfe und automatischer Versand nach Verbindung.
+  // Offline-Ausgang: Leiste, Detailpanel und automatischer Versand.
+  async function clearOutbox() {
+    const list = readOutbox();
+    if (!list.length) return;
+    const confirmed = typeof confirmAction === 'function'
+      ? await confirmAction({
+        title: 'Offline-Ausgang verwerfen?',
+        lines: [`${list.length} wartende Aktion${list.length === 1 ? '' : 'en'} werden gelöscht.`],
+        confirmLabel: 'Verwerfen',
+        cancelLabel: 'Behalten',
+        danger: true
+      })
+      : window.confirm('Offline-Ausgang verwerfen?');
+    if (!confirmed) return;
+    writeOutbox([]);
+    toast('Offline-Ausgang verworfen.', 'info', 2000);
+  }
   if (outboxBar) {
-    const runBtn = qs('#inventoryOutboxRun');
-    const clearBtn = qs('#inventoryOutboxClear');
-    if (runBtn) {
-      runBtn.addEventListener('click', () => {
-        runOutbox(true).catch(() => {});
-      });
-    }
-    if (clearBtn) {
-      clearBtn.addEventListener('click', async () => {
-        const list = readOutbox();
-        if (!list.length) return;
-        const confirmed = typeof confirmAction === 'function'
-          ? await confirmAction({
-            title: 'Offline-Ausgang verwerfen?',
-            lines: [`${list.length} wartende Aktion${list.length === 1 ? '' : 'en'} werden gelöscht.`],
-            confirmLabel: 'Verwerfen',
-            cancelLabel: 'Behalten',
-            danger: true
-          })
-          : window.confirm('Offline-Ausgang verwerfen?');
-        if (!confirmed) return;
-        writeOutbox([]);
-        toast('Offline-Ausgang verworfen.', 'info', 2000);
-      });
-    }
+    qs('#inventoryOutboxRun')?.addEventListener('click', () => {
+      runOutbox(true).catch(() => {});
+    });
+    qs('#inventoryOutboxClear')?.addEventListener('click', () => {
+      clearOutbox().catch(() => {});
+    });
+    qs('#inventoryOutboxDetails')?.addEventListener('click', () => {
+      if (!outboxPanel) return;
+      outboxPanel.classList.toggle('hidden');
+      if (!outboxPanel.classList.contains('hidden')) renderOutboxPanel();
+    });
+    qs('#inventoryOutboxClose')?.addEventListener('click', () => {
+      outboxPanel?.classList.add('hidden');
+    });
+    qs('#inventoryOutboxRunAll')?.addEventListener('click', () => {
+      runOutbox(true).catch(() => {});
+    });
+    qs('#inventoryOutboxClearAll')?.addEventListener('click', () => {
+      clearOutbox().catch(() => {});
+    });
     renderOutbox();
+    renderOutboxPanel();
+  }
+  if (outboxPanel) {
+    outboxPanel.addEventListener('click', (event) => {
+      const up = event.target.closest('[data-outbox-up]');
+      if (up) {
+        const index = Number(up.dataset.outboxUp);
+        const list = readOutbox();
+        const target = index - 1;
+        if (index > 0 && target >= 0) {
+          const [entry] = list.splice(index, 1);
+          list.splice(target, 0, entry);
+          writeOutbox(list);
+        }
+        return;
+      }
+      const down = event.target.closest('[data-outbox-down]');
+      if (down) {
+        const index = Number(down.dataset.outboxDown);
+        const list = readOutbox();
+        const target = index + 1;
+        if (index >= 0 && target < list.length) {
+          const [entry] = list.splice(index, 1);
+          list.splice(target, 0, entry);
+          writeOutbox(list);
+        }
+        return;
+      }
+      const retry = event.target.closest('[data-outbox-retry]');
+      if (retry) {
+        runOutbox(true, String(retry.dataset.outboxRetry || '')).catch(() => {});
+        return;
+      }
+      const remove = event.target.closest('[data-outbox-remove]');
+      if (remove) {
+        const id = String(remove.dataset.outboxRemove || '');
+        writeOutbox(readOutbox().filter((entry) => entry.id !== id));
+      }
+    });
   }
   window.addEventListener('online', () => {
     renderOutbox();
     if (readOutbox().length) runOutbox(false).catch(() => {});
   });
-  window.addEventListener('d2-outbox-change', renderOutbox);
+  window.addEventListener('d2-outbox-change', () => {
+    renderOutbox();
+    renderOutboxPanel();
+  });
+
+  // Loadout-Warteschlange: Detailpanel, Anhalten, Wiederholen, Sortieren.
+  if (loadoutQueueBar) {
+    qs('#loadoutQueueDetails')?.addEventListener('click', () => {
+      if (!loadoutQueuePanel) return;
+      loadoutQueuePanel.classList.toggle('hidden');
+      if (!loadoutQueuePanel.classList.contains('hidden')) renderLoadoutQueuePanel();
+    });
+    qs('#loadoutQueueClose')?.addEventListener('click', () => {
+      loadoutQueuePanel?.classList.add('hidden');
+    });
+    qs('#loadoutQueuePause')?.addEventListener('click', () => {
+      loadoutQueuePaused = !loadoutQueuePaused;
+      renderLoadoutQueuePanel();
+      if (!loadoutQueuePaused) processLoadoutQueue();
+    });
+    qs('#loadoutQueueClearDone')?.addEventListener('click', () => {
+      for (let index = loadoutQueue.length - 1; index >= 0; index -= 1) {
+        if (loadoutQueue[index].state === 'done' || loadoutQueue[index].state === 'failed') loadoutQueue.splice(index, 1);
+      }
+      renderLoadoutQueuePanel();
+    });
+    renderLoadoutQueuePanel();
+  }
+  if (loadoutQueuePanel) {
+    loadoutQueuePanel.addEventListener('click', (event) => {
+      const up = event.target.closest('[data-loadout-up]');
+      if (up) {
+        moveLoadoutQueueEntry(Number(up.dataset.loadoutUp), -1);
+        return;
+      }
+      const down = event.target.closest('[data-loadout-down]');
+      if (down) {
+        moveLoadoutQueueEntry(Number(down.dataset.loadoutDown), 1);
+        return;
+      }
+      const retry = event.target.closest('[data-loadout-retry]');
+      if (retry) {
+        const entry = loadoutQueue.find((item) => item.id === retry.dataset.loadoutRetry);
+        if (entry) {
+          entry.state = 'pending';
+          entry.error = '';
+          renderLoadoutQueuePanel();
+          processLoadoutQueue();
+        }
+        return;
+      }
+      const remove = event.target.closest('[data-loadout-remove]');
+      if (remove) {
+        const index = loadoutQueue.findIndex((item) => item.id === remove.dataset.loadoutRemove);
+        if (index >= 0 && loadoutQueue[index].state !== 'running') loadoutQueue.splice(index, 1);
+        renderLoadoutQueuePanel();
+      }
+    });
+  }
   if (view) {
     view.addEventListener('click', (event) => {
       if (event.target.closest('[data-inv-new-folder]') && selectedItem) {
@@ -10024,6 +10524,33 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       render();
     });
   }
+  if (championAuditBtn) {
+    championAuditBtn.addEventListener('click', () => {
+      if (championAuditPanel && !championAuditPanel.classList.contains('hidden')) {
+        championAuditPanel.classList.add('hidden');
+        return;
+      }
+      openChampionAudit();
+    });
+  }
+  qs('#championAuditClose')?.addEventListener('click', () => championAuditPanel?.classList.add('hidden'));
+  qs('#championAuditApply')?.addEventListener('click', () => {
+    applyChampionAudit(Number(qs('#championAuditType')?.value) || 1);
+  });
+  qs('#championAuditClear')?.addEventListener('click', () => {
+    applyChampionAudit(0);
+  });
+  qs('#championAuditSelectAll')?.addEventListener('change', (event) => {
+    for (const input of championAuditList?.querySelectorAll('[data-champion-audit-key]') || []) {
+      input.checked = event.target.checked === true;
+    }
+  });
+  qs('#championAuditExport')?.addEventListener('click', exportChampionOverrides);
+  qs('#championAuditImport')?.addEventListener('click', () => qs('#championAuditFile')?.click());
+  qs('#championAuditFile')?.addEventListener('change', (event) => {
+    importChampionOverrides(event.target.files && event.target.files[0]).catch(() => {});
+    event.target.value = '';
+  });
   if (wishlistBtn) {
     wishlistBtn.addEventListener('click', async () => {
       wishlistBtn.disabled = true;
@@ -10319,6 +10846,8 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
 
   return {
     isHidden, isOpen, open, close: closeFn, toggle, refresh, renderLoadouts: renderLoadoutsFn,
+    queueLoadout,
+    renderLoadoutQueue: renderLoadoutQueuePanel,
     openPostmaster,
     refreshWishlist: async () => {
       const result = await api.bungieWishlistRefresh();

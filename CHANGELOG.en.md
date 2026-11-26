@@ -6,6 +6,43 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] – 2026-11-26
+
+### Added
+
+- **Offline outbox with detail panel** – pending transfers and equips can be
+  retried, removed and reordered individually. Before sending, the app checks
+  whether the action is still needed (item already at the target, no longer
+  present).
+- **Loadout queue panel** – pause/resume, reorder entries, retry failures,
+  remove single entries and clear finished ones.
+- **HUD editor expanded** – drag & drop or ↑/↓ reordering, per-chip size and
+  colour, profiles per monitor/DPI, JSON export/import.
+- **Champion audit** – a single view of all weapons without a detected
+  breaker with bulk assignment plus override import/export.
+- **Search 2.0** – matches are highlighted in the tooltip; the filter menu
+  explains all operators and examples.
+- **Release workflow** – `v*` tags build portable, setup, plugin, SBOM and
+  checksums automatically and attach them to the GitHub release.
+
+### Changed
+
+- **Settings load only when opened** (dynamic import); the key bindings live
+  in a small dedicated file.
+- **HUD code moved** to `renderer/js/overlay-hud.js`.
+- **Smoke test** now checks the full navigation
+  dashboard → inventory → tools and the HUD editor.
+- **Visual baselines** extended with dashboard and settings.
+
+### Removed
+
+- The hidden settings pages **“Websites”** and **“Custom sites”** including
+  their UI wiring. The app only shows its own views.
+
+### Technical
+
+- App feature test expanded to **91** checks, E2E to **512** steps.
+
 ## [1.7.0] – 2026-11-26
 
 ### Added

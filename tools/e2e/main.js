@@ -141,6 +141,18 @@ app.whenReady().then(() => {
         fs.writeFileSync(path.join(dir, view + '.png'), image.toPNG());
         log('page ' + view);
       }
+      // Dashboard und Einstellungen als zusätzliche Baselines.
+      await win.webContents.executeJavaScript("document.querySelector('#inventoryCloseBtn')?.click(); document.querySelector('#dashboardBtn')?.click(); true").catch(() => {});
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      let extra = await win.webContents.capturePage();
+      fs.writeFileSync(path.join(dir, 'dashboard.png'), extra.toPNG());
+      log('page dashboard');
+      await win.webContents.executeJavaScript("document.querySelector('#settingsBtn')?.click(); true").catch(() => {});
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      extra = await win.webContents.capturePage();
+      fs.writeFileSync(path.join(dir, 'settings.png'), extra.toPNG());
+      log('page settings');
+      await win.webContents.executeJavaScript("document.querySelector('#settingsCloseBtn')?.click(); true").catch(() => {});
       // Zusatzaufnahme im TV-Modus: Inventar (Kacheln, Tooltip-Ziele).
       if (process.env.INV_TV_MODE === '1') {
         await win.webContents.executeJavaScript("document.querySelector('.dinv-tab[data-tab=\"inventory\"]')?.click(); true").catch(() => {});

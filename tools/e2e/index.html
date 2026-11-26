@@ -132,6 +132,7 @@
       <h2>Inventar</h2>
       <div class="inventory-head-controls">
         <button id="inventoryGodrollFilter" type="button">Godrolls</button>
+        <button id="inventoryChampionAudit" type="button">Champions</button>
         <input id="inventorySearch" type="search" placeholder="Suchen">
           <button id="inventoryFilterBtn" class="btn ghost small">Filter ▾</button>
           <button id="inventorySearchOnly" class="btn ghost small">Nur Treffer</button>
@@ -145,11 +146,42 @@
     <div id="inventoryStatus" class="inventory-status"></div>
     <div class="inventory-toolbar"></div>
     <div id="inventoryResult" class="inventory-result hidden"></div>
-    <div id="loadoutQueueBar" class="loadout-queue-bar hidden"></div>
+    <div id="loadoutQueueBar" class="loadout-queue-bar hidden"><span id="loadoutQueueText"></span><button id="loadoutQueueDetails" type="button">Details</button></div>
+    <div id="loadoutQueuePanel" class="loadout-queue-panel hidden">
+      <div class="loadout-queue-head"><strong>Loadout-Warteschlange</strong><button id="loadoutQueueClose" type="button">✕</button></div>
+      <div class="loadout-queue-toolbar"><button id="loadoutQueuePause" type="button">Anhalten</button><button id="loadoutQueueClearDone" type="button">Erledigte entfernen</button></div>
+      <div id="loadoutQueueList" class="loadout-queue-list"></div>
+    </div>
     <div id="inventoryOutbox" class="inventory-outbox hidden" aria-live="polite">
       <span id="inventoryOutboxText" class="inventory-outbox-text"></span>
+      <button id="inventoryOutboxDetails" class="btn ghost small" type="button">Details</button>
       <button id="inventoryOutboxRun" class="btn ghost small" type="button">Jetzt senden</button>
       <button id="inventoryOutboxClear" class="btn ghost small" type="button">Verwerfen</button>
+    </div>
+    <div id="inventoryOutboxPanel" class="inventory-outbox-panel hidden" role="dialog">
+      <div class="inventory-outbox-head"><strong>Offline-Ausgang</strong><button id="inventoryOutboxClose" type="button">✕</button></div>
+      <div id="inventoryOutboxList" class="inventory-outbox-list"></div>
+      <div class="inventory-outbox-foot">
+        <button id="inventoryOutboxRunAll" class="btn primary small" type="button">Alle senden</button>
+        <button id="inventoryOutboxClearAll" class="btn ghost small" type="button">Alle verwerfen</button>
+      </div>
+    </div>
+    <div id="championAuditPanel" class="champion-audit hidden" role="dialog">
+      <div class="champion-audit-head"><strong>Champion-Prüfung</strong><button id="championAuditClose" type="button">✕</button></div>
+      <p class="champion-audit-hint">Waffen ohne erkannten Brecher.</p>
+      <div class="champion-audit-toolbar">
+        <label><input id="championAuditSelectAll" type="checkbox"> Alle</label>
+        <select id="championAuditType"><option value="1">Barriere</option><option value="2">Überladung</option><option value="3">Unaufhaltsam</option></select>
+        <button id="championAuditApply" type="button">Zuweisen</button>
+        <button id="championAuditClear" type="button">Override entfernen</button>
+      </div>
+      <div id="championAuditList" class="champion-audit-list"></div>
+      <div class="champion-audit-foot">
+        <button id="championAuditExport" type="button">Export</button>
+        <button id="championAuditImport" type="button">Import</button>
+        <input id="championAuditFile" type="file" hidden>
+        <span id="championAuditCount" class="champion-audit-count"></span>
+      </div>
     </div>
     <div id="inventoryLoadoutList" class="inventory-loadout-list"></div>
     <div id="inventoryBody" class="inventory-body"></div>

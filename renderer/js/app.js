@@ -1,7 +1,8 @@
 // Die frühere Webseiten-Ansicht wurde entfernt. Die App zeigt nur noch
 // Dashboard, Inventar/Loadouts und die Werkzeuge.
 import { createController, BUTTONS } from './controller.js';
-import { initSettings, BINDING_ACTIONS } from './settings.js';
+import { BINDING_ACTIONS } from './settings-bindings.js';
+import { createOverlayHud } from './overlay-hud.js';
 import { initClock, nextDailyReset, nextWeeklyReset, xurEnd, xurActive } from './clock.js';
 import { icon } from './icons.js';
 import { createPalette } from './palette.js';
@@ -62,8 +63,6 @@ let offlineReloadDone = false;
 let paletteItems = [];
 let paletteIndex = 0;
 let findDebounce = 0;
-// Der HUD-Editor darf erst nach seinen Konstanten arbeiten (Auto-Profil).
-let hudEditorReady = false;
 // Dashboard-/Checklisten- und Aktions-Buttons ebenfalls vorab
 // verankern (Interleaving durch Top-Level-Awaits möglich).
 // Die Checklisten-Elemente liegen jetzt im Checklisten-Modul
@@ -138,6 +137,7 @@ function initialSelection() {
 const current = initialSelection();
 let settings = null;
 let onboarding = null;
+let overlayHud = null;
 let padDashboardChord = false;
 let lastError = null;
 let wasOverlayVisible = false;
@@ -515,22 +515,61 @@ const controller = createController({
 // Einstellungen
 // ------------------------------------------------------------
 
-settings = initSettings({
-  api,
-  getConfig: () => cfg,
-  setConfig,
-  getCategories: () => categories,
-  controller,
-  web,
-  onCustomSitesChanged,
-  onCategoryOrderChanged: () => applyCategoryOrder(),
-  onReloadCurrentSite: () => {
-    const site = currentSite();
-    if (!site) return;
-    hideError();
-    web.show(site);
+// Einstellungen werden erst beim ersten Öffnen geladen. Der Proxy hält
+// alle Aufrufstellen synchron; bis dahin sind Updates No-ops.
+let settingsInstance = null;
+let settingsPromise = null;
+function ensureSettings() {
+  if (settingsInstance) return Promise.resolve(settingsInstance);
+  if (!settingsPromise) {
+    settingsPromise = import('./settings.js')
+      .then(({ initSettings }) => {
+        settingsInstance = initSettings({
+          api,
+          getConfig: () => cfg,
+          setConfig,
+          getCategories: () => categories,
+          controller,
+          web,
+          onCustomSitesChanged,
+          onCategoryOrderChanged: () => applyCategoryOrder(),
+          onReloadCurrentSite: () => {
+            const site = currentSite();
+            if (!site) return;
+            hideError();
+            web.show(site);
+          }
+        });
+        return settingsInstance;
+      })
+      .catch((error) => {
+        settingsPromise = null;
+        console.error('[settings] Laden fehlgeschlagen:', error && error.stack ? error.stack : error);
+        throw error;
+      });
   }
-});
+  return settingsPromise;
+}
+
+settings = {
+  open(tab) {
+    return ensureSettings().then((instance) => instance.open(tab)).catch(() => {});
+  },
+  close() {
+    if (settingsInstance) settingsInstance.close();
+  },
+  isOpen() {
+    return Boolean(settingsInstance && settingsInstance.isOpen());
+  },
+  onCaptureChanged(...args) { settingsInstance?.onCaptureChanged?.(...args); },
+  updateAxes(...args) { settingsInstance?.updateAxes?.(...args); },
+  updateGameStatus(...args) { settingsInstance?.updateGameStatus?.(...args); },
+  updatePadAction(...args) { settingsInstance?.updatePadAction?.(...args); },
+  updatePadButtons(...args) { settingsInstance?.updatePadButtons?.(...args); },
+  updatePadStatus(...args) { settingsInstance?.updatePadStatus?.(...args); },
+  updateStats(...args) { settingsInstance?.updateStats?.(...args); },
+  updateTestLive(...args) { settingsInstance?.updateTestLive?.(...args); }
+};
 
 onboarding = createOnboarding({
   api,
@@ -695,7 +734,7 @@ function updateActivityStatus() {
   } else {
     el.hidden = true;
   }
-  maybeApplyAutoHudProfile();
+  overlayHud?.maybeAutoApply?.();
 }
 
 // Live-Aktivität aus der Bungie-API (Komponente 204) für den Status-Chip.
@@ -1462,7 +1501,7 @@ function applyOverlayVisibility() {
       element.hidden = !visible;
     }
   }
-  applyOverlayChipOrder();
+  overlayHud?.applyChipOrder();
   const minimal = !cfg.overlay || cfg.overlay.minimal !== false;
   document.body.classList.toggle('overlay-minimal', minimal);
   if (!minimal) document.body.classList.remove('overlay-more');
@@ -1474,279 +1513,14 @@ function applyOverlayVisibility() {
   }
 }
 
-// Chips rechts in der Leiste gemäß Einstellung anordnen.
-const HUD_CHIPS = [
-  ['clock', 'Reset'],
-  ['weekly', 'Weekly'],
-  ['stopwatch', 'Stoppuhr'],
-  ['session', 'Session'],
-  ['activity', 'Status'],
-  ['champion', 'Champion'],
-  ['battery', 'Akku'],
-  ['vault', 'Tresor'],
-  ['minidash', 'Mini-Dash'],
-  ['focus', 'Fokus']
-];
-const HUD_CHIP_SELECTORS = {
-  clock: '#overlayClock',
-  weekly: '#overlayWeekly',
-  stopwatch: '#overlayStopwatch',
-  session: '#overlaySession',
-  activity: '#overlayActivity',
-  champion: '#overlayChampion',
-  battery: '#overlayBattery',
-  vault: '#overlayVault',
-  minidash: '#overlayMiniDash',
-  focus: '#overlayFocus'
-};
-const HUD_DEFAULT_ORDER = HUD_CHIPS.map(([key]) => key);
-const HUD_SCALE_LABELS = { s: 'Klein', m: 'Normal', l: 'Groß', xl: 'XL' };
-const HUD_HIDEABLE = ['clock', 'session', 'activity', 'champion', 'battery', 'focus'];
+const overlayHudInstance = createOverlayHud({
+  api,
+  getConfig: () => cfg,
+  setConfig,
+  getLiveActivityName: () => liveActivityName
+});
+overlayHud = overlayHudInstance;
 
-function hudOverlay() {
-  if (!cfg.overlay || typeof cfg.overlay !== 'object') cfg.overlay = {};
-  return cfg.overlay;
-}
-
-function hudOrder() {
-  const raw = Array.isArray(hudOverlay().chipOrder) ? hudOverlay().chipOrder : [];
-  const order = raw.filter((key) => HUD_CHIP_SELECTORS[key]);
-  for (const key of HUD_DEFAULT_ORDER) if (!order.includes(key)) order.push(key);
-  return order;
-}
-
-function hudScale() {
-  const value = hudOverlay().hudScale;
-  return ['s', 'm', 'l', 'xl'].includes(value) ? value : 'm';
-}
-
-function applyHudScale() {
-  document.body.classList.remove('hud-scale-s', 'hud-scale-m', 'hud-scale-l', 'hud-scale-xl');
-  document.body.classList.add(`hud-scale-${hudScale()}`);
-}
-
-function applyOverlayChipOrder() {
-  const bar = qs('#overlayBar');
-  if (!bar) return;
-  const nodes = hudOrder().map((key) => qs(HUD_CHIP_SELECTORS[key])).filter(Boolean);
-  if (!nodes.length) return;
-  for (const node of nodes) bar.appendChild(node);
-  applyHudScale();
-}
-
-// ------------------------------------------------------------
-// HUD-Layout-Editor
-// ------------------------------------------------------------
-function hudProfiles() {
-  return Array.isArray(hudOverlay().profiles) ? hudOverlay().profiles : [];
-}
-
-function applyHudProfile(profile, options = {}) {
-  if (!profile) return;
-  const overlay = hudOverlay();
-  setConfig({
-    overlay: {
-      width: Number(profile.width) || overlay.width,
-      height: Number(profile.height) || overlay.height,
-      opacity: Number(profile.opacity) || overlay.opacity,
-      anchor: profile.anchor || overlay.anchor,
-      monitor: Number.isFinite(Number(profile.monitor)) ? Number(profile.monitor) : overlay.monitor,
-      chipOrder: Array.isArray(profile.chipOrder) ? profile.chipOrder : hudOrder(),
-      showItems: { ...(overlay.showItems || {}), ...(profile.showItems || {}) },
-      hudScale: profile.hudScale || hudScale()
-    }
-  });
-  renderHudEditor();
-  if (!options.silent) toast(`HUD-Profil „${profile.name}“ angewendet.`, 'success', 1800);
-}
-
-let lastAutoHudKey = '';
-function maybeApplyAutoHudProfile() {
-  if (!hudEditorReady) return;
-  if (hudOverlay().hudAutoProfile !== true) return;
-  const label = `${liveActivityName || ''} ${String(hudOverlay().activityStatus || '')}`.trim();
-  if (!label) return;
-  const key = label.toLowerCase();
-  if (key === lastAutoHudKey) return;
-  const match = /raid|dungeon|könig|king'?s fall|krise|root of nightmares|salvation|tiefstein|pit of heresy|duality|spire|ghost of the deep|warlord/i.test(label)
-    ? 'raid'
-    : /schmelztiegel|crucible|pvp|trials|eiserner banner|iron banner|competitive|rival|osiris/i.test(label)
-      ? 'pvp'
-      : '';
-  if (!match) return;
-  const profile = hudProfiles().find((entry) => entry.match === match)
-    || hudProfiles().find((entry) => entry.match === 'all');
-  if (!profile) return;
-  lastAutoHudKey = key;
-  applyHudProfile(profile, { silent: true });
-}
-
-function renderHudEditor() {
-  const panel = qs('#hudEditorPanel');
-  if (!panel) return;
-  for (const button of panel.querySelectorAll('[data-hud-scale]')) {
-    button.classList.toggle('on', button.dataset.hudScale === hudScale());
-  }
-  const list = qs('#hudChipList');
-  if (list) {
-    const order = hudOrder();
-    const showItems = hudOverlay().showItems || {};
-    list.innerHTML = order.map((key, index) => {
-      const label = (HUD_CHIPS.find(([chip]) => chip === key) || [key, key])[1];
-      const visible = showItems[key] !== false;
-      const toggle = HUD_HIDEABLE.includes(key)
-        ? `<input type="checkbox" data-hud-visible="${key}" ${visible ? 'checked' : ''} title="Chip anzeigen">`
-        : '';
-      return `<div class="hud-chip-row${visible ? '' : ' hidden-chip'}" data-hud-chip="${key}">
-        <span class="hud-chip-name">${escapeHtml(label)}</span>
-        ${toggle}
-        <button type="button" data-hud-move="up" data-hud-key="${key}" ${index === 0 ? 'disabled' : ''} title="Nach vorne">↑</button>
-        <button type="button" data-hud-move="down" data-hud-key="${key}" ${index === order.length - 1 ? 'disabled' : ''} title="Nach hinten">↓</button>
-      </div>`;
-    }).join('');
-  }
-  const select = qs('#hudProfileSelect');
-  if (select) {
-    const current = String(select.value || '');
-    select.innerHTML = '<option value="">Profil wählen …</option>' + hudProfiles()
-      .map((profile) => `<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.name)}${profile.match === 'pvp' ? ' · PvP' : profile.match === 'raid' ? ' · Raid' : ''}</option>`)
-      .join('');
-    if (current && hudProfiles().some((profile) => profile.id === current)) select.value = current;
-  }
-  const auto = qs('#hudAutoProfile');
-  if (auto) auto.checked = hudOverlay().hudAutoProfile === true;
-  const hint = qs('#hudEditorHint');
-  if (hint) hint.textContent = `${hudOrder().length} Chips · ${HUD_SCALE_LABELS[hudScale()]}`;
-}
-
-function toggleHudEditor(force) {
-  const panel = qs('#hudEditorPanel');
-  if (!panel) return;
-  const show = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
-  panel.classList.toggle('hidden', !show);
-  const button = qs('#overlayHudEditBtn');
-  if (button) button.setAttribute('aria-expanded', show ? 'true' : 'false');
-  document.body.classList.toggle('hud-edit', show);
-  if (show) renderHudEditor();
-}
-
-function moveHudChip(key, direction) {
-  const order = hudOrder();
-  const index = order.indexOf(key);
-  const target = direction === 'up' ? index - 1 : index + 1;
-  if (index < 0 || target < 0 || target >= order.length) return;
-  const next = order.slice();
-  [next[index], next[target]] = [next[target], next[index]];
-  setConfig({ overlay: { chipOrder: next } });
-  renderHudEditor();
-}
-
-function saveHudProfileFromEditor() {
-  const nameInput = qs('#hudProfileName');
-  const name = String((nameInput && nameInput.value) || '').trim().slice(0, 30);
-  if (!name) {
-    toast('Bitte einen Profilnamen eingeben.', 'info', 2000);
-    nameInput?.focus();
-    return;
-  }
-  const overlay = hudOverlay();
-  const match = String(qs('#hudProfileMatch')?.value || 'all');
-  const profiles = hudProfiles().slice();
-  const profile = {
-    id: `hud-${Date.now().toString(36)}`,
-    name,
-    width: overlay.width,
-    height: overlay.height,
-    opacity: overlay.opacity,
-    anchor: overlay.anchor,
-    monitor: Number(overlay.monitor) || 0,
-    chipOrder: hudOrder(),
-    showItems: { ...(overlay.showItems || {}) },
-    hudScale: hudScale(),
-    match: ['pvp', 'raid'].includes(match) ? match : 'all'
-  };
-  const existingIndex = profiles.findIndex((entry) => String(entry.name || '').toLowerCase() === name.toLowerCase());
-  if (existingIndex >= 0) profiles[existingIndex] = profile;
-  else profiles.push(profile);
-  setConfig({ overlay: { profiles: profiles.slice(-8) } });
-  if (nameInput) nameInput.value = '';
-  renderHudEditor();
-  toast(`HUD-Profil „${name}“ gespeichert.`, 'success', 2000);
-}
-
-function resetHudLayout() {
-  const overlay = hudOverlay();
-  const showItems = { ...(overlay.showItems || {}) };
-  for (const key of HUD_HIDEABLE) showItems[key] = true;
-  setConfig({
-    overlay: {
-      chipOrder: HUD_DEFAULT_ORDER.slice(),
-      hudScale: 'm',
-      showItems
-    }
-  });
-  renderHudEditor();
-  toast('HUD-Layout zurückgesetzt.', 'success', 1800);
-}
-
-{
-  const panel = qs('#hudEditorPanel');
-  if (panel) {
-    qs('#overlayHudEditBtn')?.addEventListener('click', () => toggleHudEditor());
-    qs('#hudEditorClose')?.addEventListener('click', () => toggleHudEditor(false));
-    panel.addEventListener('click', (event) => {
-      const scaleBtn = event.target.closest('[data-hud-scale]');
-      if (scaleBtn) {
-        setConfig({ overlay: { hudScale: scaleBtn.dataset.hudScale } });
-        renderHudEditor();
-        return;
-      }
-      const moveBtn = event.target.closest('[data-hud-move]');
-      if (moveBtn) {
-        moveHudChip(String(moveBtn.dataset.hudKey || ''), String(moveBtn.dataset.hudMove || ''));
-        return;
-      }
-      if (event.target.closest('#hudProfileApply')) {
-        const id = String(qs('#hudProfileSelect')?.value || '');
-        applyHudProfile(hudProfiles().find((profile) => profile.id === id));
-        return;
-      }
-      if (event.target.closest('#hudProfileSave')) {
-        saveHudProfileFromEditor();
-        return;
-      }
-      if (event.target.closest('#hudReset')) {
-        resetHudLayout();
-      }
-    });
-    panel.addEventListener('change', (event) => {
-      const visible = event.target.closest('[data-hud-visible]');
-      if (visible) {
-        const key = String(visible.dataset.hudVisible || '');
-        setConfig({ overlay: { showItems: { [key]: visible.checked === true } } });
-        renderHudEditor();
-        return;
-      }
-      if (event.target.closest('#hudAutoProfile')) {
-        setConfig({ overlay: { hudAutoProfile: event.target.checked === true } });
-        lastAutoHudKey = '';
-        maybeApplyAutoHudProfile();
-      }
-    });
-  }
-  window.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') return;
-    const panelEl = qs('#hudEditorPanel');
-    if (panelEl && !panelEl.classList.contains('hidden')) {
-      event.stopPropagation();
-      toggleHudEditor(false);
-    }
-  });
-  hudEditorReady = true;
-  applyHudScale();
-  renderHudEditor();
-  maybeApplyAutoHudProfile();
-}
 
 // ------------------------------------------------------------
 // Sitzungs-Wiederherstellung

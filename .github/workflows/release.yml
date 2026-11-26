@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release-Tag (z. B. v1.8.0)'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Installieren
+        run: npm ci
+
+      - name: Stream-Deck-Abhängigkeiten
+        run: npm install --prefix streamdeck/com.freakitout.d2tool.sdPlugin --no-audit --no-fund
+
+      - name: Tag und Version prüfen
+        shell: pwsh
+        run: |
+          $tag = "${{ inputs.tag || github.ref_name }}"
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($tag -ne "v$version") {
+            throw "Tag $tag passt nicht zu package.json v$version."
+          }
+
+      - name: Schnelltests
+        run: |
+          npm run check
+          npm run test:lint
+          npm run test:i18n
+          npm run test:types
+          npm run test:app-features
+          npm run test:bundle
+          npm run test:plugin
+
+      - name: Build (portable + Installer)
+        run: npm run dist
+
+      - name: SBOM und Prüfsummen
+        run: |
+          npm run sbom
+          npm run checksums
+
+      - name: Release veröffentlichen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          ASSETS=(
+            "dist/Destiny 2 Tool by FreakItOut ${VERSION}.exe"
+            "dist/Destiny 2 Tool by FreakItOut Setup ${VERSION}.exe"
+            "dist/com.freakitout.d2tool.streamDeckPlugin"
+            "dist/streamdeck-profile.json"
+            "dist/sbom.cdx.json"
+            "dist/SHA256SUMS.txt"
+          )
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${ASSETS[@]}" --clobber
+          else
+            gh release create "$TAG" \
+              --title "Destiny 2 Tool by FreakItOut ${VERSION}" \
+              --notes-file RELEASE_NOTES.md \
+              "${ASSETS[@]}"
+          fi

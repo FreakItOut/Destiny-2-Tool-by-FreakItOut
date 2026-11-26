@@ -91,8 +91,8 @@ async function evaluate(ws, expression) {
 
   const tabs = await evaluate(ws, `document.querySelectorAll('[data-settings-tab]').length`);
   const panels = await evaluate(ws, `document.querySelectorAll('[data-settings-panel]').length`);
-  check('12 Tabs vorhanden', tabs === 12, String(tabs));
-  check('12 Panels vorhanden', panels === 12, String(panels));
+  check('10 Tabs vorhanden', tabs === 10, String(tabs));
+  check('10 Panels vorhanden', panels === 10, String(panels));
 
   const switched = await evaluate(ws, `(async () => {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));

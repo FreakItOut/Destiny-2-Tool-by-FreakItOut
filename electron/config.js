@@ -55,6 +55,8 @@ const DEFAULTS = {
     chipOrder: ['clock', 'weekly', 'stopwatch', 'session', 'activity', 'champion', 'battery', 'vault', 'minidash', 'focus'],
     // HUD-Größe im Overlay: s | m | l | xl.
     hudScale: 'm',
+    // Feineinstellung pro Chip: { scale: 's'|'m'|'l', color: '#rrggbb' }.
+    chipStyles: {},
     // Gespeichertes HUD-Profil automatisch nach Aktivität wählen.
     hudAutoProfile: false,
     // Gespeicherte Overlay-Layouts (Position/Größe/Chips …).
@@ -1228,6 +1230,17 @@ function normalize(raw) {
   merged.overlay.chipOrder = chipOrder;
   merged.overlay.hudScale = ['s', 'm', 'l', 'xl'].includes(merged.overlay.hudScale) ? merged.overlay.hudScale : 'm';
   merged.overlay.hudAutoProfile = merged.overlay.hudAutoProfile === true;
+  const rawChipStyles = isPlainObject(merged.overlay.chipStyles) ? merged.overlay.chipStyles : {};
+  const chipStyles = {};
+  for (const key of CHIP_KEYS) {
+    const entry = rawChipStyles[key];
+    if (!isPlainObject(entry)) continue;
+    chipStyles[key] = {
+      scale: ['s', 'm', 'l'].includes(entry.scale) ? entry.scale : 'm',
+      color: /^#[0-9a-f]{6}$/i.test(String(entry.color || '')) ? String(entry.color) : ''
+    };
+  }
+  merged.overlay.chipStyles = chipStyles;
 
   // Sitzungs-Wiederherstellung: Kategorie-/Seiten-IDs, max. 8.
   if (!isPlainObject(merged.session)) merged.session = { siteIds: [] };
@@ -1669,6 +1682,8 @@ function normalize(raw) {
       chipOrder: cleanOrder,
       showItems,
       hudScale: ['s', 'm', 'l', 'xl'].includes(entry.hudScale) ? entry.hudScale : 'm',
+      chipStyles: isPlainObject(entry.chipStyles) ? entry.chipStyles : {},
+      display: /^\d+x\d+@[\d.]+$/.test(String(entry.display || '')) ? String(entry.display) : '',
       match: ['all', 'pvp', 'raid', 'dungeon'].includes(entry.match) ? entry.match : 'all'
     });
     if (overlayProfiles.length >= 8) break;

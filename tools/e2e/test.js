@@ -675,6 +675,35 @@ async function run() {
   check('Loadout-Versionen öffnen', /Loadout-Versionen/.test(document.body.textContent || ''), 'kein Dialog');
   document.querySelector('[data-versions-close]')?.click();
 
+  // --- Loadout-Warteschlange: Detailpanel und Fehlerbehandlung ----------
+  cfg.bungie.loadouts = cfg.bungie.loadouts || [];
+  if (!cfg.bungie.loadouts.some((entry) => entry.id === 'lo-queue-test')) {
+    cfg.bungie.loadouts.push({ id: 'lo-queue-test', name: 'Queue-Test', classType: 0, characterId: '', items: [], mods: [] });
+  }
+  inv.renderLoadouts();
+  await wait(150);
+  inv.queueLoadout('lo-queue-test');
+  await wait(300);
+  const queueBar = document.querySelector('#loadoutQueueBar');
+  check('Loadout-Warteschlange sichtbar', Boolean(queueBar) && !queueBar.classList.contains('hidden'));
+  document.querySelector('#loadoutQueueDetails')?.click();
+  await wait(100);
+  const queuePanelEl = document.querySelector('#loadoutQueuePanel');
+  check('Loadout-Warteschlange Detailpanel offen', Boolean(queuePanelEl) && !queuePanelEl.classList.contains('hidden'));
+  const queueRow = queuePanelEl?.querySelector('.loadout-queue-row');
+  check('Loadout-Warteschlange listet Eintrag', Boolean(queueRow), queuePanelEl?.textContent?.slice(0, 120));
+  check('Loadout-Warteschlange markiert Fehler', Boolean(queueRow?.querySelector('.loadout-queue-state.failed')), queueRow?.textContent);
+  const retryBtn = queueRow?.querySelector('[data-loadout-retry]');
+  check('Loadout-Warteschlange bietet Wiederholen', Boolean(retryBtn));
+  retryBtn?.click();
+  await wait(300);
+  document.querySelector('#loadoutQueuePanel [data-loadout-remove]')?.click();
+  await wait(100);
+  check('Loadout-Warteschlange entfernt Eintrag', !document.querySelector('#loadoutQueuePanel .loadout-queue-row'));
+  document.querySelector('#loadoutQueueClose')?.click();
+  cfg.bungie.loadouts = cfg.bungie.loadouts.filter((entry) => entry.id !== 'lo-queue-test');
+  inv.renderLoadouts();
+
   // --- Bearbeiten (Persistenz) -----------------------------------------
   document.querySelector('[data-loadout-edit]').click();
   check('Drawer erneut offen', await until(() => drawer()));
@@ -956,6 +985,7 @@ async function run() {
     const filterMenu = document.querySelector('.inv-filter-menu:not(.hidden)');
     check('Filter-Menü öffnet', Boolean(filterMenu));
     check('Filter-Menü bietet Schnellfilter', Boolean(filterMenu && filterMenu.querySelectorAll('[data-filter-apply]').length >= 6));
+    check('Filter-Menü erklärt Operatoren', Boolean(filterMenu && filterMenu.querySelector('.inv-filter-help')) && /stat:gesundheit/.test(filterMenu.textContent || ''));
     const preset = filterMenu && filterMenu.querySelector('[data-filter-apply="is:godroll"]');
     if (preset) preset.click();
     await wait(250);
@@ -969,6 +999,41 @@ async function run() {
   check('Fuzzy-Suche findet Tippfehler', /Treffer/.test(document.querySelector('#inventorySearchCount')?.textContent || ''), document.querySelector('#inventorySearchCount')?.textContent);
   check('Such-Worker ist aktiv', window.__d2SearchWorkerActive === true, String(window.__d2SearchWorkerActive));
   check('Fuzzy-Suche wird gekennzeichnet', /unscharf/.test(document.querySelector('#inventorySearchCount')?.textContent || ''));
+
+  // Treffer werden im Tooltip hervorgehoben.
+  await setSearch('Testgewehr');
+  await wait(200);
+  const highlightTile = document.querySelector('.dinv-tile[title^="Testgewehr"]');
+  if (highlightTile) {
+    highlightTile.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    await wait(100);
+  }
+  check('Treffer im Tooltip markiert', Boolean(document.querySelector('#inventoryTooltip .dinv-mark')),
+    document.querySelector('#inventoryTooltip')?.textContent?.slice(0, 80));
+  await setSearch('');
+
+  // Champion-Prüfung: Waffe ohne Brecher auswählen und Override setzen.
+  document.querySelector('#inventoryChampionAudit')?.click();
+  await wait(150);
+  const auditPanel = document.querySelector('#championAuditPanel');
+  check('Champion-Prüfung öffnet', Boolean(auditPanel) && !auditPanel.classList.contains('hidden'));
+  const auditInput = auditPanel?.querySelector('[data-champion-audit-key]');
+  check('Champion-Prüfung listet Waffen ohne Brecher', Boolean(auditInput),
+    auditPanel?.querySelector('#championAuditCount')?.textContent);
+  if (auditInput) {
+    auditInput.checked = true;
+    document.querySelector('#championAuditType').value = '1';
+    document.querySelector('#championAuditApply')?.click();
+    await wait(180);
+    let overrides = {};
+    try { overrides = JSON.parse(localStorage.getItem('d2tool.championOverrides') || '{}'); } catch (error) { overrides = {}; }
+    check('Champion-Prüfung speichert Override', Object.keys(overrides).length >= 1, JSON.stringify(overrides));
+    try { localStorage.removeItem('d2tool.championOverrides'); } catch (error) { /* egal */ }
+    document.querySelector('#championAuditClose')?.click();
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
+    await wait(200);
+  }
+
   await setSearch('');
   if (viewsSelect) {
     viewsSelect.value = 'p:preset-god';
@@ -1934,6 +1999,45 @@ async function run() {
   let outboxAfter = [];
   try { outboxAfter = JSON.parse(localStorage.getItem('d2tool.outbox') || '[]'); } catch (error) { outboxAfter = []; }
   check('Offline-Ausgang sendet nach Erfolg', outboxAfter.length === 0, JSON.stringify(outboxAfter));
+
+  // --- Offline-Ausgang: Detailpanel, Sortieren, einzelne Aktionen ---
+  transferResponse = { ok: false, error: 'Netzwerk nicht erreichbar' };
+  for (const id of ['i-legs2', 'i-class2']) {
+    const tile = document.querySelector(`.dinv-tile[data-inv-select="${id}"][data-inv-kind="backpack"]`);
+    if (!tile) continue;
+    tile.click();
+    await wait(120);
+    document.querySelector('.inv-popup [data-inv-act="to-vault"]')?.click();
+    await wait(320);
+  }
+  let outboxTwo = [];
+  try { outboxTwo = JSON.parse(localStorage.getItem('d2tool.outbox') || '[]'); } catch (error) { outboxTwo = []; }
+  check('Offline-Ausgang sammelt mehrere Aktionen', outboxTwo.length === 2, `${outboxTwo.length}`);
+  document.querySelector('#inventoryOutboxDetails')?.click();
+  await wait(80);
+  const outboxPanelEl = document.querySelector('#inventoryOutboxPanel');
+  check('Offline-Ausgang Detailpanel offen', Boolean(outboxPanelEl) && !outboxPanelEl.classList.contains('hidden'));
+  check('Offline-Ausgang listet Aktionen',
+    document.querySelectorAll('#inventoryOutboxList .inventory-outbox-row').length === 2,
+    document.querySelectorAll('#inventoryOutboxList .inventory-outbox-row').length);
+  const firstBefore = outboxTwo[0]?.id;
+  document.querySelector('[data-outbox-down="0"]')?.click();
+  await wait(60);
+  let reordered = [];
+  try { reordered = JSON.parse(localStorage.getItem('d2tool.outbox') || '[]'); } catch (error) { reordered = []; }
+  check('Offline-Ausgang lässt sich sortieren', reordered[1]?.id === firstBefore, reordered.map((entry) => entry.id).join(','));
+  document.querySelector(`[data-outbox-remove="${reordered[0]?.id}"]`)?.click();
+  await wait(60);
+  let oneLeft = [];
+  try { oneLeft = JSON.parse(localStorage.getItem('d2tool.outbox') || '[]'); } catch (error) { oneLeft = []; }
+  check('Offline-Ausgang entfernt einzelne Aktion', oneLeft.length === 1, `${oneLeft.length}`);
+  document.querySelector('#inventoryOutboxClose')?.click();
+  await wait(60);
+  check('Offline-Ausgang Detailpanel schließt', Boolean(outboxPanelEl) && outboxPanelEl.classList.contains('hidden'));
+  transferResponse = null;
+  try { localStorage.removeItem('d2tool.outbox'); } catch (error) { /* egal */ }
+  window.dispatchEvent(new CustomEvent('d2-outbox-change'));
+  await wait(60);
 
   // --- Dashboard 2.0: Kommandostand mit Prioritäten + Aktionen ---
   let dashOpenedInventory = 0;
