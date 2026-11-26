@@ -131,8 +131,10 @@ const INVENTORY_CSS = `
 .dinv-tile-wrap { display: flex; flex-direction: column; gap: 1px; width: 56px; height: var(--dinv-tile-h, 79px); flex-shrink: 0; content-visibility: auto; contain-intrinsic-size: auto var(--dinv-tile-h, 79px); }
 body.tv-mode #inventoryView { --dinv-tile-h: 104px; }
 body.tv-mode .dinv-tile-wrap { width: 76px; }
-body.tv-mode .dinv-sub { grid-template-columns: repeat(3, 76px); }
+body.tv-mode .dinv-sub,
 body.tv-mode .dinv-sub.vault { grid-template-columns: repeat(auto-fill, 76px); }
+body.tv-mode .dinv-tile { width: 76px !important; height: 76px !important; }
+body.tv-mode .dinv-pm-slot { width: 76px !important; height: 76px !important; }
 body.pad-active .dinv-tile-wrap { content-visibility: visible; }
 .dinv-chunk { display: contents; }
 .dinv-tile-perkrow { display: flex; gap: 2px; justify-content: center; align-items: center; height: 11px; }
@@ -2355,7 +2357,11 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   function postmasterCell(character, postmasterList) {
     if (!postmasterList.length) return '';
     const slots = [];
-    for (let i = 0; i < 21; i += 1) {
+    // Im TV-Modus keine 21 leeren Plätze aufblasen: nur belegte Slots
+    // plus ein kleiner Puffer, damit die Ansicht kompakt bleibt.
+    const tvMode = document.body.classList.contains('tv-mode');
+    const slotCount = tvMode ? Math.min(21, Math.max(9, postmasterList.length + 2)) : 21;
+    for (let i = 0; i < slotCount; i += 1) {
       const item = postmasterList[i];
       slots.push(item ? tileHtml(item, 'postmaster', character.id) : `<div class="dinv-pm-slot"></div>`);
     }

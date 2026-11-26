@@ -6,6 +6,18 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.1] – 2026-11-26
+
+### Fixed
+
+- **TV inventory showed too little** – tile rows now use the full cell width
+  (`auto-fill` instead of three fixed columns), the postmaster renders only
+  occupied slots plus a small buffer instead of 21 empty ones, and the header,
+  filters and tabs are more compact in TV mode. Many more items are visible at
+  once.
+- **E2E** now checks the TV column count and larger TV tiles.
+- Version **1.5.1**.
+
 ## [1.5.0] – 2026-11-25
 
 ### Added

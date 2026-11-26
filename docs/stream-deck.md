@@ -393,7 +393,7 @@ Das Plugin umfasst jetzt **30 Actions** (SDK 2) und ist versionsgleich mit der A
 ### Verbindung
 
 Die Action **Verbindung** prüft API, Token und App-Version. Sie zeigt
-`OK · v1.5.0 · P1.5.0` oder `Fehler` und löst bei Fehlern einen Alarm aus.
+`OK · v1.5.1 · P1.5.1` oder `Fehler` und löst bei Fehlern einen Alarm aus.
 Der Property Inspector hat zusätzlich **Testen** mit App-/Plugin-Version.
 
 ### Encoder

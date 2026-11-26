@@ -6,6 +6,18 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.1] – 2026-11-26
+
+### Behoben
+
+- **TV-Inventar zeigt zu wenig** – Kachelreihen nutzen jetzt die volle
+  Zellbreite (`auto-fill` statt drei fester Spalten), die Poststelle rendert
+  nur noch belegte Slots plus kleinen Puffer statt 21 leerer Plätze, und
+  Kopfzeile/Filter/Tabs sind im TV-Modus kompakter. Dadurch sind deutlich
+  mehr Items gleichzeitig sichtbar.
+- **E2E** prüft die TV-Spaltenzahl und die größeren TV-Kacheln.
+- Version **1.5.1**.
+
 ## [1.5.0] – 2026-11-25
 
 ### Hinzugefügt

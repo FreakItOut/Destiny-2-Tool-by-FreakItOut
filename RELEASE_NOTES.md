@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.5.0
+# Destiny 2 Tool by FreakItOut 1.5.1
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,39 +6,31 @@
 
 ## Deutsch
 
-Version 1.5.0 macht die App alltagstauglicher: fokussiertes Dashboard,
-einfachere Einstellungen, Loadout-Warteschlange mit Konflikterkennung und ein
-längerer Aktivitätsverlauf.
+Version 1.5.1 verbessert den TV-Modus im Inventar: mehr Items pro Zeile,
+weniger leere Poststellen-Plätze und kompaktere Kopfbereiche.
 
-### Neu in 1.5.0
+### Neu in 1.5.1
 
-- **Fokus-Dashboard** – standardmäßig nur Hüter, Prioritäten, Analyse und
-  Wochen-Checkliste. „Alle anzeigen“ holt die restlichen Karten; die Wahl
-  wird gespeichert.
-- **Einfach-/Erweitert-Modus** – Steam Input, Sicherheit und Diagnose sind
-  nur noch im Erweitert-Modus sichtbar. Die Overlay-Leiste bleibt normal
-  erreichbar.
-- **Loadout-Warteschlange** – mehrere Loadouts nacheinander anwenden, inkl.
-  Fortschritt und automatischem Überspringen blockierender Konflikte.
-- **Konflikterkennung** – mehrere Exoten, falsche Klasse und fehlende Items
-  werden vor dem Anwenden gemeldet.
-- **90-Tage-Verlauf** – die Aktivitäts-Analyse speichert tägliche Aggregate
-  lokal und zeigt den längeren Trend.
-- **SBOM** – CycloneDX-Datei für Releases (`dist/sbom.cdx.json`).
-- **Werkzeuge-Knopf** direkt in der App-Leiste.
-- **Sicherer:** CSP-Verbindungen nur noch zu Bungie; kompaktere Leiste.
+- **TV-Inventar nutzt die volle Breite** – Kacheln füllen die Zelle per
+  `auto-fill` statt nur drei fester Spalten. Dadurch sind deutlich mehr Items
+  gleichzeitig sichtbar.
+- **Poststelle kompakt** – im TV-Modus werden nur belegte Slots plus ein
+  kleiner Puffer gerendert, nicht mehr 21 leere Plätze.
+- **Kompaktere TV-Kopfzeile** – kleinere Tabs, Filter und Abstände; die
+  Kacheln bleiben mit 76 px groß und fokussierbar.
+- **E2E-Tests** prüfen TV-Spalten und Kachelgröße.
 
-### Enthalten aus 1.4.0
+### Enthalten aus 1.5.0
 
-- Webseiten vollständig entfernt (native Ansichten, keine Webviews).
-- Dashboard-Analytik, Inventar-Virtualisierung und Stream Deck.
+- Fokus-Dashboard, Einfach-/Erweitert-Einstellungen, Loadout-Warteschlange
+  mit Konflikterkennung, 90-Tage-Analyse und SBOM.
 
 ### Downloads
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.1.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.1.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -46,7 +38,7 @@ längerer Aktivitätsverlauf.
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.5.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.1.exe`).
 
 ### Voraussetzungen
 
@@ -79,37 +71,30 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.5.0 makes the app more usable day to day: a focused dashboard,
-simpler settings, a loadout queue with conflict detection and a longer
-activity history.
+Version 1.5.1 improves the TV mode inventory: more items per row, fewer empty
+postmaster slots and more compact headers.
 
-### New in 1.5.0
+### New in 1.5.1
 
-- **Focus dashboard** – only Guardian, priorities, analytics and the weekly
-  checklist by default. “Show all” reveals the rest; the choice is saved.
-- **Simple/advanced mode** – Steam Input, security and diagnostics only show
-  in advanced mode. The overlay bar stays available normally.
-- **Loadout queue** – apply multiple loadouts in sequence, with progress and
-  automatic skipping of blocking conflicts.
-- **Conflict detection** – multiple exotics, wrong class and missing items are
-  reported before applying.
-- **90-day history** – activity analytics stores daily aggregates locally and
-  shows the longer trend.
-- **SBOM** – CycloneDX file for releases (`dist/sbom.cdx.json`).
-- **Tools button** directly in the app bar.
-- **Safer:** CSP connections only to Bungie; more compact bar.
+- **TV inventory uses the full width** – tiles fill the cell via `auto-fill`
+  instead of only three fixed columns. Many more items are visible at once.
+- **Compact postmaster** – in TV mode only occupied slots plus a small buffer
+  are rendered, not 21 empty slots.
+- **More compact TV header** – smaller tabs, filters and gaps; tiles stay at
+  76 px and remain focusable.
+- **E2E tests** check TV columns and tile size.
 
-### Included from 1.4.0
+### Included from 1.5.0
 
-- Websites fully removed (native views, no webviews).
-- Dashboard analytics, inventory virtualization and Stream Deck.
+- Focus dashboard, simple/advanced settings, loadout queue with conflict
+  detection, 90-day analytics and SBOM.
 
 ### Downloads
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.0.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.1.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.1.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -117,7 +102,7 @@ activity history.
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.5.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.1.exe`).
 
 ### Requirements
 

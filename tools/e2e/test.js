@@ -2148,6 +2148,27 @@ async function run() {
     check('Große Liste rendert zuerst nur 120 Kacheln', false, String((error && error.message) || error));
   }
 
+  // --- TV-Modus: Inventar muss die Zellbreite nutzen ---------------------
+  try {
+    const tabEl = document.querySelector('.dinv-tab.on');
+    const tabBack = tabEl ? tabEl.dataset.tab : 'tools';
+    document.body.classList.add('tv-mode');
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
+    await wait(220);
+    const sub = document.querySelector('#inventoryBody .dinv-sub:not(.vault)');
+    const columns = sub ? getComputedStyle(sub).gridTemplateColumns.split(' ').filter(Boolean).length : 0;
+    const tile = sub ? sub.querySelector('.dinv-tile') : null;
+    const tileHeight = tile ? Math.round(tile.getBoundingClientRect().height) : 0;
+    check('TV-Inventar nutzt die Zellbreite', columns >= 4, `${columns} Spalten`);
+    check('TV-Inventar nutzt größere Kacheln', tileHeight >= 70, `${tileHeight}px`);
+    document.body.classList.remove('tv-mode');
+    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: tabBack } }));
+    await wait(160);
+  } catch (error) {
+    document.body.classList.remove('tv-mode');
+    check('TV-Inventar nutzt die Zellbreite', false, String((error && error.message) || error));
+  }
+
   try {
     for (const tip of document.querySelectorAll('.inventory-tooltip.show, .vc-tooltip.show, #armorPickerTooltip.show, #toolsXurTooltip.show')) {
       tip.classList.remove('show');
