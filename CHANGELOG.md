@@ -6,6 +6,29 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.15.0] – 2026-11-27
+
+### Entfernt
+
+- **Tote Web-Pfade in den Einstellungen** – die verbliebenen Web-/Seiten-Funktionen
+  (Keep-Alive, Zoom, Dunkelmodus, Lesemodus, Blocker, Auto-Refresh,
+  Fehlerradar, Kategorie-Reihenfolge, eigene Seiten) sind aus `settings.js`
+  entfernt; die Datei schrumpft um rund 600 Zeilen.
+- **Controller-Webview-Helfer** – Maus-/Drag-Helfer und `api.webviewInput`
+  sind gelöscht. Maus, Klick, Scrollen, Snap, Buttons und Achsen bleiben
+  unverändert.
+- **Web-Belegungen** – `sitePrev`, `siteNext`, `pip` und `unloadOthers` sind
+  aus den Controller-Belegungen entfernt.
+
+### Hinzugefügt
+
+- **CSV-Export** – Händlerangebote und Godroll-/Wunschlisten-Treffer lassen
+  sich als CSV speichern (Semikolon, UTF-8-BOM, Datum im Dateinamen).
+
+### Geändert
+
+- Die Controller-Aktion `reload` heißt jetzt „Inventar aktualisieren“.
+
 ## [1.14.0] – 2026-11-27
 
 ### Hinzugefügt

@@ -6,6 +6,28 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.15.0] – 2026-11-27
+
+### Removed
+
+- **Dead web paths in settings** – the remaining web/site functions
+  (keep-alive, zoom, dark mode, reader mode, blocker, auto-refresh, error
+  radar, category order, custom sites) are gone from `settings.js`; the file
+  shrinks by about 600 lines.
+- **Controller webview helpers** – mouse/drag helpers and `api.webviewInput`
+  are deleted. Mouse, click, scroll, snap, buttons and axes are unchanged.
+- **Web bindings** – `sitePrev`, `siteNext`, `pip` and `unloadOthers` are
+  removed from the controller bindings.
+
+### Added
+
+- **CSV export** – vendor offers and godroll/wishlist hits can be saved as
+  CSV (semicolon, UTF-8 BOM, date in the file name).
+
+### Changed
+
+- The controller action `reload` is now labelled "Refresh inventory".
+
 ## [1.14.0] – 2026-11-27
 
 ### Added

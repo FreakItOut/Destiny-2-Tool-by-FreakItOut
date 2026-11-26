@@ -1,5 +1,4 @@
 import { BUTTONS } from './controller.js';
-import { icon } from './icons.js';
 import { qs, qsa, escapeHtml, formatAccelerator, toast, modalOpen, modalClose, clamp, debounce } from './ui.js';
 import { BINDING_ACTIONS } from './settings-bindings.js';
 
@@ -87,30 +86,12 @@ function formatCombo(combo) {
   return list.map((index) => BUTTONS[index]?.label || String(index)).join(' + ');
 }
 
-function normalizeUrl(value) {
-  let url = String(value || '').trim();
-  if (!url) return null;
-  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
-  try {
-    const parsed = new URL(url);
-    if (!['http:', 'https:'].includes(parsed.protocol)) return null;
-    if (!parsed.hostname.includes('.')) return null;
-    return parsed.toString();
-  } catch (error) {
-    return null;
-  }
-}
-
 export function initSettings({
   api,
   getConfig,
   setConfig,
   getCategories = () => [],
-  controller,
-  web = null,
-  onCustomSitesChanged = null,
-  onReloadCurrentSite = null,
-  onCategoryOrderChanged = null
+  controller
 }) {
   const modal = qs('#settingsModal');
   const tabs = qsa('[data-settings-tab]', modal);
@@ -145,8 +126,6 @@ export function initSettings({
   buildQuickMenuConfig();
   const padGrid = qs('#padGrid');
   const padCells = [];
-  const customCategory = qs('#customCategory');
-  const customList = qs('#customList');
 
   let recording = null;
   let recordingCombo = false;
@@ -357,8 +336,6 @@ export function initSettings({
     qs('#gamepadSpeedValue').textContent = String(config.gamepad.speed);
     qs('#gamepadDeadzoneValue').textContent = `${Math.round(config.gamepad.deadzone * 100)} %`;
     qs('#gamepadTriggerThresholdValue').textContent = `${Math.round((Number(config.gamepad.triggerThreshold) || 0.35) * 100)} %`;
-    const webZoomValueText = qs('#webZoomValue');
-    if (webZoomValueText) webZoomValueText.textContent = `${Math.round(config.web.zoom * 100)} %`;
     qs('#uiScaleValue').textContent = `${Math.round((Number(config.appearance && config.appearance.uiScale) || 1) * 100)} %`;
   const colorblind = qs('#colorblindMode');
   if (colorblind) colorblind.checked = Boolean(config.appearance && config.appearance.colorblind);
@@ -659,21 +636,9 @@ export function initSettings({
     }
     qs('#gamepadXinput').checked = config.gamepad.xinput !== false;
     qs('#gamepadStealFocus').checked = config.gamepad.stealFocus !== false;
-    const webKeepAliveInput = qs('#webKeepAlive');
-    if (webKeepAliveInput) {
-      webKeepAliveInput.value = String(config.web.keepAlive);
-      const idleSelect = qs('#webIdleUnload');
-      if (idleSelect) idleSelect.value = String(Number(config.web && config.web.idleUnloadMinutes) || 0);
-      qs('#webZoom').value = Math.round(config.web.zoom * 100);
-      qs('#webDark').checked = config.web.dark !== false;
-      qs('#webReaderMode').checked = config.web.readerMode === true || config.behavior.readerMode === true;
-    }
     qs('#uiScale').value = Math.round((Number(config.appearance && config.appearance.uiScale) || 1) * 100);
   const fontScaleInput = qs('#fontScale');
   if (fontScaleInput) fontScaleInput.value = Math.round((Number(config.appearance && config.appearance.fontScale) || 1) * 100);
-    refreshAutoRefreshControls();
-    refreshSiteZoomControls();
-    refreshSiteReaderControls();
     const notesFolderInput = qs('#notesFolderInput');
     if (notesFolderInput) notesFolderInput.value = String((config.overlay && config.overlay.notesFolder) || '');
     qs('#closeToTray').checked = config.behavior.closeToTray !== false;
@@ -736,8 +701,6 @@ export function initSettings({
     if (pmRefresh) pmRefresh.value = String(Math.round(Number(pm.refreshSeconds) || 90));
     renderChipOrder(config);
     renderOverlayProfiles(config);
-    const globalSiteHotkeys = qs('#globalSiteHotkeys');
-    if (globalSiteHotkeys) globalSiteHotkeys.checked = config.behavior.globalSiteHotkeys === true;
     const weeklyGoalInput = qs('#weeklyGoalInput');
     if (weeklyGoalInput) weeklyGoalInput.value = String(Number((config.stats && config.stats.weeklyGoal) || 0) || 0);
     const bungieKey = qs('#bungieApiKey');
@@ -776,8 +739,6 @@ export function initSettings({
     qs('#autoOverlayOnGame').checked = config.behavior.autoOverlayOnGame === true;
     qs('#disableGpu').checked =
       config.behavior.disableGpu === true || config.behavior.disableGpuAuto === true;
-    const adBlockInput = qs('#adBlock');
-    if (adBlockInput) adBlockInput.checked = config.behavior.adBlock !== false;
     qs('#gameLaunchUrl').value = config.behavior.gameLaunchUrl;
     qs('#resetAlarm').checked = config.behavior.resetAlarm !== false;
     qs('#alarmSound').checked = config.behavior.alarmSound === true;
@@ -794,7 +755,6 @@ export function initSettings({
         : (/^#[0-9a-fA-F]{6}$/.test(cssAccent) ? cssAccent : '#ff4655');
     }
     updateAccentSwatchActive(accent);
-    refreshSiteDeadzones();
     updateRangeLabels();
     refreshHotkeyFields();
     updateComboDisplay();
@@ -804,111 +764,6 @@ export function initSettings({
     if (recordingCombo) return;
     comboInput.value = formatCombo(cfg().gamepad.combo);
   }
-
-  function refreshCustomCategories() {
-    if (!customCategory) return;
-    const categories = getCategories();
-    const previous = customCategory.value;
-    customCategory.innerHTML = categories
-      .map(
-        (category) =>
-          `<option value="${escapeHtml(category.id)}">${escapeHtml(category.name)}</option>`
-      )
-      .join('');
-    customCategory.value = categories.some((category) => category.id === previous) ? previous : 'custom';
-  }
-
-  let editingCustomId = null;
-
-  function renderCustomList() {
-    if (!customList) return;
-    const config = cfg();
-    const categories = getCategories();
-    const sites = Array.isArray(config.customSites) ? config.customSites : [];
-    if (editingCustomId && !sites.some((site) => site.id === editingCustomId)) editingCustomId = null;
-    if (!sites.length) {
-      editingCustomId = null;
-      customList.innerHTML = '<div class="custom-empty">Noch keine eigenen Seiten. Füge oben die erste hinzu.</div>';
-      return;
-    }
-    customList.innerHTML = sites
-      .map((site) => {
-        const category = categories.find((entry) => entry.id === (site.category || 'custom'));
-        if (editingCustomId === site.id) {
-          const options = categories
-            .map(
-              (cat) =>
-                `<option value="${escapeHtml(cat.id)}" ${cat.id === (site.category || 'custom') ? 'selected' : ''}>${escapeHtml(cat.name)}</option>`
-            )
-            .join('');
-          return `<div class="custom-item editing" data-custom-id="${escapeHtml(site.id)}">
-            <div class="custom-item-main">
-              <input data-custom-edit-name value="${escapeHtml(site.name)}" maxlength="80" placeholder="Name">
-              <input data-custom-edit-url value="${escapeHtml(site.url)}" maxlength="2000" placeholder="https://…">
-              <select data-custom-edit-category class="control">${options}</select>
-            </div>
-            <button class="btn primary small" data-custom-save="${escapeHtml(site.id)}">Speichern</button>
-            <button class="btn ghost small" data-custom-cancel="1">Abbrechen</button>
-          </div>`;
-        }
-        return `<div class="custom-item" data-custom-id="${escapeHtml(site.id)}">
-          <div class="custom-item-main">
-            <span class="custom-item-name">${escapeHtml(site.name)}</span>
-            <span class="custom-item-url">${escapeHtml(site.url)}</span>
-          </div>
-          <span class="custom-category">${escapeHtml(category ? category.name : 'Eigene')}</span>
-          <button class="icon-btn" data-custom-edit="${escapeHtml(site.id)}" title="Bearbeiten" aria-label="Bearbeiten">${'✎'}</button>
-          <button class="icon-btn" data-remove-custom="${escapeHtml(site.id)}" title="Entfernen" aria-label="Entfernen">${'✕'}</button>
-        </div>`;
-      })
-      .join('');
-  }
-
-  function saveCustomEdit(id) {
-    const nameInput = qs(`[data-custom-edit-name]`);
-    const urlInput = qs(`[data-custom-edit-url]`);
-    const categorySelect = qs(`[data-custom-edit-category]`);
-    if (!nameInput || !urlInput) return;
-    const name = String(nameInput.value || '').trim();
-    const url = normalizeUrl(urlInput.value);
-    const category = categorySelect ? categorySelect.value : 'custom';
-    if (!name) { toast('Bitte einen Namen angeben.', 'warning'); return; }
-    if (!url) { toast('Bitte eine gültige Adresse angeben.', 'warning'); return; }
-    const current = cfg().customSites || [];
-    if (current.some((site) => site.url === url && site.id !== id)) {
-      toast('Diese Adresse ist bereits in einer anderen Seite vorhanden.', 'warning');
-      return;
-    }
-    const next = current.map((site) => (site.id === id ? { ...site, name: name.slice(0, 80), url, category } : site));
-    setConfig({ customSites: next });
-    editingCustomId = null;
-    onCustomSitesChanged(next);
-    toast('Eigene Seite aktualisiert.', 'success', 1600);
-  }
-
-  customList?.addEventListener('click', (event) => {
-    const editButton = event.target.closest('[data-custom-edit]');
-    if (editButton) {
-      editingCustomId = editButton.dataset.customEdit;
-      renderCustomList();
-      const input = qs('[data-custom-edit-name]');
-      if (input) input.focus();
-      return;
-    }
-    const saveButton = event.target.closest('[data-custom-save]');
-    if (saveButton) {
-      saveCustomEdit(saveButton.dataset.customSave);
-      return;
-    }
-    const cancelButton = event.target.closest('[data-custom-cancel]');
-    if (cancelButton) {
-      editingCustomId = null;
-      renderCustomList();
-      return;
-    }
-    const removeButton = event.target.closest('[data-remove-custom]');
-    if (removeButton) removeCustomSite(removeButton.dataset.removeCustom);
-  });
 
   function updatePadStatus(status) {
     const connected = Boolean(status && status.connected);
@@ -1013,14 +868,10 @@ export function initSettings({
     qs('#aboutElectron').textContent = appInfo ? appInfo.electron : '—';
     qs('#aboutChrome').textContent = appInfo ? appInfo.chrome : '—';
     updateAboutHotkeys();
-    const webInfo = qs('#webInfo');
-    if (webInfo) webInfo.textContent = `Aktuell geladene Seiten: ${web ? web.count : 0}`;
   }
 
   async function refresh() {
     refreshFields();
-    refreshCustomCategories();
-    renderCustomList();
     await loadDisplays();
     refreshFields();
     renderReminders();
@@ -1036,7 +887,7 @@ export function initSettings({
   function open(tab = 'overlay') {
     isOpen = true;
     document.body.classList.add('settings-open');
-    setTab(['overlay', 'overlaybar', 'controller', 'steam', 'web', 'custom', 'display', 'behavior', 'security', 'bungie', 'diag', 'about'].includes(tab) ? tab : 'overlay');
+    setTab(['overlay', 'overlaybar', 'controller', 'steam', 'display', 'behavior', 'security', 'bungie', 'diag', 'about'].includes(tab) ? tab : 'overlay');
     applySettingsAdvanced();
     modalOpen(modal);
     if (settingsSearchInput) {
@@ -1188,49 +1039,6 @@ export function initSettings({
     qs('#gamepadRecordBtn').textContent = 'Aufnehmen';
     qs('#gamepadRecordBtn').disabled = false;
     updateComboDisplay();
-  }
-
-  function addCustomSite() {
-    if (!qs('#customName') || !qs('#customUrl') || !customCategory) return;
-    const name = qs('#customName').value.trim();
-    const url = normalizeUrl(qs('#customUrl').value);
-    const category = customCategory.value || 'custom';
-    if (!name) {
-      toast('Bitte einen Namen angeben.', 'warning');
-      qs('#customName').focus();
-      return;
-    }
-    if (!url) {
-      toast('Bitte eine gültige Adresse angeben (http oder https).', 'error');
-      qs('#customUrl').focus();
-      return;
-    }
-    const current = cfg().customSites || [];
-    if (current.some((site) => site.url === url)) {
-      toast('Diese Adresse ist bereits vorhanden.', 'warning');
-      return;
-    }
-    const id = `c-${crypto.randomUUID()}`;
-    const next = [...current, { id, name: name.slice(0, 80), url, category }];
-    setConfig({ customSites: next });
-    qs('#customName').value = '';
-    qs('#customUrl').value = '';
-    renderCustomList();
-    refreshCustomCategories();
-    if (onCustomSitesChanged) onCustomSitesChanged(next, { category, siteId: id });
-    toast(`"${name}" hinzugefügt.`, 'success');
-  }
-
-  function removeCustomSite(id) {
-    const site = (cfg().customSites || []).find((entry) => entry.id === id);
-    if (!site) return;
-    if (!window.confirm(`"${site.name}" wirklich entfernen?`)) return;
-    const next = (cfg().customSites || []).filter((entry) => entry.id !== id);
-    setConfig({ customSites: next });
-    renderCustomList();
-    refreshCustomCategories();
-    if (onCustomSitesChanged) onCustomSitesChanged(next);
-    toast('Eigene Seite entfernt.', 'info');
   }
 
   // ------------------------------------------------------------
@@ -1588,66 +1396,6 @@ export function initSettings({
     setConfig({ gamepad: { combo: DEFAULT_COMBO } });
     comboInput.value = formatCombo(DEFAULT_COMBO);
     toast('Controller-Kombo zurückgesetzt: L3 + R3.', 'success');
-  });
-
-  qs('#webKeepAlive')?.addEventListener('change', (event) => setConfig({ web: { keepAlive: Number(event.target.value) } }));
-  const idleUnloadSelect = qs('#webIdleUnload');
-  if (idleUnloadSelect) {
-    idleUnloadSelect.addEventListener('change', (event) => setConfig({ web: { idleUnloadMinutes: Number(event.target.value) || 0 } }));
-  }
-  const memoryBtn = qs('#webMemoryBtn');
-  if (memoryBtn) {
-    memoryBtn.addEventListener('click', () => {
-      const list = qs('#webMemoryList');
-      if (!list || !api || typeof api.webviewsMemory !== 'function') return;
-      list.textContent = 'Lade …';
-      api.webviewsMemory().then((result) => {
-        if (!result || !result.ok) { list.textContent = (result && result.error) || 'Nicht verfügbar.'; return; }
-        if (!result.items.length) { list.textContent = 'Keine Seiten geladen.'; return; }
-        list.innerHTML = result.items.map((entry) =>
-          '<div class="inv-tool-row"><span class="inv-tool-main">' + escapeHtml(entry.url || 'Seite') + '</span>' +
-          '<span class="inv-tool-meta">' + entry.memoryMB + ' MB</span></div>'
-        ).join('') + '<div class="inv-tool-muted">Gesamt: ' + result.totalMB + ' MB</div>';
-      }).catch((error) => { list.textContent = error.message || String(error); });
-    });
-  }
-  qs('#webZoom')?.addEventListener('input', (event) => {
-    const zoomValue = qs('#webZoomValue');
-    if (zoomValue) zoomValue.textContent = `${event.target.value} %`;
-    setConfig({ web: { zoom: Number(event.target.value) / 100 } });
-    if (web) web.applyZoom();
-  });
-  qs('#webDark')?.addEventListener('change', (event) => setConfig({ web: { dark: event.target.checked } }));
-  qs('#webReaderMode')?.addEventListener('change', (event) => {
-    setConfig({ web: { readerMode: event.target.checked }, behavior: { readerMode: event.target.checked } });
-    if (web && web.applyReaderMode) web.applyReaderMode();
-  });
-  qs('#unloadAllBtn')?.addEventListener('click', () => {
-    if (!web) return;
-    web.unloadAll();
-    if (onReloadCurrentSite) onReloadCurrentSite();
-    toast('Alle Webseiten entladen.', 'info');
-    const webInfo = qs('#webInfo');
-    if (webInfo) webInfo.textContent = 'Aktuell geladene Seiten: 0';
-  });
-  qs('#clearWebDataBtn')?.addEventListener('click', async () => {
-    if (!window.confirm('Cookies und Anmeldungen aller Webseiten löschen? Das Tool selbst bleibt unberührt.')) return;
-    const result = await api.clearWebData();
-    if (!result || !result.ok) {
-      toast(result && result.error ? result.error : 'Daten konnten nicht gelöscht werden.', 'error');
-      return;
-    }
-    if (web) web.unloadAll();
-    if (onReloadCurrentSite) onReloadCurrentSite();
-    toast('Website-Daten gelöscht.', 'success');
-  });
-
-  qs('#customAddBtn')?.addEventListener('click', addCustomSite);
-  qs('#customName')?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') addCustomSite();
-  });
-  qs('#customUrl')?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') addCustomSite();
   });
 
   qs('#closeToTray').addEventListener('change', (event) => setConfig({ behavior: { closeToTray: event.target.checked } }));
@@ -2451,78 +2199,6 @@ export function initSettings({
   );
 
   // ------------------------------------------------------------
-  // Deadzone pro Webseite
-  // ------------------------------------------------------------
-
-  function allKnownSites() {
-    const list = [];
-    for (const category of getCategories()) {
-      for (const site of category.sites) {
-        if (!list.some((entry) => entry.id === site.id)) list.push({ id: site.id, name: site.name, category: category.name });
-      }
-    }
-    return list;
-  }
-
-  function refreshSiteDeadzones() {
-    const select = qs('#siteDeadzoneSelect');
-    const input = qs('#siteDeadzoneValue');
-    if (!select) return;
-    const sites = allKnownSites();
-    const previous = select.value;
-    select.innerHTML = sites
-      .map((site) => `<option value="${escapeHtml(site.id)}">${escapeHtml(site.category)} · ${escapeHtml(site.name)}</option>`)
-      .join('');
-    if (sites.some((site) => site.id === previous)) select.value = previous;
-    updateSiteDeadzoneInput();
-  }
-
-  function updateSiteDeadzoneInput() {
-    const select = qs('#siteDeadzoneSelect');
-    const input = qs('#siteDeadzoneValue');
-    if (!select || !input) return;
-    const map = (cfg().gamepad && cfg().gamepad.siteDeadzones) || {};
-    const value = map[select.value];
-    if (Number.isFinite(Number(value))) {
-      input.value = String(Math.round(Number(value) * 100));
-      input.placeholder = '';
-    } else {
-      input.value = '';
-      input.placeholder = `${Math.round((cfg().gamepad.deadzone || 0.2) * 100)}`;
-    }
-  }
-
-  const siteDeadzoneSelect = qs('#siteDeadzoneSelect');
-  if (siteDeadzoneSelect) {
-    siteDeadzoneSelect.addEventListener('change', updateSiteDeadzoneInput);
-    const input = qs('#siteDeadzoneValue');
-    input.addEventListener('change', () => {
-      const raw = String(input.value || '').trim();
-      const map = { ...((cfg().gamepad && cfg().gamepad.siteDeadzones) || {}) };
-      if (!raw) {
-        delete map[siteDeadzoneSelect.value];
-        setConfig({ gamepad: { siteDeadzones: map } });
-        toast('Diese Seite nutzt wieder die globale Deadzone.', 'info', 1600);
-        return;
-      }
-      const percent = clamp(Number(raw) || 20, 5, 60);
-      input.value = String(Math.round(percent));
-      map[siteDeadzoneSelect.value] = percent / 100;
-      setConfig({ gamepad: { siteDeadzones: map } });
-      toast(`Deadzone für diese Seite: ${Math.round(percent)} %.`, 'success', 1600);
-    });
-    qs('#siteDeadzoneResetBtn').addEventListener('click', () => {
-      const map = { ...((cfg().gamepad && cfg().gamepad.siteDeadzones) || {}) };
-      delete map[siteDeadzoneSelect.value];
-      setConfig({ gamepad: { siteDeadzones: map } });
-      const input = qs('#siteDeadzoneValue');
-      input.value = '';
-      updateSiteDeadzoneInput();
-      toast('Deadzone-Override entfernt (global).', 'info', 1600);
-    });
-  }
-
-  // ------------------------------------------------------------
   // Trigger-Schwellwert & Overlay-Taste mit Zweifunktion
   // ------------------------------------------------------------
 
@@ -2536,50 +2212,6 @@ export function initSettings({
   qs('#gamepadCursorSnap').addEventListener('change', (event) =>
     setConfig({ gamepad: { cursorSnap: event.target.checked } })
   );
-
-  // ------------------------------------------------------------
-  // Auto-Refresh pro Webseite
-  // ------------------------------------------------------------
-
-  function allKnownSitesFlat() {
-    const list = [];
-    for (const category of getCategories()) {
-      for (const site of category.sites) {
-        if (!list.some((entry) => entry.id === site.id)) list.push({ id: site.id, name: site.name, category: category.name });
-      }
-    }
-    return list;
-  }
-
-  function refreshAutoRefreshControls() {
-    const select = qs('#autoRefreshSelect');
-    const minutes = qs('#autoRefreshMinutes');
-    if (!select || !minutes) return;
-    const sites = allKnownSitesFlat();
-    const previous = select.value;
-    select.innerHTML = sites
-      .map((site) => `<option value="${escapeHtml(site.id)}">${escapeHtml(site.category)} · ${escapeHtml(site.name)}</option>`)
-      .join('');
-    if (sites.some((site) => site.id === previous)) select.value = previous;
-    const map = (cfg().web && cfg().web.autoRefresh) || {};
-    const value = Number(map[select.value]) || 0;
-    minutes.value = String(value);
-  }
-
-  const autoRefreshSelect = qs('#autoRefreshSelect');
-  if (autoRefreshSelect) {
-    autoRefreshSelect.addEventListener('change', () => {
-      const map = { ...((cfg().web && cfg().web.autoRefresh) || {}) };
-      const minutes = qs('#autoRefreshMinutes');
-      map[autoRefreshSelect.value] = Number(minutes.value) || 0;
-      setConfig({ web: { autoRefresh: map } });
-    });
-    qs('#autoRefreshMinutes').addEventListener('change', () => {
-      const map = { ...((cfg().web && cfg().web.autoRefresh) || {}) };
-      map[autoRefreshSelect.value] = Number(qs('#autoRefreshMinutes').value) || 0;
-      setConfig({ web: { autoRefresh: map } });
-    });
-  }
 
   // ------------------------------------------------------------
   // Oberflächen-Zoom
@@ -2794,61 +2426,6 @@ export function initSettings({
   if (hudChampionsInput) hudChampionsInput.addEventListener('change', (event) => setConfig({ statsHud: { showChampions: event.target.checked === true } }));
 
   // ------------------------------------------------------------
-  // Zoom pro Webseite
-  // ------------------------------------------------------------
-
-  function refreshSiteZoomControls() {
-    const select = qs('#siteZoomSelect');
-    const input = qs('#siteZoomValue');
-    if (!select || !input) return;
-    const sites = allKnownSitesFlat();
-    const previous = select.value;
-    select.innerHTML = sites
-      .map((site) => `<option value="${escapeHtml(site.id)}">${escapeHtml(site.category)} · ${escapeHtml(site.name)}</option>`)
-      .join('');
-    if (sites.some((site) => site.id === previous)) select.value = previous;
-    const map = (cfg().web && cfg().web.siteZoom) || {};
-    const value = Number(map[select.value]);
-    if (Number.isFinite(value) && value > 0) {
-      input.value = String(Math.round(value * 100));
-    } else {
-      input.value = '';
-      input.placeholder = `${Math.round((cfg().web.zoom || 1) * 100)}`;
-    }
-  }
-
-  const siteZoomSelect = qs('#siteZoomSelect');
-  if (siteZoomSelect) {
-    siteZoomSelect.addEventListener('change', refreshSiteZoomControls);
-    const zoomInput = qs('#siteZoomValue');
-    zoomInput.addEventListener('change', () => {
-      const raw = String(zoomInput.value || '').trim();
-      const map = { ...((cfg().web && cfg().web.siteZoom) || {}) };
-      if (!raw) {
-        delete map[siteZoomSelect.value];
-        setConfig({ web: { siteZoom: map } });
-        if (web && web.applyZoom) web.applyZoom();
-        toast('Diese Seite nutzt wieder den globalen Zoom.', 'info', 1600);
-        return;
-      }
-      const percent = clamp(Number(raw) || 100, 50, 200);
-      zoomInput.value = String(Math.round(percent));
-      map[siteZoomSelect.value] = percent / 100;
-      setConfig({ web: { siteZoom: map } });
-      if (web && web.applyZoom) web.applyZoom();
-      toast(`Zoom für diese Seite: ${Math.round(percent)} %.`, 'success', 1600);
-    });
-    qs('#siteZoomResetBtn').addEventListener('click', () => {
-      const map = { ...((cfg().web && cfg().web.siteZoom) || {}) };
-      delete map[siteZoomSelect.value];
-      setConfig({ web: { siteZoom: map } });
-      if (web && web.applyZoom) web.applyZoom();
-      refreshSiteZoomControls();
-      toast('Zoom-Override entfernt (global).', 'info', 1600);
-    });
-  }
-
-  // ------------------------------------------------------------
   // Persönliche Erinnerungen
   // ------------------------------------------------------------
 
@@ -2984,39 +2561,6 @@ export function initSettings({
   renderReminders();
 
   // ------------------------------------------------------------
-  // Lesemodus pro Webseite
-  // ------------------------------------------------------------
-
-  function refreshSiteReaderControls() {
-    const select = qs('#siteReaderSelect');
-    const value = qs('#siteReaderValue');
-    if (!select || !value) return;
-    const sites = allKnownSitesFlat();
-    const previous = select.value;
-    select.innerHTML = sites
-      .map((site) => `<option value="${escapeHtml(site.id)}">${escapeHtml(site.category)} · ${escapeHtml(site.name)}</option>`)
-      .join('');
-    if (sites.some((site) => site.id === previous)) select.value = previous;
-    const map = (cfg().web && cfg().web.readerSites) || {};
-    const override = map[select.value];
-    value.value = typeof override === 'boolean' ? (override ? 'on' : 'off') : '';
-  }
-
-  const siteReaderSelect = qs('#siteReaderSelect');
-  if (siteReaderSelect) {
-    siteReaderSelect.addEventListener('change', refreshSiteReaderControls);
-    qs('#siteReaderValue').addEventListener('change', (event) => {
-      const map = { ...((cfg().web && cfg().web.readerSites) || {}) };
-      const raw = event.target.value;
-      if (raw === '') delete map[siteReaderSelect.value];
-      else map[siteReaderSelect.value] = raw === 'on';
-      setConfig({ web: { readerSites: map } });
-      if (web && web.applyReaderMode) web.applyReaderMode();
-      toast(raw === '' ? 'Lesemodus dieser Seite folgt dem globalen Schalter.' : `Lesemodus für diese Seite: ${raw === 'on' ? 'an' : 'aus'}.`, 'info', 1800);
-    });
-  }
-
-  // ------------------------------------------------------------
   // Einstellungs-Suche
   // ------------------------------------------------------------
 
@@ -3078,8 +2622,8 @@ export function initSettings({
     if (!bodyEl) return;
     const selectors = [
       '.field', '.check-row', '.check', '.field-actions-row', '.note-box', 'details.compat-details',
-      '.custom-form', '.custom-list', '#statsSummary', '#statsBars', '#netResults', '#logOutput',
-      '#bridgeStatus', '#appHealth', '#errorRadar', '#notifyHistory', '#reminderList', '.reminder-add',
+      '#statsSummary', '#statsBars', '#netResults', '#logOutput',
+      '#bridgeStatus', '#appHealth', '#notifyHistory', '#reminderList', '.reminder-add',
       'details.settings-group', '.settings-checks', '.settings-panel > h4',
       '.settings-panel > p', '.controller-status-line', '.key-table', '.about-grid',
       '.pad-grid', '.axis-view', '.order-list', '.chip-order-list', '.reminder-list',
@@ -3363,7 +2907,7 @@ export function initSettings({
     renderStats();
   });
 
-  // App-Gesundheit + Seiten-Fehler-Radar
+  // App-Gesundheit
   async function refreshAppHealth() {
     const box = qs('#appHealth');
     if (!box) return;
@@ -3383,7 +2927,6 @@ export function initSettings({
         `<div><span>Arbeitsspeicher:</span><strong>${health.rss} MB</strong></div>` +
         `<div><span>Heap (genutzt):</span><strong>${health.heapUsed} MB</strong></div>` +
         `<div><span>Läuft seit:</span><strong>${uptimeText}</strong></div>` +
-        `<div><span>Geladene Webviews:</span><strong>${health.webviews}</strong></div>` +
         `<div><span>Bungie-Anfragen:</span><strong>${Number(rate.waiting) || 0} wartend · ${rateText}</strong></div>`;
       const diagBox = qs('#diagRateLimit');
       if (diagBox) {
@@ -3397,27 +2940,6 @@ export function initSettings({
   }
   qs('#appHealthBtn').addEventListener('click', refreshAppHealth);
   refreshAppHealth().catch(() => {});
-
-  function renderErrorRadar() {
-    const box = qs('#errorRadar');
-    if (!box) return;
-    const radar = window.__d2ErrorRadar;
-    const entries = radar ? [...radar.entries()].sort((a, b) => b[1].at - a[1].at) : [];
-    box.innerHTML = entries.length
-      ? entries
-          .map(([siteId, entry]) => {
-            const time = new Date(entry.at).toLocaleTimeString(window.i18n ? window.i18n.locale() : 'de-DE', { hour: '2-digit', minute: '2-digit' });
-            return (
-              `<div class="history-row"><span class="history-kind">${entry.count}×</span>` +
-              `<span class="history-msg" title="${escapeHtml(entry.last || '')}">${escapeHtml(entry.name || siteId)} · ${escapeHtml(entry.last || '')} · ${escapeHtml(time)}</span></div>`
-            );
-          })
-          .join('')
-      : '<div class="check-empty">Keine Ladefehler in dieser Sitzung.</div>';
-  }
-  const errorRadarBtn = qs('#errorRadarBtn');
-  if (errorRadarBtn) errorRadarBtn.addEventListener('click', renderErrorRadar);
-  renderErrorRadar();
 
   // Erinnerungen aus dem Wochenplan ableiten: Uhrzeiten im Text der
   // Tagesfelder werden als wöchentliche Erinnerungen angelegt
@@ -3549,54 +3071,6 @@ export function initSettings({
   });
 
   // ------------------------------------------------------------
-  // Blocker-Ausnahmen pro Webseite
-  // ------------------------------------------------------------
-
-  function refreshBlockerControls() {
-    const select = qs('#blockerSiteSelect');
-    if (!select) return;
-    const sites = allKnownSitesFlat();
-    const previous = select.value;
-    select.innerHTML = sites
-      .map((site) => `<option value="${escapeHtml(site.id)}">${escapeHtml(site.category)} · ${escapeHtml(site.name)}</option>`)
-      .join('');
-    if (sites.some((site) => site.id === previous)) select.value = previous;
-    const adMap = (cfg().web && cfg().web.adBlockOffSites) || {};
-    const cookieMap = (cfg().web && cfg().web.cookieOffSites) || {};
-    qs('#blockerAdOff').checked = adMap[select.value] === true;
-    qs('#blockerCookieOff').checked = cookieMap[select.value] === true;
-  }
-
-  const blockerSiteSelect = qs('#blockerSiteSelect');
-  if (blockerSiteSelect) {
-    blockerSiteSelect.addEventListener('change', refreshBlockerControls);
-    qs('#blockerAdOff').addEventListener('change', (event) => {
-      const map = { ...((cfg().web && cfg().web.adBlockOffSites) || {}) };
-      if (event.target.checked) map[blockerSiteSelect.value] = true;
-      else delete map[blockerSiteSelect.value];
-      setConfig({ web: { adBlockOffSites: map } });
-      toast(event.target.checked ? 'AdBlock für diese Seite aus (nach F5 aktiv).' : 'AdBlock wieder aktiv (nach F5).', 'info', 2200);
-    });
-    qs('#blockerCookieOff').addEventListener('change', (event) => {
-      const map = { ...((cfg().web && cfg().web.cookieOffSites) || {}) };
-      if (event.target.checked) map[blockerSiteSelect.value] = true;
-      else delete map[blockerSiteSelect.value];
-      setConfig({ web: { cookieOffSites: map } });
-      if (web && web.applyReaderMode) web.applyReaderMode();
-      toast(event.target.checked ? 'Cookie-Banner-Blocker für diese Seite aus.' : 'Cookie-Banner-Blocker wieder aktiv.', 'info', 2200);
-    });
-    qs('#blockerResetBtn').addEventListener('click', () => {
-      const adMap = { ...((cfg().web && cfg().web.adBlockOffSites) || {}) };
-      const cookieMap = { ...((cfg().web && cfg().web.cookieOffSites) || {}) };
-      delete adMap[blockerSiteSelect.value];
-      delete cookieMap[blockerSiteSelect.value];
-      setConfig({ web: { adBlockOffSites: adMap, cookieOffSites: cookieMap } });
-      refreshBlockerControls();
-      toast('Ausnahmen für diese Seite entfernt.', 'info', 1800);
-    });
-  }
-
-  // ------------------------------------------------------------
   // Konfig-Profile
   // ------------------------------------------------------------
 
@@ -3671,68 +3145,6 @@ export function initSettings({
     });
   }
   refreshProfileList().catch(() => {});
-
-  // ------------------------------------------------------------
-  // Kategorie-Reihenfolge
-  // ------------------------------------------------------------
-
-  function renderCategoryOrder() {
-    const list = qs('#categoryOrderList');
-    if (!list) return;
-    const categories = getCategories();
-    const stored = (cfg().categoryOrder || []).slice();
-    const effective = [];
-    for (const id of stored) {
-      if (categories.some((entry) => entry.id === id) && !effective.includes(id)) effective.push(id);
-    }
-    for (const entry of categories) {
-      if (!effective.includes(entry.id)) effective.push(entry.id);
-    }
-    list.innerHTML = effective
-      .map((id, index) => {
-        const category = categories.find((entry) => entry.id === id);
-        return (
-          `<div class="order-row" data-order-id="${escapeHtml(id)}">` +
-          `<span class="order-name" style="--tab-color:${category.color}">${icon(category.icon)} ${escapeHtml(category.name)}</span>` +
-          `<button class="icon-btn" data-order-up="${escapeHtml(id)}" title="Nach oben" aria-label="Nach oben">↑</button>` +
-          `<button class="icon-btn" data-order-down="${escapeHtml(id)}" title="Nach unten" aria-label="Nach unten">↓</button>` +
-          `<small>${index + 1}</small>` +
-          `</div>`
-        );
-      })
-      .join('');
-  }
-
-  function moveCategoryOrder(id, direction) {
-    const categories = getCategories();
-    const stored = (cfg().categoryOrder || []).slice();
-    const effective = [];
-    for (const other of stored) {
-      if (categories.some((entry) => entry.id === other) && !effective.includes(other)) effective.push(other);
-    }
-    for (const entry of categories) {
-      if (!effective.includes(entry.id)) effective.push(entry.id);
-    }
-    const from = effective.indexOf(id);
-    const to = Math.max(0, Math.min(effective.length - 1, from + direction));
-    if (from === to) return;
-    effective.splice(from, 1);
-    effective.splice(to, 0, id);
-    setConfig({ categoryOrder: effective });
-    renderCategoryOrder();
-    if (onCategoryOrderChanged) onCategoryOrderChanged();
-  }
-
-  const categoryOrderList = qs('#categoryOrderList');
-  if (categoryOrderList) {
-    categoryOrderList.addEventListener('click', (event) => {
-      const up = event.target.closest('[data-order-up]');
-      const down = event.target.closest('[data-order-down]');
-      if (up) moveCategoryOrder(up.dataset.orderUp, -1);
-      else if (down) moveCategoryOrder(down.dataset.orderDown, 1);
-    });
-  }
-  renderCategoryOrder();
 
   // ------------------------------------------------------------
   // Benachrichtigungs-Historie & Werkseinstellungen

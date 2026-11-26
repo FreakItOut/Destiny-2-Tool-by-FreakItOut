@@ -1243,6 +1243,30 @@ export function createInventoryTools(ctx) {
     }
   }
 
+  // CSV-Download ohne Netzzugriff: Semikolon als Trenner, UTF-8-BOM
+  // für Excel und ein Dateiname mit lokalem Datum.
+  function csvCell(value) {
+    return `"${String(value == null ? '' : value).replace(/"/g, '""')}"`;
+  }
+
+  function csvStamp() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+
+  function downloadCsv(filename, rows) {
+    const content = '\uFEFF' + rows.map((row) => row.map(csvCell).join(';')).join('\r\n');
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   function pickerScore(stats) {
     return scoreArmorStats(stats, {
       goals: pickerGoals,
@@ -4463,6 +4487,7 @@ let transferJobsState = null;
         `<label class="inv-tool-check"><input type="checkbox" data-vendor-wishlist ${vendorWishOnly ? 'checked' : ''}> Nur Wunschrolls</label>` +
         `<button type="button" class="btn ghost small" data-vendor-refresh>Aktualisieren</button>` +
         `<button type="button" class="btn ghost small" data-vendor-expand>${expandedVendors.size ? 'Alle zuklappen' : 'Alle aufklappen'}</button>` +
+        `<button type="button" class="btn ghost small" data-vendor-csv>CSV</button>` +
         `<span class="dim-vendors-shop" title="Fehlende bzw. mit vorhandenen Materialien bezahlbare Angebote">${esc(shopSummary)}</span>` +
         `<button type="button" class="btn ghost small" data-vendor-shopping-copy>Einkaufsliste</button>` +
         `<span class="dim-vendors-stamp">${state.fetchedAt ? new Date(state.fetchedAt).toLocaleTimeString(window.i18n ? window.i18n.locale() : 'de-DE', { hour: '2-digit', minute: '2-digit' }) : ''}</span>` +
@@ -8154,14 +8179,23 @@ let transferJobsState = null;
     };
   }
 
+  function godrollTracked() {
+    if (!data) return [];
+    const weapons = allEntries().map((entry) => entry.item).filter((item) => item && WEAPON_SLOTS.has(Number(item.bucket)));
+    return weapons
+      .filter((item) => Array.isArray(item.godOptions) && item.godOptions.length)
+      .map((item) => ({ item, ...godrollScore(item) }))
+      .sort((a, b) => b.score - a.score);
+  }
+
   function renderGodrollProgress() {
     if (!data) return card('Godroll-Fortschritt', '🎯', '<span class="inv-tool-muted">Inventar laden, um Wunschrollen zu prüfen.</span>', '', 'wide');
     const weapons = allEntries().map((entry) => entry.item).filter((item) => item && WEAPON_SLOTS.has(Number(item.bucket)));
     const god = weapons.filter((item) => item.godRoll).length;
     const near = weapons.filter((item) => item.nearGodRoll).length;
     const wishlistCount = Number((data.wishlist && data.wishlist.count) || 0);
-    const tracked = weapons.filter((item) => Array.isArray(item.godOptions) && item.godOptions.length);
-    const scored = tracked.map((item) => ({ item, ...godrollScore(item) })).sort((a, b) => b.score - a.score);
+    const scored = godrollTracked();
+    const tracked = scored.map((entry) => entry.item);
     const weights = godrollWeights();
     const rows = scored.slice(0, 8).map((entry) => {
       const why = entry.options.map((name) => {
@@ -8206,7 +8240,7 @@ let transferJobsState = null;
       ? `<div class="inv-tool-sub">Beste vorhandene Rollen</div>${rows}`
       : '<span class="inv-tool-muted">Keine Wunschrollen mit Perk-Daten gefunden.</span>';
     return card('Godroll-Fortschritt', '🎯', kpis + weightEditor + perkEditor + rulesEditor + list,
-      `<span class="inv-tool-actions"><button type="button" class="btn ghost small" data-tool-search="is:godroll">Godrolls anzeigen</button><button type="button" class="btn ghost small" data-tool-search="is:near-godroll">Fast-Godrolls</button></span>`, 'wide');
+      `<span class="inv-tool-actions"><button type="button" class="btn ghost small" data-tool-search="is:godroll">Godrolls anzeigen</button><button type="button" class="btn ghost small" data-tool-search="is:near-godroll">Fast-Godrolls</button><button type="button" class="btn ghost small" data-godroll-csv>CSV</button></span>`, 'wide');
   }
 
   let modLibQuery = '';
@@ -9096,6 +9130,31 @@ let transferJobsState = null;
         Promise.resolve(copy).then(() => toast('Einkaufsliste kopiert.', 'success', 2200)).catch(() => toast('Kopieren fehlgeschlagen.', 'error', 2200));
         return;
       }
+      if (event.target.closest('[data-vendor-csv]')) {
+        const rows = [['vendor', 'group', 'item', 'type', 'category', 'price', 'missing', 'godroll', 'near_godroll', 'available', 'owned', 'hash']];
+        for (const group of (allVendorsState && allVendorsState.groups) || []) {
+          for (const vendor of group.vendors || []) {
+            for (const item of vendor.items || []) {
+              rows.push([
+                vendor.name || '',
+                group.name || '',
+                item.name || '',
+                item.typeName || '',
+                item.categoryName || '',
+                (item.costs || []).map((cost) => `${fmt(cost.quantity)} ${cost.name}`).join(' | '),
+                (item.missingCosts || []).map((cost) => cost.name).join(' | '),
+                item.godRoll ? 1 : 0,
+                item.nearGodRoll ? 1 : 0,
+                item.purchasable === false || item.failure ? 0 : 1,
+                isOwnedHash(item.hash) ? 1 : 0,
+                Number(item.hash) || 0
+              ]);
+            }
+          }
+        }
+        downloadCsv(`haendler-angebote-${csvStamp()}.csv`, rows);
+        return;
+      }
       if (event.target.closest('[data-vendor-refresh]')) {
         loadAllVendors(true);
         return;
@@ -9175,6 +9234,27 @@ let transferJobsState = null;
       const openView = event.target.closest('[data-tool-open-view]');
       if (openView) {
         switchToolView(String(openView.dataset.toolOpenView || 'overview'));
+        return;
+      }
+      if (event.target.closest('[data-godroll-csv]')) {
+        const rows = [['name', 'type', 'score', 'matched', 'missing', 'options', 'godroll', 'near_godroll', 'masterwork', 'hash', 'instance', 'location']];
+        for (const entry of godrollTracked()) {
+          rows.push([
+            entry.item.name || '',
+            entry.item.typeName || '',
+            entry.score,
+            entry.matched.join(' | '),
+            entry.missing.join(' | '),
+            entry.options.join(' | '),
+            entry.item.godRoll ? 1 : 0,
+            entry.item.nearGodRoll ? 1 : 0,
+            entry.item.masterwork ? 1 : 0,
+            Number(entry.item.hash) || 0,
+            entry.item.instanceId || '',
+            entry.item.location || ''
+          ]);
+        }
+        downloadCsv(`godroll-treffer-${csvStamp()}.csv`, rows);
         return;
       }
       const kpi = event.target.closest('[data-tool-kpi]');

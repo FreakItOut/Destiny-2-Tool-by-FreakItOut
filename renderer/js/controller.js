@@ -260,7 +260,6 @@ export function createController(options) {
   let smoothedAxisY = 0;
   // Wurde der Guide-Knopf jemals vom Treiber gemeldet?
   let guideEverSeen = false;
-  let lastHoverAt = 0;
   let lastScrollAt = 0;
   // Synthetische Hover-Ereignisse für App-Oberflächen (Tooltips,
   // Perk-Erklärungen) und Fokus-Navigation per D-Pad.
@@ -276,9 +275,6 @@ let lastDpadDownAt = 0;
   let cursorY = Math.max(20, window.innerHeight / 2);
   let cursorVisible = false;
   let cursorUsedAt = 0;
-  let dragWebviewId = null;
-  let dragWebviewElement = null;
-  let lastDragLogAt = 0;
   let repeatState = {};
   let destroyed = false;
   let lastPadInputAt = 0;
@@ -301,9 +297,7 @@ let lastDpadDownAt = 0;
 
   // Cursor-Magnet-Snap: klickbare Oberflächenelemente werden alle
   // ~800 ms erfasst; bewegt sich der Cursor in deren Nähe, wird er
-  // sanft auf die Elementmitte gezogen. Webseiten-Inhalte leben in
-  // <webview>-Frames und sind für den Renderer unsichtbar - dort
-  // greift der Snap nicht (dort hilft der Präzisionsmodus).
+  // sanft auf die Elementmitte gezogen.
   const SNAP_RADIUS = 34;
   let snapCandidates = [];
   let snapCacheAt = 0;
@@ -436,43 +430,13 @@ let lastDpadDownAt = 0;
     return document.elementFromPoint(x, y);
   }
 
-  function webviewUnderPoint(x, y) {
-    const element = topElementAt(x, y);
-    if (element && element.tagName === 'WEBVIEW') return element;
-    return null;
-  }
-
-  function webviewIdOf(element) {
-    try {
-      const id = element.getWebContentsId();
-      return Number.isInteger(id) && id > 0 ? id : null;
-    } catch (error) {
-      return null;
-    }
-  }
-
   function scrollAtCursor(direction) {
     const now = performance.now();
     if (now - lastScrollAt < 85) return;
     lastScrollAt = now;
 
-    const webview = webviewUnderPoint(cursorX, cursorY);
-    if (webview) {
-      const id = webviewIdOf(webview);
-      if (!id) return;
-      const rect = webview.getBoundingClientRect();
-      api.webviewInput({
-        id,
-        type: 'wheel',
-        x: Math.round(cursorX - rect.left),
-        y: Math.round(cursorY - rect.top),
-        deltaY: direction * 420
-      });
-      return;
-    }
-
     const element = topElementAt(cursorX, cursorY);
-    const scrollable = element && element.closest('.settings-panels, .modal-card, .web-error, #inventoryBody, .inventory-body, .inventory-tools-tab, .inventory-editor-tab, #webArea');
+    const scrollable = element && element.closest('.settings-panels, .modal-card, #inventoryBody, .inventory-body, .inventory-tools-tab, .inventory-editor-tab');
     if (scrollable) scrollable.scrollBy({ top: direction * 140, behavior: 'smooth' });
   }
 
@@ -482,20 +446,6 @@ let lastDpadDownAt = 0;
     const speed = clamp(Number(cfgNow.gamepad.scrollSpeed) || 980, 150, 3000);
     const amount = axisY * speed * dt;
     if (Math.abs(amount) < 0.5) return;
-    const webview = webviewUnderPoint(cursorX, cursorY);
-    if (webview) {
-      const id = webviewIdOf(webview);
-      if (!id) return;
-      const rect = webview.getBoundingClientRect();
-      api.webviewInput({
-        id,
-        type: 'wheel',
-        x: Math.round(cursorX - rect.left),
-        y: Math.round(cursorY - rect.top),
-        deltaY: amount
-      });
-      return;
-    }
     // Inventar-Popup zuerst (hat einen eigenen Scrollbereich).
     const popup = document.querySelector('.inv-popup-backdrop.open .inv-popup');
     if (popup) {
@@ -538,27 +488,13 @@ let lastDpadDownAt = 0;
       return;
     }
     const element = topElementAt(cursorX, cursorY);
-    const scrollable = element && element.closest('.settings-panels, .modal-card, .web-error, #inventoryBody, .inventory-body, .inventory-tools-tab, .inventory-editor-tab, #webArea');
+    const scrollable = element && element.closest('.settings-panels, .modal-card, #inventoryBody, .inventory-body, .inventory-tools-tab, .inventory-editor-tab');
     if (scrollable) scrollable.scrollTop += amount;
   }
 
   function clickAtCursor() {
     const element = topElementAt(cursorX, cursorY);
     if (!element) return;
-
-    if (element.tagName === 'WEBVIEW') {
-      const id = webviewIdOf(element);
-      if (!id) return;
-      const rect = element.getBoundingClientRect();
-      api.webviewInput({
-        id,
-        type: 'click',
-        x: Math.round(cursorX - rect.left),
-        y: Math.round(cursorY - rect.top)
-      });
-      showCursor();
-      return;
-    }
 
     // Ein natives <select> lässt sich per Controller so nicht
     // bedienen. Deshalb schaltet A dort einfach zur nächsten Option.
@@ -604,23 +540,6 @@ let lastDpadDownAt = 0;
       // egal
     }
     showCursor();
-  }
-
-  function sendHoverMove() {
-    const now = performance.now();
-    if (now - lastHoverAt < 110) return;
-    lastHoverAt = now;
-    const webview = webviewUnderPoint(cursorX, cursorY);
-    if (!webview) return;
-    const id = webviewIdOf(webview);
-    if (!id) return;
-    const rect = webview.getBoundingClientRect();
-    api.webviewInput({
-      id,
-      type: 'move',
-      x: Math.round(cursorX - rect.left),
-      y: Math.round(cursorY - rect.top)
-    });
   }
 
   // Hover in der App-Oberfläche: der Controller-Cursor ist nur ein
@@ -1121,21 +1040,8 @@ let lastDpadDownAt = 0;
         }
       }
     }
-    // Deadzone: global einstellbar, optional pro Webseite überschrieben
-    // (z. B. DIM mit kleiner Deadzone für den präzisen Cursor). Die
-    // Überschreibung steckt in gamepad.siteDeadzones[siteId]; die
-    // siteId kommt aus dem aktiven Webview-Element.
-    let siteDeadzone = NaN;
-    const activeElement = null;
-    const siteId = activeElement && activeElement.dataset ? activeElement.dataset.siteId : null;
-    if (siteId) {
-      const overrides = cfg.gamepad.siteDeadzones;
-      if (overrides && typeof overrides === 'object') {
-        const value = Number(overrides[siteId]);
-        if (Number.isFinite(value) && value > 0) siteDeadzone = value;
-      }
-    }
-    const deadzone = clamp(Number.isFinite(siteDeadzone) ? siteDeadzone : cfg.gamepad.deadzone, 0.05, 0.6);
+    // Deadzone: global einstellbar.
+    const deadzone = clamp(Number(cfg.gamepad.deadzone), 0.05, 0.6);
     const dead = (value) => (Math.abs(value) < deadzone ? 0 : (value - Math.sign(value) * deadzone) / (1 - deadzone));
     const scrollDeadzoneValue = Number(cfg.gamepad.scrollDeadzone) > 0
       ? clamp(Number(cfg.gamepad.scrollDeadzone), 0.05, 0.6)
@@ -1149,7 +1055,7 @@ let lastDpadDownAt = 0;
     axisX = curveValue(dead(axisX));
     axisY = curveValue(dead(axisY));
     // Zweiter Stick (standardmäßig der rechte, wenn links den Cursor
-    // steuert) scrollt seitenweise durch Inventar/Dialoge/Webseiten.
+    // steuert) scrollt seitenweise durch Inventar und Dialoge.
     const scrollStickY = choice === 'right'
       ? ay0
       : choice === 'left'
@@ -1174,15 +1080,11 @@ let lastDpadDownAt = 0;
     }
 
     if (interactive && moved) {
-      // Beim Ziehen (A gehalten) die Geschwindigkeit stark drosseln:
-      // Mit voller Geschwindigkeit rast der Cursor unsteuerbar los
-      // und klebt am Fensterrand. 30 % machen das Ziehen präzise.
-      const dragFactor = dragWebviewId ? 0.3 : 1;
-      const speed = clamp(cfg.gamepad.speed, 150, 3000) * (precision ? 0.35 : 1) * dragFactor;
+      const speed = clamp(cfg.gamepad.speed, 150, 3000) * (precision ? 0.35 : 1);
       cursorX = clamp(cursorX + axisX * speed * dt, 6, window.innerWidth - 6);
       cursorY = clamp(cursorY + axisY * speed * dt, 6, window.innerHeight - 6);
-      // Magnet-Snap (nur ohne laufenden Drag).
-      if (!dragWebviewId && cfg.gamepad.cursorSnap !== false) {
+      // Magnet-Snap.
+      if (cfg.gamepad.cursorSnap !== false) {
         if (now - snapCacheAt > 300 || snapDirtyAt > snapCacheAt) {
           snapCacheAt = now;
           refreshSnapCandidates();
@@ -1195,32 +1097,7 @@ let lastDpadDownAt = 0;
       }
       positionCursor();
       showCursor();
-      // WICHTIG: Während eines Drags werden KEINE Hover-Bewegungen
-      // geschickt. Der Hover-Move läuft ohne gedrückte Taste (buttons
-      // 0) und würde den Drag aus Sicht der Seite ständig abreißen
-      // lassen - das Drag-Tracking bricht dann zusammen.
-      if (!dragWebviewId) {
-        if (webviewUnderPoint(cursorX, cursorY)) sendHoverMove();
-        else sendAppHover();
-      }
-      // Beim Ziehen die Bewegung mit gedrückter Taste melden - der
-      // Hauptprozess führt daraus den Drag (dragEnter/dragOver per
-      // CDP).
-      if (dragWebviewId && dragWebviewElement) {
-        const rect = dragWebviewElement.getBoundingClientRect();
-        api.webviewInput({
-          id: dragWebviewId,
-          type: 'move',
-          x: Math.round(cursorX - rect.left),
-          y: Math.round(cursorY - rect.top),
-          buttons: 1
-        });
-        // Diagnose: zeigt Position und Stick-Werte während des Zugs.
-        if (now - lastDragLogAt > 500) {
-          lastDragLogAt = now;
-          console.log('[d2] drag', Math.round(cursorX), Math.round(cursorY), 'achsen=', JSON.stringify((pad.axes || []).map((v) => Number(Number(v).toFixed(2)))));
-        }
-      }
+      sendAppHover();
     } else if (!interactive) {
       hideCursor();
     }
@@ -1249,56 +1126,18 @@ let lastDpadDownAt = 0;
     const precisionButton = Number.isInteger(Number(bind.precision)) ? Number(bind.precision) : -1;
     const categoryPrevButton = Number.isInteger(Number(bind.categoryPrev)) ? Number(bind.categoryPrev) : -1;
     const categoryNextButton = Number.isInteger(Number(bind.categoryNext)) ? Number(bind.categoryNext) : -1;
-    const sitePrevButton = Number.isInteger(Number(bind.sitePrev)) ? Number(bind.sitePrev) : -1;
-    const siteNextButton = Number.isInteger(Number(bind.siteNext)) ? Number(bind.siteNext) : -1;
     const settingsButton = Number.isInteger(Number(bind.settings)) ? Number(bind.settings) : -1;
     const hideButton = Number.isInteger(Number(bind.hide)) ? Number(bind.hide) : -1;
     const notesButton = Number.isInteger(Number(bind.notes)) ? Number(bind.notes) : -1;
-    const pipButton = Number.isInteger(Number(bind.pip)) ? Number(bind.pip) : -1;
-    const unloadOthersButton = Number.isInteger(Number(bind.unloadOthers)) ? Number(bind.unloadOthers) : -1;
     const hudButton = Number.isInteger(Number(bind.hud)) ? Number(bind.hud) : -1;
 
-    // Klick: über CDP drücken (gehalten = ziehen). CDP-Ereignisse
-    // sind vertrauenswürdig und blockieren den Hauptprozess nicht -
-    // anders als der native OS-Drag. Drags werden über
-    // Input.dispatchDragEvent geführt (siehe Hauptprozess).
+    // Klick: löst die App-Oberfläche direkt an der Cursorposition aus.
     if (clickButton >= 0 && just[clickButton]) {
       console.log('[d2] klick down', Math.round(cursorX), Math.round(cursorY), 'taste=' + clickButton);
       spawnRipple();
       if (cfg.gamepad.hapticSwitch === true) rumble(0.12, 24);
-      const webview = webviewUnderPoint(cursorX, cursorY);
-      if (webview) {
-        const id = webviewIdOf(webview);
-        if (id) {
-          try { webview.focus(); } catch (error) {}
-          const rect = webview.getBoundingClientRect();
-          const x = Math.round(cursorX - rect.left);
-          const y = Math.round(cursorY - rect.top);
-          api.webviewInput({ id, type: 'move', x, y, buttons: 0 });
-          api.webviewInput({ id, type: 'mousedown', x, y, buttons: 1 });
-          dragWebviewId = id;
-          dragWebviewElement = webview;
-        } else {
-          sendAppHover(true);
-          clickAtCursor();
-        }
-      } else {
-        sendAppHover(true);
-        clickAtCursor();
-      }
-    }
-
-    // Klick losgelassen: Drag per Drop abschließen.
-    if (dragWebviewId && clickButton >= 0 && previous[clickButton] && !pressed[clickButton]) {
-      console.log('[d2] klick up', Math.round(cursorX), Math.round(cursorY));
-      const webview = dragWebviewElement || webviewUnderPoint(cursorX, cursorY);
-      const id = webview ? (webviewIdOf(webview) || dragWebviewId) : dragWebviewId;
-      const rect = webview ? webview.getBoundingClientRect() : null;
-      const x = rect ? Math.round(cursorX - rect.left) : Math.round(cursorX);
-      const y = rect ? Math.round(cursorY - rect.top) : Math.round(cursorY);
-      api.webviewInput({ id, type: 'mouseup', x, y });
-      dragWebviewId = null;
-      dragWebviewElement = null;
+      sendAppHover(true);
+      clickAtCursor();
     }
     if (backButton >= 0 && just[backButton] && onAction) onAction('back');
     if (reloadButton >= 0 && just[reloadButton] && onAction) onAction('reload');
@@ -1321,14 +1160,11 @@ let lastDpadDownAt = 0;
     if (quickMenuButton > 0 && just[quickMenuButton] && quickMenuButton !== toggleIndex && !comboDown && onAction) onAction('quickmenu');
     if (hideButton >= 0 && just[hideButton] && !combo.includes(hideButton) && onAction) onAction('hide');
     if (notesButton >= 0 && just[notesButton] && onAction) onAction('notes');
-    if (pipButton >= 0 && just[pipButton] && onAction) onAction('pip');
-    if (unloadOthersButton >= 0 && just[unloadOthersButton] && onAction) onAction('unload-others');
     if (hudButton >= 0 && just[hudButton] && onAction) onAction('hud');
 
     const invertDpad = Boolean(cfg.gamepad.invertDpadScroll);
     // In App-Bereichen (Inventar, Dashboard, Dialoge, Notizen) navigiert
-    // das D-Pad per Fokus. Auf Webseiten bleibt es beim Scrollen bzw.
-    // Seitenwechsel.
+    // das D-Pad per Fokus.
     const navRoot = appNavRoot(Boolean(just[12] || just[13] || just[14] || just[15]));
     const appNav = navRoot !== document.body;
     if (appNav) {
@@ -1358,8 +1194,6 @@ let lastDpadDownAt = 0;
       lastFocusedRoot = null;
       handleRepeat('dup', pressed[12], () => scrollAtCursor(invertDpad ? 1 : -1));
       handleRepeat('ddown', pressed[13], () => scrollAtCursor(invertDpad ? -1 : 1));
-      if (sitePrevButton >= 0 && just[sitePrevButton] && onAction) { onAction('site-prev'); if (cfg.gamepad.hapticSwitch === true) rumble(0.1, 30); }
-      if (siteNextButton >= 0 && just[siteNextButton] && onAction) { onAction('site-next'); if (cfg.gamepad.hapticSwitch === true) rumble(0.1, 30); }
     }
 
     // Analoge Trigger scrollen schnell. Bei Controllern, die die
@@ -1370,7 +1204,7 @@ let lastDpadDownAt = 0;
     // empfindlichen Controller hat, setzt sie höher.
     const triggerThreshold = clamp(Number(cfg.gamepad.triggerThreshold) || 0.35, 0.05, 0.9);
     // LT/RT-Verhalten: 'scroll' (Standard) oder eine Aktion aus den
-    // Belegungen (z. B. 'pip', 'notes', 'click'). Nicht belegte
+    // Belegungen (z. B. 'notes', 'click'). Nicht belegte
     // Trigger scrollen weiter.
     const triggerActions = { left: cfg.gamepad.triggerLeft || 'scroll', right: cfg.gamepad.triggerRight || 'scroll' };
     const fireTrigger = (side, direction) => {
