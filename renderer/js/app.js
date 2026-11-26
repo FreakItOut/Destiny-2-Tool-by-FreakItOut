@@ -47,31 +47,9 @@ let patchTimer = 0;
 let lastSelection = null;
 // notesDirty/notesAutosaveTimer liegen jetzt im Notizen-Modul
 // (renderer/js/notes.js).
-const mutedFrames = new Set();
 let persistTimer = 0;
-const urlInput = qs('#urlInput');
-const urlGoBtn = qs('#urlGoBtn');
 const windowBaseTitle = document.title;
-const findBar = qs('#findBar');
-const findInput = qs('#findInput');
-const findCount = qs('#findCount');
-const findNextBtn = qs('#findNextBtn');
-const findCloseBtn = qs('#findCloseBtn');
-let autoRefreshTimer = null;
-let autoRefreshSite = '';
 let offlineReloadDone = false;
-let paletteItems = [];
-let paletteIndex = 0;
-let findDebounce = 0;
-// Dashboard-/Checklisten- und Aktions-Buttons ebenfalls vorab
-// verankern (Interleaving durch Top-Level-Awaits möglich).
-// Die Checklisten-Elemente liegen jetzt im Checklisten-Modul
-// (renderer/js/checklist.js).
-const urlCopyBtn = qs('#urlCopyBtn');
-// Aktuelle Seite als eigene Webseite speichern.
-const urlSaveBtn = qs('#urlSaveBtn');
-const urlShotBtn = qs('#urlShotBtn');
-const muteBtn = qs('#muteBtn');
 
 // ------------------------------------------------------------
 // Grundzustand
@@ -98,8 +76,6 @@ function logConfigPatch(before, patch) {
     // Protokoll ist optional.
   }
 }
-const APP_CATEGORY = { id: 'app', name: 'App', hint: '', icon: 'sun', color: '#f0c66b', sites: [] };
-let categories = [APP_CATEGORY];
 let overlayState = (await api.getOverlayState().catch(() => null)) || {
   mode: 'window',
   visible: false,
@@ -127,14 +103,6 @@ window.addEventListener('mousemove', resetAutoHideTimer, { passive: true });
 window.addEventListener('keydown', resetAutoHideTimer, { passive: true });
 window.addEventListener('wheel', resetAutoHideTimer, { passive: true });
 
-function initialSelection() {
-  const category = categories.find((entry) => entry.id === cfg.lastCategory) || categories[0];
-  const remembered = cfg.lastSite && cfg.lastSite[category.id];
-  const site = category.sites.find((entry) => entry.id === remembered) || category.sites[0] || null;
-  return { category: category.id, site: site ? site.id : null };
-}
-
-const current = initialSelection();
 let settings = null;
 let onboarding = null;
 let overlayHud = null;
@@ -163,19 +131,6 @@ document.addEventListener('focusout', (event) => {
   if (event.target && event.target.tagName === 'WEBVIEW') webviewHasFocus = false;
 }, true);
 
-function currentCategory() {
-  return categories.find((entry) => entry.id === current.category) || categories[0];
-}
-
-function currentSite() {
-  const category = currentCategory();
-  return category ? category.sites.find((entry) => entry.id === current.site) || null : null;
-}
-
-// ------------------------------------------------------------
-// Symbole in die vorhandenen Knöpfe einsetzen
-// ------------------------------------------------------------
-
 function prepareIcons() {
   for (const element of qsa('[data-icon]')) {
     const name = element.dataset.icon;
@@ -197,23 +152,8 @@ prepareIcons();
 // Elemente
 // ------------------------------------------------------------
 
-const tabbar = qs('#tabbar');
-const siteSelect = qs('#siteSelect');
-const siteSearch = qs('#siteSearch');
-const siteList = qs('#siteList');
-const favoritesBar = qs('#favoritesBar');
-const favoriteBtn = qs('#favoriteBtn');
-const overlayCategorySelect = qs('#overlayCategorySelect');
-const overlaySiteSelect = qs('#overlaySiteSelect');
-const siteDesc = qs('#siteDesc');
-const loadState = qs('#loadState');
-const loadingBar = qs('#loadingBar');
 const pageTitle = qs('#pageTitle');
 const hintBar = qs('#hintBar');
-const emptyState = qs('#emptyState');
-const webError = qs('#webError');
-const webErrorTitle = qs('#webErrorTitle');
-const webErrorText = qs('#webErrorText');
 const overlayLockBtn = qs('#overlayLockBtn');
 const controllerStatus = qs('#controllerStatus');
 const controllerStatusText = qs('#controllerStatusText');
@@ -224,59 +164,6 @@ const controllerStatusText = qs('#controllerStatusText');
 // Die App lädt keine fremden Seiten mehr. Der Stub hält die noch
 // vorhandenen Aufrufstellen (Dashboard, Controller, Tastatur) ruhig.
 
-const web = {
-  show() {},
-  preload() {},
-  showUrl() {},
-  reload() {},
-  goBack() { return false; },
-  goForward() { return false; },
-  home() {},
-  navigate() { return false; },
-  openExternal() {},
-  applyZoom() {},
-  applyReaderMode() {},
-  reloadAll() {},
-  unloadAll() {},
-  unloadOthers() { return 0; },
-  unloadSite() { return false; },
-  restoreLast() { return null; },
-  toggleSplit() { return false; },
-  splitActive() { return false; },
-  getOpenSiteIds() { return []; },
-  setCategoryProvider() {},
-  hide() {},
-  getWebContentsId() { return null; },
-  activeElement() { return null; },
-  activeSite() { return null; },
-  count: 0
-};
-
-// ------------------------------------------------------------
-// Feature-Module Phase 3: Notizen + Checkliste
-// ------------------------------------------------------------
-// GetCfg-Bridge: setConfig übernimmt cfg sofort synchron (deepMerge)
-// und speichert entprellt - die Module lesen daher über getCfg().
-const notes = createNotes({
-  api,
-  qs,
-  toast,
-  escapeHtml,
-  getCfg: () => cfg,
-  setConfig
-});
-const checklist = createChecklist({
-  qs,
-  toast,
-  escapeHtml,
-  getCfg: () => cfg,
-  setConfig,
-  notes,
-  getInventoryData: () => (inventoryInstance && typeof inventoryInstance.getData === 'function' ? inventoryInstance.getData() : null)
-});
-// Inventar & Werkzeuge werden erst beim ersten Öffnen geladen. Das
-// spart beim Start ~1 MB Renderer-Code (inventory.js + tools.js) und
-// verkürzt die Zeit bis zum ersten Bild.
 let inventoryInstance = null;
 let inventoryPromise = null;
 let inventoryOpenRequested = false;
@@ -381,6 +268,24 @@ const overlayLoadouts = createOverlayLoadouts({
   }
 });
 
+const notes = createNotes({
+  api,
+  qs,
+  toast,
+  escapeHtml,
+  getCfg: () => cfg,
+  setConfig
+});
+const checklist = createChecklist({
+  qs,
+  toast,
+  escapeHtml,
+  getCfg: () => cfg,
+  setConfig,
+  notes,
+  getInventoryData: () => (inventoryInstance && typeof inventoryInstance.getData === 'function' ? inventoryInstance.getData() : null)
+});
+
 // ------------------------------------------------------------
 // Feature-Module Phase 2: Dashboard + Befehlspalette
 // ------------------------------------------------------------
@@ -388,13 +293,7 @@ const dashboard = createDashboard({
   api,
   getConfig: () => cfg,
   setConfig,
-  web,
-  hideError,
   pageTitle,
-  siteDesc,
-  loadState,
-  loadingBar,
-  emptyState,
   updateWindowTitle,
   checklistToggle: checklist.toggle,
   openBungieSettings: () => settings.open('bungie'),
@@ -413,9 +312,6 @@ const dashboard = createDashboard({
 const palette = createPalette({
   api,
   getConfig: () => cfg,
-  getCategories: () => categories,
-  selectCategory,
-  web,
   settings: { open: (tab) => settings.open(tab) },
   notesApi: notes,
   checklistToggle: checklist.toggle,
@@ -438,7 +334,6 @@ const palette = createPalette({
   refreshWishlist: () => (inventory && inventory.refreshWishlist ? inventory.refreshWishlist() : Promise.resolve()),
   dashboard,
   appendStopwatchToNote,
-  hideError,
   anyModalOpen,
   toast,
   escapeHtml,
@@ -459,7 +354,6 @@ const controller = createController({
   api,
   cursorElement: qs('#padCursor'),
   getConfig: () => cfg,
-  getActiveWebview: () => web.activeElement(),
   isInteractive: () => {
     if (document.body.classList.contains('mode-overlay')) {
       // Im Overlay zählt nur: sichtbar und nicht im Maus-Durchlass.
@@ -528,17 +422,7 @@ function ensureSettings() {
           api,
           getConfig: () => cfg,
           setConfig,
-          getCategories: () => categories,
-          controller,
-          web,
-          onCustomSitesChanged,
-          onCategoryOrderChanged: () => applyCategoryOrder(),
-          onReloadCurrentSite: () => {
-            const site = currentSite();
-            if (!site) return;
-            hideError();
-            web.show(site);
-          }
+          controller
         });
         return settingsInstance;
       })
@@ -1003,86 +887,6 @@ window.addEventListener('beforeunload', flushStats);
 // ------------------------------------------------------------
 // urlInput/urlGoBtn sind oben bei den Grundzuständen deklariert.
 
-function normalizeUrlInput(value) {
-  let url = String(value || '').trim();
-  if (!url) return '';
-  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
-  try {
-    const parsed = new URL(url);
-    if (!['http:', 'https:'].includes(parsed.protocol)) return '';
-    if (!parsed.hostname.includes('.')) return '';
-    return parsed.toString();
-  } catch (error) {
-    return '';
-  }
-}
-
-function goToUrl() {
-  if (!urlInput) return;
-  const url = normalizeUrlInput(urlInput.value);
-  if (!url) {
-    toast('Bitte eine gültige Adresse angeben (z. B. light.gg).', 'warning', 2200);
-    return;
-  }
-  if (web.navigate(url)) {
-    urlInput.blur();
-    toast('Adresse wird geladen.', 'info', 1200);
-  } else {
-    toast('Keine Seite offen – erst eine Webseite wählen.', 'warning', 2000);
-  }
-}
-if (urlGoBtn) urlGoBtn.addEventListener('click', goToUrl);
-if (urlInput) {
-  urlInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      goToUrl();
-    }
-  });
-}
-
-// Aktuelle Adresse kopieren.
-if (urlCopyBtn) {
-  urlCopyBtn.addEventListener('click', async () => {
-    const url = currentVideoUrl();
-    if (!url) {
-      toast('Keine Seite offen.', 'warning', 1600);
-      return;
-    }
-    const result = await api.copyToClipboard(url);
-    if (result && result.ok) toast('Adresse kopiert.', 'success', 1400);
-    else toast('Kopieren fehlgeschlagen.', 'error', 1600);
-  });
-}
-
-// Webseiten-Screenshot als PNG speichern.
-if (urlShotBtn) {
-  urlShotBtn.addEventListener('click', async () => {
-    const element = web.activeElement();
-    if (!element) {
-      toast('Keine Webseite offen.', 'warning', 1600);
-      return;
-    }
-    try {
-      const image = await element.capturePage();
-      const dataUrl = image.toDataURL('image/png');
-      const result = await api.saveScreenshot(dataUrl);
-      if (result && result.ok) toast(`Screenshot gespeichert: ${result.path}`, 'success');
-      else if (result && !result.canceled) toast((result && result.error) || 'Screenshot fehlgeschlagen.', 'error');
-    } catch (error) {
-      toast(`Screenshot fehlgeschlagen: ${error.message || error}`, 'error', 2600);
-    }
-  });
-}
-
-// ------------------------------------------------------------
-// Offline-Banner
-// ------------------------------------------------------------
-// Windows meldet Verbindungsverlust → dezenter Banner; beim
-// Wieder-Reconnect lädt die aktive Seite einmalig neu.
-
-const offlineBanner = qs('#offlineBanner');
-
 function updateOfflineBanner() {
   if (!offlineBanner) return;
   const offline = !navigator.onLine;
@@ -1099,14 +903,6 @@ updateOfflineBanner();
 
 // Die früheren Webseiten-Kürzel (Strg+Shift+T, Strg+Tab, Strg+Q)
 // entfallen mit der Webseiten-Ansicht.
-function jumpToLastSite() {
-  toast('Es gibt keine Webseiten mehr – alles läuft über Dashboard und Inventar.', 'info', 2200);
-}
-
-// ------------------------------------------------------------
-// Fenstertitel mit Seitennamen (Alt+Tab / Taskbar)
-// ------------------------------------------------------------
-// windowBaseTitle ist oben bei den Grundzuständen deklariert.
 function updateWindowTitle() {
   const current = pageTitle.textContent || '';
   // Läuft die Stoppuhr, steht die Zeit im Fenstertitel (Alt+Tab).
@@ -1127,67 +923,6 @@ const historyPanel = qs('#historyPanel');
 const historyList = qs('#historyList');
 const historyCloseBtn = qs('#historyCloseBtn');
 
-function hideHistoryPanel() {
-  if (historyPanel) historyPanel.classList.add('hidden');
-}
-
-if (backHistoryBtn) {
-  backHistoryBtn.addEventListener('click', async () => {
-    if (!historyPanel || !historyList) return;
-    if (!historyPanel.classList.contains('hidden')) {
-      hideHistoryPanel();
-      return;
-    }
-    const element = web.activeElement();
-    let contentsId = 0;
-    if (element) {
-      try { contentsId = element.getWebContentsId() || 0; } catch (error) { contentsId = 0; }
-    }
-    if (!contentsId) {
-      toast('Keine Seite offen.', 'warning', 1600);
-      return;
-    }
-    const result = await api.getWebHistory(contentsId);
-    if (!result || !result.ok || !(result.entries || []).length) {
-      toast('Kein Verlauf verfügbar.', 'info', 1800);
-      return;
-    }
-    const entries = (result.entries || []).slice().reverse();
-    historyList.innerHTML = entries
-      .map((entry) => {
-        let label = entry.url;
-        try { label = new URL(entry.url).hostname + (new URL(entry.url).pathname === '/' ? '' : new URL(entry.url).pathname); } catch (error) { /* egal */ }
-        const isCurrent = entry.position === result.index;
-        return (
-          `<button class="check-item history-entry ${isCurrent ? 'done' : ''}" data-history-go="${entry.position}" title="${escapeHtml(entry.url)}">` +
-          `<span class="check-text">${escapeHtml(label)}</span>` +
-          (isCurrent ? '<small>aktuell</small>' : '') +
-          `</button>`
-        );
-      })
-      .join('');
-    historyPanel.classList.remove('hidden');
-  });
-}
-if (historyList) {
-  historyList.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-history-go]');
-    if (!button) return;
-    const element = web.activeElement();
-    let contentsId = 0;
-    if (element) {
-      try { contentsId = element.getWebContentsId() || 0; } catch (error) { contentsId = 0; }
-    }
-    if (!contentsId) return;
-    await api.goToHistoryIndex(contentsId, Number(button.dataset.historyGo));
-    hideHistoryPanel();
-  });
-}
-if (historyCloseBtn) historyCloseBtn.addEventListener('click', hideHistoryPanel);
-
-// ------------------------------------------------------------
-// Tages-Begrüßung mit Kontext (einmal pro Start)
-// ------------------------------------------------------------
 function showDailyGreeting() {
   const now = new Date();
   const parts = [];
@@ -1293,186 +1028,6 @@ function appendStopwatchToNote() {
 const tabContextMenu = qs('#tabContextMenu');
 const tabContextBody = qs('#tabContextBody');
 
-function closeTabContextMenu() {
-  if (tabContextMenu) tabContextMenu.classList.add('hidden');
-}
-
-// ------------------------------------------------------------
-// Webseiten-Kontextmenü: Aktionen auf Links/Seiten
-// ------------------------------------------------------------
-// Der Hauptprozess meldet Rechtsklicks in Webviews (mit Link-URL);
-// hier erscheint das Tool-Menü an der relativen Position.
-
-function addCustomSiteFromUrl(url, name) {
-  const clean = String(url || '').trim();
-  if (!/^https?:\/\//i.test(clean)) return;
-  let host = clean;
-  try { host = new URL(clean).hostname.replace(/^www\./, ''); } catch (error) { /* egal */ }
-  const existing = cfg.customSites || [];
-  if (existing.some((site) => site.url === clean)) {
-    toast('Diese Adresse ist bereits als eigene Seite gespeichert.', 'warning', 2200);
-    return;
-  }
-  const id = `c-${crypto.randomUUID()}`;
-  const category = current.category || 'custom';
-  const next = existing.concat([{ id, name: String(name || host).slice(0, 80), url: clean, category }]);
-  setConfig({ customSites: next });
-  onCustomSitesChanged(next, { category, siteId: id });
-  toast(`"${String(name || host).slice(0, 40)}" als eigene Seite gespeichert.`, 'success', 2200);
-}
-
-function showContextMenuActions(actions, x, y) {
-  if (!tabContextMenu || !tabContextBody) return;
-  tabContextBody.innerHTML = actions
-    .map((action, index) => `<button class="palette-item" data-tab-context="${index}">${escapeHtml(action.label)}</button>`)
-    .join('');
-  window.__tabContextActions = actions;
-  for (const button of qsa('[data-tab-context]', tabContextBody)) {
-    button.addEventListener('click', () => {
-      const entry = (window.__tabContextActions || [])[Number(button.dataset.tabContext)];
-      closeTabContextMenu();
-      if (entry && typeof entry.run === 'function') {
-        try { entry.run(); } catch (error) {
-          toast(`Aktion fehlgeschlagen: ${error.message || error}`, 'error', 2200);
-        }
-      }
-    });
-  }
-  tabContextMenu.classList.remove('hidden');
-  const menuWidth = 260;
-  const menuHeight = 300;
-  const left = Math.min(x, window.innerWidth - menuWidth - 8);
-  const top = Math.min(y, window.innerHeight - menuHeight - 8);
-  tabContextMenu.style.left = `${Math.max(8, left)}px`;
-  tabContextMenu.style.top = `${Math.max(8, top)}px`;
-}
-
-function openTabContextMenu(site, category, x, y) {
-  if (!tabContextMenu || !tabContextBody) return;
-  const isFavorite = (cfg.favorites || []).includes(site.id);
-  const actions = [
-    { label: isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern', run: () => toggleFavoriteFor(site.id) },
-    { label: 'Im Browser öffnen', run: () => api.openExternal(site.url) },
-    { label: 'Neu laden', run: () => { if (current.site === site.id) { hideError(); web.reload(); } else { selectCategory(category.id, site.id); } } },
-    { label: 'Mini-Fenster (PiP)', run: () => api.pipToggle(embedUrlFor(site.url), site.name).catch(() => {}) },
-    { label: 'Seite entladen (RAM)', run: () => {
-      const removed = web.unloadSite(site.id);
-      toast(removed ? 'Seite entladen.' : 'Aktive Seite bleibt offen.', removed ? 'info' : 'warning', 1800);
-    } },
-    { label: 'AdBlock-Ausnahme umschalten', run: () => {
-      const map = { ...((cfg.web && cfg.web.adBlockOffSites) || {}) };
-      if (map[site.id]) delete map[site.id];
-      else map[site.id] = true;
-      setConfig({ web: { adBlockOffSites: map } });
-      toast(map[site.id] ? 'AdBlock für diese Seite aus (nach F5 aktiv).' : 'AdBlock wieder aktiv.', 'info', 2200);
-    } },
-    { label: 'Zoom auf 100 % setzen', run: () => {
-      const map = { ...((cfg.web && cfg.web.siteZoom) || {}) };
-      map[site.id] = 1;
-      setConfig({ web: { siteZoom: map } });
-      if (web && web.applyZoom) web.applyZoom();
-      toast('Zoom für diese Seite: 100 %.', 'success', 1600);
-    } }
-  ];
-  showContextMenuActions(actions, x, y);
-}
-
-api.onWebContextMenu?.((payload) => {
-  try {
-    // Das Webview-Element finden, das den Rechtsklick gemeldet hat,
-    // und die relative Position in Fensterkoordinaten übersetzen.
-    let offsetX = 0;
-    let offsetY = 0;
-    for (const element of document.querySelectorAll('webview')) {
-      let id = 0;
-      try { id = element.getWebContentsId(); } catch (error) { id = 0; }
-      if (id === payload.contentsId) {
-        const rect = element.getBoundingClientRect();
-        offsetX = rect.left;
-        offsetY = rect.top;
-        break;
-      }
-    }
-    const x = offsetX + (Number(payload.x) || 0);
-    const y = offsetY + (Number(payload.y) || 0);
-    const linkURL = String(payload.linkURL || '');
-    const pageURL = String(payload.pageURL || '');
-    const actions = [];
-    if (linkURL) {
-      actions.push({ label: 'Link-Adresse kopieren', run: () => { api.copyToClipboard(linkURL); toast('Link kopiert.', 'success', 1400); } });
-      actions.push({ label: 'Link im Mini-Fenster öffnen', run: () => api.pipToggle(embedUrlFor(linkURL), '').catch(() => {}) });
-      actions.push({ label: 'Link im Browser öffnen', run: () => api.openExternal(linkURL) });
-      actions.push({ label: 'Link als eigene Seite speichern', run: () => addCustomSiteFromUrl(linkURL, '') });
-    }
-    actions.push({ label: 'Seiten-Adresse kopieren', run: () => { api.copyToClipboard(pageURL); toast('Adresse kopiert.', 'success', 1400); } });
-    actions.push({ label: 'Seite als eigene Webseite speichern', run: () => addCustomSiteFromUrl(pageURL, '') });
-    actions.push({ label: 'Im Browser öffnen', run: () => api.openExternal(pageURL) });
-    showContextMenuActions(actions, x, y);
-  } catch (error) {
-    // egal
-  }
-});
-
-// Drag&Drop: Link auf das Tool-Fenster ziehen → als eigene Seite
-// hinzufügen (Webviews regeln ihre eigenen Drops selbst).
-window.addEventListener('dragover', (event) => {
-  if (event.target && event.target.tagName === 'WEBVIEW') return;
-  event.preventDefault();
-});
-window.addEventListener('drop', (event) => {
-  if (event.target && event.target.tagName === 'WEBVIEW') return;
-  const data = event.dataTransfer;
-  const url = String((data && (data.getData('text/uri-list') || data.getData('text/plain'))) || '').trim();
-  if (!/^https?:\/\//i.test(url)) return;
-  event.preventDefault();
-  addCustomSiteFromUrl(url.split('\n')[0].trim(), '');
-});
-
-if (tabbar) {
-  tabbar.addEventListener('contextmenu', (event) => {
-    const tab = event.target.closest('.tab');
-    if (!tab) return;
-    event.preventDefault();
-    const category = categories.find((entry) => entry.id === tab.dataset.cat);
-    // Zielseite: die gemerkte Seite dieser Kategorie, sonst die erste.
-    const rememberedId = cfg.lastSite && cfg.lastSite[category.id];
-    const site = category.sites.find((entry) => entry.id === rememberedId) || category.sites[0];
-    if (!category || !site) return;
-    openTabContextMenu(site, category, event.clientX, event.clientY);
-  });
-}
-window.addEventListener('mousedown', (event) => {
-  if (tabContextMenu && !tabContextMenu.classList.contains('hidden')) {
-    if (!event.target.closest('#tabContextMenu')) closeTabContextMenu();
-  }
-}, true);
-window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && tabContextMenu && !tabContextMenu.classList.contains('hidden')) {
-    closeTabContextMenu();
-  }
-});
-
-// Favorit umschalten für eine bestimmte Seite (Kontextmenü).
-function toggleFavoriteFor(siteId) {
-  if (!siteId) return;
-  const favorites = new Set(cfg.favorites || []);
-  const added = !favorites.has(siteId);
-  if (added) favorites.add(siteId);
-  else favorites.delete(siteId);
-  const next = [...favorites];
-  setConfig({ favorites: next });
-  cfg.favorites = next;
-  renderFavorites();
-  sendSiteCatalog();
-  toast(added ? 'Als Favorit gespeichert.' : 'Favorit entfernt.', 'info', 1400);
-}
-
-// ------------------------------------------------------------
-// Overlay-Leiste konfigurierbar
-// ------------------------------------------------------------
-// Einzelne Elemente der Overlay-Kopfzeile ein-/ausblenden. Die
-// Elemente sind im DOM immer vorhanden; die Config steuert `hidden`.
-
 const OVERLAY_ITEMS = [
   ['notes', '#overlayNotesBtn'],
   ['dashboard', '#overlayDashboardBtn'],
@@ -1529,221 +1084,8 @@ overlayHud = overlayHudInstance;
 // ------------------------------------------------------------
 // Sitzungs-Wiederherstellung
 // ------------------------------------------------------------
-// Beim Verlassen die offenen Seiten melden; Dashboard-Karte bietet
-// die Chips + "Alle wiederherstellen".
+// Die frühere Webseiten-Sitzung gibt es nicht mehr.
 
-window.addEventListener('beforeunload', () => {
-  try { api.saveSession(web.getOpenSiteIds()); } catch (error) { /* egal */ }
-});
-
-
-// Webseiten-Audio stumm schalten: Klick = aktiver Tab,
-// Rechtsklick = alle Tabs. mutedFrames ist oben deklariert.
-
-function updateMuteButton() {
-  if (!muteBtn) return;
-  const element = web.activeElement();
-  let muted = false;
-  if (element) {
-    try { muted = element.isAudioMuted(); } catch (error) { muted = mutedFrames.size > 0; }
-  }
-  if (updateMuteButton.lastMuted === muted) return;
-  updateMuteButton.lastMuted = muted;
-  muteBtn.classList.toggle('active', muted);
-  muteBtn.innerHTML = icon(muted ? 'mute' : 'volume');
-  muteBtn.title = muted
-    ? 'Ton an (Klick: dieser Tab · Rechtsklick: alle Tabs)'
-    : 'Webseiten-Ton aus (Klick: dieser Tab · Rechtsklick: alle Tabs)';
-}
-
-function setFrameMuted(element, muted) {
-  if (!element) return;
-  try {
-    element.setAudioMuted(muted);
-    if (muted) mutedFrames.add(element);
-    else mutedFrames.delete(element);
-  } catch (error) {
-    // egal
-  }
-}
-
-if (muteBtn) {
-  muteBtn.addEventListener('click', () => {
-    const element = web.activeElement();
-    if (!element) {
-      toast('Keine Webseite offen.', 'warning', 1600);
-      return;
-    }
-    let muted = false;
-    try { muted = element.isAudioMuted(); } catch (error) { muted = mutedFrames.has(element); }
-    setFrameMuted(element, !muted);
-    updateMuteButton();
-    toast(!muted ? 'Webseiten-Ton aus.' : 'Webseiten-Ton an.', 'info', 1400);
-  });
-  muteBtn.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-    const allMuted = (() => {
-      const frames = document.querySelectorAll('webview');
-      if (!frames.length) return mutedFrames.size > 0;
-      for (const frame of frames) {
-        try { if (!frame.isAudioMuted()) return false; } catch (error) { return mutedFrames.size > 0; }
-      }
-      return true;
-    })();
-    const target = !allMuted;
-    for (const element of document.querySelectorAll('webview')) setFrameMuted(element, target);
-    mutedFrames.clear();
-    if (target) {
-      for (const element of document.querySelectorAll('webview')) mutedFrames.add(element);
-    }
-    updateMuteButton();
-    toast(target ? 'Alle Tabs stumm.' : 'Alle Tabs wieder mit Ton.', 'info', 1600);
-  });
-  // Zustand bei Tab-Wechsel aktualisieren.
-  setInterval(updateMuteButton, 1000);
-}
-
-if (urlSaveBtn) {
-  urlSaveBtn.addEventListener('click', () => {
-    const element = web.activeElement();
-    let url = '';
-    let name = '';
-    if (element) {
-      try { url = element.getURL() || ''; } catch (error) { url = ''; }
-      try { name = element.getTitle() || ''; } catch (error) { name = ''; }
-    }
-    if (!url || !/^https?:\/\//i.test(url)) {
-      toast('Keine Webseite offen.', 'warning', 1600);
-      return;
-    }
-    const existing = (cfg.customSites || []);
-    if (existing.some((site) => site.url === url)) {
-      toast('Diese Adresse ist bereits als eigene Seite gespeichert.', 'warning', 2400);
-      return;
-    }
-    const id = `c-${crypto.randomUUID()}`;
-    const category = current.category === 'custom' ? 'custom' : current.category;
-    const next = existing.concat([
-      { id, name: String(name || 'Eigene Seite').slice(0, 80), url, category }
-    ]);
-    setConfig({ customSites: next });
-    onCustomSitesChanged(next, { category, siteId: id });
-    toast(`"${String(name || 'Eigene Seite').slice(0, 40)}" als eigene Seite gespeichert.`, 'success', 2400);
-  });
-}
-
-// ------------------------------------------------------------
-// Find-in-Page (Strg+F)
-// ------------------------------------------------------------
-// Textsuche im aktiven Webview über Chromiums eingebaute Suche -
-// inklusive Trefferzähler und Weitersuchen.
-
-
-function findFrame() {
-  const element = web.activeElement();
-  if (!element) return null;
-  try {
-    return element.getWebContentsId() > 0 ? element : null;
-  } catch (error) {
-    return null;
-  }
-}
-
-function runFind(findNext) {
-  const frame = findFrame();
-  const text = String(findInput.value || '').trim();
-  if (!frame) {
-    if (findCount) findCount.textContent = 'keine Seite';
-    return;
-  }
-  if (!text) {
-    try { frame.stopFindInPage('clearSelection'); } catch (error) { /* egal */ }
-    if (findCount) findCount.textContent = '—';
-    return;
-  }
-  try {
-    frame.findInPage(text, { findNext: Boolean(findNext) });
-  } catch (error) {
-    // Seite noch nicht bereit.
-  }
-}
-
-function openFindBar() {
-  if (!findBar) return;
-  findBar.classList.remove('hidden');
-  if (findInput) {
-    findInput.focus();
-    findInput.select();
-  }
-  runFind(false);
-}
-
-function closeFindBar() {
-  if (!findBar) return;
-  findBar.classList.add('hidden');
-  const frame = findFrame();
-  if (frame) {
-    try { frame.stopFindInPage('clearSelection'); } catch (error) { /* egal */ }
-  }
-  if (findInput) findInput.value = '';
-  if (findCount) findCount.textContent = '—';
-}
-
-if (findInput) {
-  findInput.addEventListener('input', () => {
-    clearTimeout(findDebounce);
-    findDebounce = setTimeout(() => runFind(false), 250);
-  });
-  findInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      runFind(true);
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      closeFindBar();
-    }
-  });
-}
-if (findNextBtn) findNextBtn.addEventListener('click', () => runFind(true));
-if (findCloseBtn) findCloseBtn.addEventListener('click', closeFindBar);
-// Minimodus, Split-View, Strg+F/Strg+L und die Webseiten-Kürzel
-// wurden mit der Webseiten-Ansicht entfernt.
-
-// ------------------------------------------------------------
-// Auto-Refresh pro Webseite
-// ------------------------------------------------------------
-
-
-function refreshAutoRefreshTimer() {
-  if (autoRefreshTimer) {
-    clearInterval(autoRefreshTimer);
-    autoRefreshTimer = null;
-  }
-  autoRefreshSite = current.site || '';
-  const map = (cfg.web && cfg.web.autoRefresh) || {};
-  const minutes = Number(map[autoRefreshSite]) || 0;
-  if (!minutes) return;
-  autoRefreshTimer = setInterval(() => {
-    if (autoRefreshSite !== current.site) {
-      refreshAutoRefreshTimer();
-      return;
-    }
-    try { web.reload(); } catch (error) {
-      // Seite lädt evtl. schon.
-    }
-  }, minutes * 60000);
-  if (autoRefreshTimer.unref) autoRefreshTimer.unref();
-}
-
-// ------------------------------------------------------------
-// Oberflächen-Zoom
-// ------------------------------------------------------------
-
-const CONTROLLER_AREA_PRESETS = {
-  inventory: { speed: 650, deadzone: 0.15, scrollSpeed: 700, quickMenuButton: 11, hapticProfile: 'soft' },
-  standard: { speed: 900, deadzone: 0.2, scrollSpeed: 980, quickMenuButton: 11, hapticProfile: 'standard' },
-  accessible: { speed: 500, deadzone: 0.28, scrollSpeed: 600, quickMenuButton: 0, hapticProfile: 'strong' }
-};
 
 function applyControllerAreaProfile(area) {
   if (!cfg.gamepad || cfg.gamepad.autoAreaProfile !== true) return;
@@ -1905,132 +1247,16 @@ function updateQuietState() {
 // Tray-Schnellzugriff: Seitenkatalog an den Hauptprozess melden
 // ------------------------------------------------------------
 
-function sendSiteCatalog() {
-  try {
-    const favorites = new Set(cfg.favorites || []);
-    const usage = (cfg.behavior && cfg.behavior.siteUsage) || {};
-    const flat = [];
-    for (const category of categories) {
-      for (const site of category.sites) {
-        flat.push({ site, score: (favorites.has(site.id) ? 1000 : 0) + (Number(usage[site.id]) || 0) });
-      }
-    }
-    flat.sort((a, b) => b.score - a.score);
-    api.sendSiteCatalog(flat.slice(0, 8).map(({ site }) => ({ id: site.id, name: site.name, url: site.url })));
-  } catch (error) {
-    // optional
-  }
-}
-
-// Aus dem Tray gewählte Seite öffnen: Die Webseiten-Ansicht wurde
-// entfernt; der Tray öffnet nur noch Dashboard/Inventar.
-
-initClock({
-  onToday: () => dashboard.open(),
-  onXur: () => {
-    try { showInventoryPage(); } catch (error) { /* egal */ }
-    try { inventory.openTools('vendor', { vendorHash: 2190858386 }); } catch (error) { /* egal */ }
-  },
-  onReset: () => {
-    toast('Wöchentlicher Reset – Daten werden aktualisiert', 'info', 4000);
-    try { inventory.refreshInventory(); } catch (error) { /* egal */ }
-    try { dashboard.render(); } catch (error) { /* egal */ }
-  }
-});
-
-// ------------------------------------------------------------
-// Kategorie-Reihenfolge aus der Config anwenden
-// ------------------------------------------------------------
-function applyCategoryOrder() {
-  const order = (cfg.categoryOrder || []).slice();
-  const sorted = [];
-  for (const id of order) {
-    const match = categories.find((entry) => entry.id === id);
-    if (match && !sorted.includes(match)) sorted.push(match);
-  }
-  for (const entry of categories) {
-    if (!sorted.includes(entry)) sorted.push(entry);
-  }
-  if (sorted.length !== categories.length || sorted.some((entry, index) => entry !== categories[index])) {
-    categories = sorted;
-  }
-  renderTabs();
-  syncSiteSelects();
-  updateSiteSearchList();
-  renderFavorites();
-}
-
-// ------------------------------------------------------------
-// Reiter und Auswahl
-// ------------------------------------------------------------
-
-function renderTabs() {
-  if (!tabbar) return;
-  tabbar.innerHTML = categories
-    .map(
-      (category) => `
-      <button class="tab ${category.id === current.category ? 'active' : ''}"
-              data-cat="${escapeHtml(category.id)}"
-              style="--tab-color:${category.color}"
-              title="${escapeHtml(category.hint)}">
-        ${icon(category.icon)}
-        <span>${escapeHtml(category.name)}</span>
-        <span class="tab-badge">${category.sites.length}</span>
-      </button>`
-    )
-    .join('') +
-    // Inventar & Loadouts als eigener Reiter am Ende der Kategorien.
-    `<button class="tab ${inventoryPageOpen ? 'active' : ''}"
-            data-cat="__inventory__"
-            title="Inventar & Loadouts (Bungie-Anmeldung nötig)">
-      ${icon('backpack')}
-      <span>Inventar</span>
-    </button>`;
-
-  for (const button of qsa('.tab', tabbar)) {
-    button.addEventListener('click', () => selectCategory(button.dataset.cat));
-  }
-
-  const activeTab = qs('.tab.active', tabbar);
-  if (activeTab && typeof activeTab.scrollIntoView === 'function') {
-    activeTab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  }
-
-  overlayCategorySelect.innerHTML = categories
-    .map((category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.name)}</option>`)
-    .join('') + '<option value="__inventory__">🎒 Inventar</option>';
-  overlayCategorySelect.value = inventoryPageOpen ? '__inventory__' : current.category;}
-
-// ------------------------------------------------------------
-// Inventar-Seite: eigener Reiter im Hauptbereich
-// ------------------------------------------------------------
-// Das Panel füllt den Webbereich (wie das Dashboard); Kategorien und
-// Dashboard schließen es automatisch. ESC/Controller-B kehren zurück.
-
 const inventoryView = qs('#inventoryView');
 let inventoryPageOpen = false;
 
 function showInventoryPage() {
   if (!inventoryView || inventoryPageOpen) return;
   if (dashboard && !dashboard.hidden()) dashboard.hide();
-  web.hide();
-  if (emptyState) emptyState.classList.add('hidden');
-  hideError();
-  if (loadingBar) loadingBar.classList.add('hidden');
-  if (loadState) {
-    loadState.textContent = '';
-    loadState.classList.remove('loading');
-  }
   if (pageTitle) pageTitle.textContent = 'Inventar';
-  if (siteDesc) siteDesc.textContent = '';
   inventoryPageOpen = true;
   inventoryView.classList.remove('hidden');
   try { api.inventorySetOpen?.(true); } catch (error) { /* egal */ }
-  if (tabbar) {
-    for (const button of qsa('.tab', tabbar)) {
-      button.classList.toggle('active', button.dataset.cat === '__inventory__');
-    }
-  }
   updateWindowTitle();
   inventory.open();
 }
@@ -2056,34 +1282,7 @@ function toggleInventoryPage() {
   else showInventoryPage();
 }
 
-function syncSiteSelects() {
-  if (!siteSelect && !overlaySiteSelect) return;
-  const category = currentCategory();
-  const sites = category ? category.sites : [];
-  const options = sites.length
-    ? sites
-        .map(
-          (site) =>
-            `<option value="${escapeHtml(site.id)}">${escapeHtml(site.name)}${site.custom ? ' ★' : ''}</option>`
-        )
-        .join('')
-    : '<option value="">Keine Seiten</option>';
-
-  for (const select of [siteSelect, overlaySiteSelect].filter(Boolean)) {
-    select.innerHTML = options;
-    select.disabled = sites.length === 0;
-    if (current.site) select.value = current.site;
-  }
-
-  const site = currentSite();
-  if (site) {
-    if (siteSelect) siteSelect.title = site.url;
-    if (overlaySiteSelect) overlaySiteSelect.title = site.url;
-    if (siteDesc) siteDesc.textContent = site.desc || '';
-  }
-}
-
-function applyAccent(category) {
+function applyAccent() {
   // Eigene Akzentfarbe (Einstellungen -> Overlay) hat Vorrang vor der
   // Markenfarbe. Ohne eigene Farbe bleibt die Edition bei ihrem Logo-
   // Farbschema (Standard = Rot, Lenastheo = Violett).
@@ -2108,263 +1307,6 @@ function accentContrast(hex) {
   return luminance > 0.55 ? '#04121f' : '#f4f7fd';
 }
 
-function updateSiteSearchList() {
-  if (!siteList) return;
-  const items = [];
-  for (const category of categories) {
-    for (const site of category.sites) {
-      items.push(
-        `<option value="${escapeHtml(site.name)}">${escapeHtml(category.name)}</option>`
-      );
-    }
-  }
-  siteList.innerHTML = items.join('');
-}
-
-function renderFavorites() {
-  if (!favoritesBar) return;
-  const ids = new Set(cfg.favorites || []);
-  const favorites = [];
-  for (const category of categories) {
-    for (const site of category.sites) {
-      if (ids.has(site.id)) favorites.push({ category, site });
-    }
-  }
-  if (!favorites.length) {
-    favoritesBar.classList.add('hidden');
-    favoritesBar.innerHTML = '';
-    if (favoriteBtn) favoriteBtn.classList.remove('active');
-    return;
-  }
-  favoritesBar.classList.remove('hidden');
-  favoritesBar.innerHTML = favorites
-    .map(
-      ({ category, site }) => `
-        <button class="favorite-chip" data-cat="${escapeHtml(category.id)}" data-site="${escapeHtml(site.id)}" title="${escapeHtml(site.url)}">
-          ${icon(category.icon)}
-          <span>${escapeHtml(site.name)}</span>
-        </button>`
-    )
-    .join('');
-  for (const button of qsa('.favorite-chip', favoritesBar)) {
-    button.addEventListener('click', () => selectCategory(button.dataset.cat, button.dataset.site));
-  }
-  // Rechtsklick: gleiche Aktionen wie im Tab-Kontextmenü.
-  favoritesBar.addEventListener('contextmenu', (event) => {
-    const chip = event.target.closest('.favorite-chip');
-    if (!chip) return;
-    event.preventDefault();
-    const category = categories.find((entry) => entry.id === chip.dataset.cat);
-    const site = category && category.sites.find((entry) => entry.id === chip.dataset.site);
-    if (!category || !site) return;
-    openTabContextMenu(site, category, event.clientX, event.clientY);
-  });
-  const currentSiteId = current.site;
-  if (favoriteBtn) favoriteBtn.classList.toggle('active', ids.has(currentSiteId));
-}
-
-function toggleFavorite() {
-  const site = currentSite();
-  if (!site) return;
-  const favorites = new Set(cfg.favorites || []);
-  const added = !favorites.has(site.id);
-  if (added) favorites.add(site.id);
-  else favorites.delete(site.id);
-  const next = [...favorites];
-  setConfig({ favorites: next });
-  cfg.favorites = next;
-  renderFavorites();
-  sendSiteCatalog();
-  toast(added ? 'Als Favorit gespeichert.' : 'Favorit entfernt.', 'info', 1400);
-}
-
-// Auswahl speichern: gehoistete Funktion (kein TDZ), Debounce über
-// persistTimer (oben bei den Grundzuständen deklariert).
-function saveSelection() {
-  cfg.lastCategory = current.category;
-  cfg.lastSite = { ...(cfg.lastSite || {}), [current.category]: current.site || '' };
-  clearTimeout(persistTimer);
-  persistTimer = setTimeout(async () => {
-    try {
-      await api.setConfig({ lastCategory: current.category, lastSite: cfg.lastSite });
-    } catch (error) {
-      // egal
-    }
-  }, 350);
-}
-
-function selectCategory(categoryId, siteId, options = {}) {
-  // Inventar-Reiter: eigene Seite öffnen statt Kategorie zu wechseln.
-  if (categoryId === '__inventory__') {
-    showInventoryPage();
-    return;
-  }
-  const category = categories.find((entry) => entry.id === categoryId) || categories[0];
-  if (!category) return;
-  if (inventoryPageOpen) hideInventoryPage();
-  // Für Strg+Q: die bisherige Auswahl merken, bevor gewechselt wird.
-  if (current.site && (current.site !== siteId || current.category !== category.id)) {
-    lastSelection = { category: current.category, site: current.site };
-  }
-  current.category = category.id;
-  dashboard.hide();
-
-  const preferred =
-    siteId || (cfg.lastSite && cfg.lastSite[category.id]) || (category.sites[0] && category.sites[0].id) || null;
-  const site = category.sites.find((entry) => entry.id === preferred) || category.sites[0] || null;
-  current.site = site ? site.id : null;
-
-  renderTabs();
-  applyAccent(category);
-  hideError();
-  syncSiteSelects();
-  renderFavorites();
-
-  if (site) {
-    if (emptyState) emptyState.classList.add('hidden');
-    web.show(site);
-    if (pageTitle) pageTitle.textContent = site.name;
-  } else {
-    showEmpty();
-  }
-  refreshAutoRefreshTimer();
-  if (options.persist !== false) saveSelection();
-}
-
-function selectSite(siteId) {
-  const category = currentCategory();
-  if (!category) return;
-  const site = category.sites.find((entry) => entry.id === siteId);
-  if (!site) return;
-  if (current.site && current.site !== site.id) {
-    lastSelection = { category: current.category, site: current.site };
-  }
-  current.site = site.id;
-  dashboard.hide();
-  if (siteSelect) siteSelect.value = site.id;
-  if (overlaySiteSelect) overlaySiteSelect.value = site.id;
-  if (siteDesc) siteDesc.textContent = site.desc || '';
-  hideError();
-  if (emptyState) emptyState.classList.add('hidden');
-  web.show(site);
-  if (pageTitle) pageTitle.textContent = site.name;
-  // Nutzungszähler für Webseiten-Vorladen erhöhen.
-  trackSiteUsage(site.id);
-  refreshAutoRefreshTimer();
-  saveSelection();
-  renderFavorites();
-}
-
-// Welche Seiten wie oft geöffnet wurden (für das Vorladen beim Start).
-const siteUsage = (cfg.behavior && cfg.behavior.siteUsage) || {};
-function trackSiteUsage(siteId) {
-  if (!siteId) return;
-  siteUsage[siteId] = (Number(siteUsage[siteId]) || 0) + 1;
-  // Nur alle 10 Aufrufe speichern (Performance).
-  if (siteUsage[siteId] % 10 === 1) {
-    setConfig({ behavior: { siteUsage } });
-  }
-}
-
-// Die 3 am häufigsten genutzten Seiten im Hintergrund vorladen,
-// damit sie beim ersten Öffnen sofort verfügbar sind.
-function preloadTopSites() {
-  try {
-    // Low-Power-Modus: kein Vorladen (spart RAM, CPU und Netzwerk).
-    if (cfg.behavior && cfg.behavior.lowPower === true) return;
-    const entries = Object.entries(siteUsage)
-      .filter(([id]) => id)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3);
-    for (const [siteId] of entries) {
-      // Seite in allen Kategorien suchen.
-      for (const category of categories) {
-        const site = category.sites.find((entry) => entry.id === siteId);
-        if (site) {
-          web.preload(site);
-          break;
-        }
-      }
-    }
-  } catch (error) {
-    // Vorladen ist optional.
-  }
-}
-// Nach 2 Sekunden vorladen (App muss erst initialisieren).
-setTimeout(preloadTopSites, 2000);
-
-function showEmpty() {
-  web.hide();
-  if (!emptyState) return;
-  emptyState.classList.remove('hidden');
-  const category = currentCategory();
-  const text = emptyState.querySelector('p');
-  if (category && category.id === 'custom') {
-    text.textContent = 'Füge unter Einstellungen eigene Seiten hinzu. Sie erscheinen hier und in der Kategorie deiner Wahl.';
-  } else {
-    text.textContent = 'In dieser Kategorie gibt es noch keine Webseiten.';
-  }
-  qs('#emptyAddBtn')?.classList.toggle('hidden', !(category && category.id === 'custom'));
-  if (siteDesc) siteDesc.textContent = '';
-  if (pageTitle) pageTitle.textContent = '';
-  if (loadState) {
-    loadState.classList.remove('loading');
-    loadState.textContent = 'Keine Seiten';
-  }
-  if (loadingBar) loadingBar.classList.add('hidden');
-  hideError();
-}
-
-// ------------------------------------------------------------
-// Fehleranzeige
-// ------------------------------------------------------------
-
-function friendlyError(error) {
-  const code = Number(error && error.code);
-  if (code === -106) return 'Keine Internetverbindung. Prüfe deine Verbindung und versuche es erneut.';
-  if (code === -105) return 'Die Adresse konnte nicht aufgelöst werden. Vielleicht ist die Seite gerade offline.';
-  if (code === -118) return 'Die Seite hat zu lange nicht geantwortet. Versuche es später noch einmal.';
-  if (code === -102) return 'Die Verbindung wurde abgelehnt.';
-  if (code === -7) return 'Die Verbindung hat zu lange gedauert.';
-  const description = (error && error.description) || 'Unbekannter Fehler';
-  return `${description}${code ? ` (Fehler ${code})` : ''}`;
-}
-
-function showError(error) {
-  lastError = error || {};
-  if (!webError) return;
-  webError.classList.remove('hidden');
-  webErrorTitle.textContent = error && error.site ? `${error.site.name} ist nicht erreichbar` : 'Seite nicht erreichbar';
-  webErrorText.textContent = `${friendlyError(error)}${error && error.url ? `\n${error.url}` : ''}`;
-  // Fehler-Radar: pro Sitzung zählen; ab 3 Fehlern einmalig warnen.
-  try {
-    const siteId = error && error.site && error.site.id;
-    if (siteId) {
-      const radar = window.__d2ErrorRadar || (window.__d2ErrorRadar = new Map());
-      const entry = radar.get(siteId) || { name: error.site.name, count: 0, last: '', at: 0 };
-      entry.count += 1;
-      entry.last = friendlyError(error);
-      entry.at = Date.now();
-      radar.set(siteId, entry);
-      if (entry.count === 3) {
-        toast(`${entry.name}: wiederholte Ladefehler (${entry.count} in dieser Sitzung)`, 'warning', 5000);
-      }
-    }
-  } catch (radarError) {
-    // Radar darf die Fehleranzeige nie blockieren.
-  }
-}
-
-function hideError() {
-  if (webError) webError.classList.add('hidden');
-}
-
-// ------------------------------------------------------------
-// Einstellungen speichern (kurz entprellt)
-// ------------------------------------------------------------
-// pendingPatch/patchTimer sind oben bei den Grundzuständen
-// deklariert (TDZ-sicher).
-
 function setConfig(patch) {
   if (!patch) return;
   logConfigPatch(cfg, patch);
@@ -2375,11 +1317,10 @@ function setConfig(patch) {
     updateQuietState();
   }
   if (patch.appearance) {
-    applyAccent(currentCategory());
+    applyAccent();
     applyUiScale();
   }
   if (patch.overlay) { applyOverlayVisibility(); updateActivityStatus(); applyUiScale(); }
-  if (patch.web) refreshAutoRefreshTimer();
   pendingPatch = deepMerge(pendingPatch || {}, patch);
   clearTimeout(patchTimer);
   patchTimer = setTimeout(async () => {
@@ -2393,15 +1334,6 @@ function setConfig(patch) {
     }
   }, 180);
 }
-
-function onCustomSitesChanged() {
-  // Eigene Webseiten werden nicht mehr unterstützt.
-  cfg.customSites = [];
-}
-
-// ------------------------------------------------------------
-// Overlay-Zustand
-// ------------------------------------------------------------
 
 function applyOverlayState(next) {
   if (!next) return;
@@ -2723,7 +1655,7 @@ function handlePadAction(action, payload) {
     window.dispatchEvent(loadoutBack);
     if (loadoutBack.defaultPrevented) return;
     if (closeTopModal()) return;
-    if (!web.goBack()) api.hideOverlay().catch(() => {});
+    api.hideOverlay().catch(() => {});
     return;
   }
   // Controller-Schnellaktionen, solange ein Item-Popup offen ist.
@@ -2767,8 +1699,6 @@ function handlePadAction(action, payload) {
         if (refreshButton) refreshButton.click();
         break;
       }
-      hideError();
-      web.reload();
       break;
     }
     case 'precision': {
@@ -2818,21 +1748,6 @@ function handlePadAction(action, payload) {
       if (notes.isOpen()) notes.close();
       else notes.open();
       break;
-    case 'pip': {
-      const site = currentSite();
-      const url = currentVideoUrl();
-      if (!url) {
-        toast('Keine Seite offen.', 'warning', 1600);
-        break;
-      }
-      api.pipToggle(url, site ? site.name : '').catch(() => {});
-      break;
-    }
-    case 'unload-others': {
-      const removed = web.unloadOthers();
-      toast(removed > 0 ? `${removed} Seite${removed === 1 ? '' : 'n'} entladen.` : 'Keine anderen Seiten offen.', 'info', 1800);
-      break;
-    }
     case 'hud': {
       const next = !(cfg.behavior && cfg.behavior.showBindingHud === true);
       setConfig({ behavior: { showBindingHud: next } });
@@ -2932,212 +1847,6 @@ if (qs('#helpBtn')) qs('#helpBtn').addEventListener('click', openHelp);
 // Bild-in-Bild (PiP)
 // ------------------------------------------------------------
 
-function currentVideoUrl() {
-  // Bevorzugt die tatsächliche Adresse des aktiven Webviews (z. B. ein
-  // gerade laufendes Video), sonst die Basisadresse der Seite.
-  const element = web.activeElement();
-  if (element) {
-    try {
-      const url = element.getURL();
-      if (url && /^https?:\/\//i.test(url)) return url;
-    } catch (error) {
-      // nicht bereit
-    }
-  }
-  const site = currentSite();
-  return site ? site.url : '';
-}
-
-function embedUrlFor(url) {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, '');
-    if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtu.be') {
-      let id = '';
-      if (host === 'youtu.be') id = parsed.pathname.replace(/^\//, '');
-      else if (parsed.pathname === '/watch') id = parsed.searchParams.get('v') || '';
-      else {
-        const shorts = parsed.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]{6,})/);
-        if (shorts) id = shorts[1];
-      }
-      if (id) return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
-      return url;
-    }
-    if (host === 'twitch.tv' || host === 'm.twitch.tv') {
-      const parts = parsed.pathname.split('/').filter(Boolean);
-      if (parts.length && parts[0] !== 'videos') {
-        return `https://player.twitch.tv/?channel=${encodeURIComponent(parts[0])}&parent=localhost`;
-      }
-      if (parts[0] === 'videos' && parts[1]) {
-        return `https://player.twitch.tv/?video=${encodeURIComponent(parts[1])}&parent=localhost`;
-      }
-      return url;
-    }
-    return url;
-  } catch (error) {
-    return url;
-  }
-}
-
-const pipBtn = qs('#pipBtn');
-if (pipBtn) {
-  pipBtn.addEventListener('click', async () => {
-    const raw = currentVideoUrl();
-    if (!raw) {
-      toast('Keine Seite offen – erst eine Webseite öffnen.', 'warning');
-      return;
-    }
-    const site = currentSite();
-    const result = await api.pipToggle(embedUrlFor(raw), site ? site.name : '');
-    if (!result || !result.ok) toast((result && result.error) || 'Mini-Fenster konnte nicht geöffnet werden.', 'error');
-    else if (result.open) toast('Mini-Fenster geöffnet (immer im Vordergrund).', 'success', 2000);
-  });
-}
-api.onPipState?.((state) => {
-  if (pipBtn) pipBtn.classList.toggle('active', Boolean(state && state.open));
-});
-
-// Poststellen-Zähler: eigenes Mini-Fenster. Wird es direkt am Fenster
-// geschlossen, bleibt der Schalter in den Einstellungen synchron.
-api.onPostmasterWindow?.((state) => {
-  const enabled = Boolean(state && state.enabled);
-  cfg.postmaster = { ...(cfg.postmaster || {}), enabled };
-  const toggle = qs('#postmasterEnabled');
-  if (toggle) toggle.checked = enabled;
-});
-
-// Klick auf den Poststellen-Zähler: Inventar bei der Poststelle öffnen.
-api.onOpenInventoryPostmaster?.(() => {
-  showInventoryPage();
-  if (inventory && typeof inventory.openPostmaster === 'function') inventory.openPostmaster();
-});
-
-// Globales Kürzel „Inventar“: Inventar-Seite öffnen.
-api.onOpenInventory?.(() => {
-  showInventoryPage();
-});
-
-// Andere Seiten entladen (RAM freimachen) – schneller Zugriff aus der
-// Toolbar, die aktive Seite bleibt offen.
-const unloadOthersBtn = qs('#unloadOthersBtn');
-if (unloadOthersBtn) {
-  unloadOthersBtn.addEventListener('click', () => {
-    const removed = web.unloadOthers();
-    toast(removed > 0 ? `${removed} Seite${removed === 1 ? '' : 'n'} entladen.` : 'Keine anderen Seiten offen.', 'info', 1800);
-  });
-}
-
-if (qs('#overlayLockBtn')) qs('#overlayLockBtn').addEventListener('click', () => api.toggleClickThrough().catch(() => {}));
-if (qs('#overlaySettingsBtn')) qs('#overlaySettingsBtn').addEventListener('click', () => settings.open('overlay'));
-if (qs('#overlayHideBtn')) qs('#overlayHideBtn').addEventListener('click', () => api.hideOverlay().catch(() => {}));
-if (qs('#overlayExitBtn')) qs('#overlayExitBtn').addEventListener('click', () => api.leaveOverlay().catch(() => {}));
-
-qs('#gameLaunchBtn').addEventListener('click', async () => {
-  const result = await api.launchGame();
-  if (!result || !result.ok) toast((result && result.error) || 'Spiel konnte nicht gestartet werden.', 'error');
-});
-
-if (qs('#helpCloseBtn')) qs('#helpCloseBtn').addEventListener('click', closeHelp);
-if (qs('#helpOpenSettingsBtn')) qs('#helpOpenSettingsBtn').addEventListener('click', () => {
-  closeHelp();
-  settings.open('overlay');
-});
-if (qs('#helpOpenControllerBtn')) qs('#helpOpenControllerBtn').addEventListener('click', () => {
-  closeHelp();
-  settings.open('controller');
-});
-
-for (const modal of qsa('.modal')) {
-  modal.addEventListener('mousedown', (event) => {
-    if (event.target !== modal) return;
-    if (modal.id === 'settingsModal') settings.close();
-    else modalClose(modal);
-  });
-}
-
-for (const button of qsa('[data-win]')) {
-  button.addEventListener('click', async () => {
-    const action = button.dataset.win;
-    if (action === 'minimize') await api.minimizeWindow();
-    else if (action === 'maximize') await api.toggleMaximizeWindow();
-    else if (action === 'close') await api.closeWindow();
-  });
-}
-const pinBtn = qs('#pinBtn');
-if (pinBtn) {
-  pinBtn.addEventListener('click', async () => {
-    const result = await api.windowTogglePin();
-    if (result && result.ok) {
-      pinBtn.classList.toggle('active', result.pinned === true);
-      toast(result.pinned ? 'Fenster immer im Vordergrund.' : 'Fenster-Vordergrund aus.', 'info', 1600);
-    } else if (result && result.error) {
-      toast(result.error, 'warning', 2200);
-    }
-  });
-}
-
-const titlebar = qs('#titlebar');
-titlebar.addEventListener('dblclick', (event) => {
-  if (event.target.closest('button, select, input')) return;
-  api.toggleMaximizeWindow().catch(() => {});
-});
-
-window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    if (closeTopModal()) {
-      event.preventDefault();
-      return;
-    }
-    if (overlayState.mode === 'overlay' && overlayState.visible) {
-      event.preventDefault();
-      api.hideOverlay().catch(() => {});
-    }
-    return;
-  }
-
-  if (anyModalOpen()) return;
-
-});
-
-// Alt + Mausrad ändert die Overlay-Deckkraft (nur wenn kein Dialog offen).
-window.addEventListener(
-  'wheel',
-  (event) => {
-    if (!event.altKey || anyModalOpen()) return;
-    event.preventDefault();
-    const next = clamp(cfg.overlay.opacity + (event.deltaY < 0 ? 0.05 : -0.05), 0.3, 1);
-    setConfig({ overlay: { opacity: next } });
-    toast(`Overlay-Deckkraft: ${Math.round(next * 100)} %`, 'info', 1200);
-  },
-  { passive: false }
-);
-
-// ------------------------------------------------------------
-// Hauptprozess-Ereignisse
-// ------------------------------------------------------------
-
-api.onOverlayState((next) => {
-  const wasVisible = lastOverlayVisible;
-  lastOverlayVisible = Boolean(next && next.visible);
-  applyOverlayState(next);
-  resetAutoHideTimer();
-  if (next && next.visible && !wasVisible && cfg.gamepad && cfg.gamepad.steamInputMode === true) {
-    toast('Steam Input: Guide + Back drücken, um auf das Overlay-Set zu wechseln.', 'info', 6500);
-  }
-  updateOverlayFocusChip();
-});
-api.onGpuCrashed?.((info) => {
-  if (!info) return;
-  if (info.autoDisabled) {
-    toast('Grafikfehler erkannt – Hardware-Beschleunigung wird beim nächsten Start deaktiviert (Einstellungen → Verhalten)', 'warning', 8000);
-  } else {
-    toast(`Grafikprozess abgestürzt (${info.count}. Mal)`, 'error', 4000);
-  }
-});
-
-// Reset-Alarm: Hinweis anzeigen und optional einen kurzen Signalton
-// abspielen (Web Audio, keine Datei nötig). Die Tray-Benachrichtigung
-// kommt aus dem Hauptprozess.
 function playAlarmBeep() {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -3469,13 +2178,6 @@ if (typeof api.onApiAction === 'function') {
 
 api.onGameStatus((status) => {
   updateGameStatus(status);
-  // Spielmodus: Webseiten entladen, um RAM für Destiny 2 freizugeben.
-  try {
-    if (status && status.running && cfg.behavior && cfg.behavior.gameModeOptimize === true) {
-      if (web && typeof web.unloadAll === 'function') web.unloadAll();
-      toast('Spielmodus: Webseiten entladen, um Speicher freizugeben.', 'info', 4000);
-    }
-  } catch (error) { /* egal */ }
 });
 api.onGamepadState((snapshot) => {
   if (window.__lastGamepadLog !== (snapshot && snapshot.connected)) {
@@ -3537,19 +2239,8 @@ api.onToast((payload) => {
 });
   // 'dashboard': Dashboard umschalten (globaler Kürzel-Pfad).
 api.onNavShortcut((payload) => {
-  if (!payload) return;
-  if (anyModalOpen()) return;
-  if (payload.type === 'category') {
-    const category = categories[payload.index];
-    if (category) selectCategory(category.id);
-  } else if (payload.type === 'reload') {
-    hideError();
-    web.reload();
-  } else if (payload.type === 'find') {
-    openFindBar();
-  } else if (payload.type === 'last-site') {
-    jumpToLastSite();
-  } else if (payload.type === 'dashboard') {
+  if (!payload || anyModalOpen()) return;
+  if (payload.type === 'dashboard') {
     if (dashboardHidden()) dashboard.open();
     else dashboard.restore();
   }
@@ -3559,7 +2250,6 @@ api.onNavShortcut((payload) => {
 // Start
 // ------------------------------------------------------------
 
-renderTabs();
 // ------------------------------------------------------------
 // PIN-Sperre beim Start
 // ------------------------------------------------------------
@@ -3608,7 +2298,7 @@ async function initSecurityLock() {
   });
 }
 
-applyAccent(currentCategory());
+applyAccent();
 applyBindingHud();
 applyUiScale();
 
@@ -3705,12 +2395,12 @@ if (!cfg.behavior || !cfg.behavior.firstRunDone) {
 window.__D2_READY__ = true;
 window.__D2_DIAG__ = () => ({
   ready: Boolean(window.__D2_READY__),
-  categories: categories.length,
+  categories: 0,
   sites: 0,
-  tabs: document.querySelectorAll('.tab').length,
-  siteOptions: siteSelect ? siteSelect.options.length : 0,
-  customSites: (cfg.customSites || []).length,
-  webviews: document.querySelectorAll('webview').length,
+  tabs: 0,
+  siteOptions: 0,
+  customSites: 0,
+  webviews: 0,
   overlayMode: overlayState.mode,
   hasSettings: Boolean(document.querySelector('#settingsModal')),
   hasCursor: Boolean(document.querySelector('#padCursor')),

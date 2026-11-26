@@ -9,7 +9,7 @@ import { openChangelog } from './changelog.js';
 import { openTour } from './tour.js';
 
 export function createPalette(ctx) {
-  const { api, getConfig, getCategories, selectCategory, web, hideError, anyModalOpen, appendStopwatchToNote, settings, notesApi, checklistFn, dashboard, toast, escapeHtml, qs, qsa, modalOpen, modalClose } = ctx;
+  const { api, getConfig, anyModalOpen, appendStopwatchToNote, settings, notesApi, checklistFn, dashboard, toast, escapeHtml, qs, qsa, modalOpen, modalClose } = ctx;
   const paletteModal = qs('#paletteModal');
   const paletteInput = qs('#paletteInput');
   const paletteResults = qs('#paletteResults');

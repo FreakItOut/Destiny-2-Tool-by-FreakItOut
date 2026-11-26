@@ -87,6 +87,8 @@ check('Daten-Migration als eigenes Modul', read('electron/data-migration.js').in
 check('Lokale API für Ausgang/Queue/Champion', read('electron/api-commands.js').includes('/action/outbox/send') && read('electron/api-commands.js').includes('/action/loadout/queue'));
 check('Bungie-Icon-Cache und Platzhalter', main.includes("protocol.handle('d2icon'") && index.includes('d2icon:') && read('renderer/styles.css').includes('Bungie-Icon-Platzhalter'));
 check('Budget für den ersten Inventar-Render', inventory.includes('__D2_FIRST_RENDER_MS__') && inventory.includes('__D2_RENDER_BUDGET_MS__'));
+check('Web-Stub und Kategorie-Daten entfernt', !app.includes('const web = {') && !app.includes('APP_CATEGORY') && !app.includes('let categories ='));
+check('Controller ohne Webview-Option', !read('renderer/js/controller.js').includes('getActiveWebview: () =>'));
 check('Champion-Planer mit Artefakt und Swaps', tools.includes('renderChampionPlanner') && tools.includes('artifactBreakers') && tools.includes('championSwapSuggestions'));
 check('Build-Lückenanalyse', tools.includes('renderBuildGap') && tools.includes('data-gap-target') && tools.includes('data-gap-loadout'));
 check('Crafting-Materialplan', tools.includes('renderCraftingMaterialPlan') && tools.includes('Crafting-Materialplan'));

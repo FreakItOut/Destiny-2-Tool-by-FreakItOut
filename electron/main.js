@@ -15300,7 +15300,7 @@ async function runSmoke() {
       diag &&
         diag.ready &&
         // Es gibt nur noch die eigene App-Ansicht, keine Webseiten.
-        diag.categories >= 1 &&
+        diag.categories === 0 &&
         diag.sites === 0 &&
         diag.tabs === 0 &&
         diag.siteOptions === 0 &&

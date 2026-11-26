@@ -177,4 +177,4 @@ Native Startseite:
 
 ---
 
-*Stand: Version 1.11.0 — öffentliche Standard-Edition.*
+*Stand: Version 1.12.0 — öffentliche Standard-Edition.*

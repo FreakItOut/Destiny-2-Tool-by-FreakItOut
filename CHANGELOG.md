@@ -6,6 +6,25 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.12.0] – 2026-11-26
+
+### Entfernt
+
+- **Letzter Web-Rest** – der `web`-No-op-Stub, die Kategorie-/Site-Daten und
+  die dazugehörigen Funktionen (URL-Leiste, Suchen, Stummschalten, Verlauf,
+  Tab-Kontextmenü, PiP, Auto-Refresh) sind aus `app.js` entfernt.
+  `app.js` schrumpft dadurch von ~143 KB auf ~98 KB.
+- **Controller** erhält keine `getActiveWebview`-Option mehr; die
+  Webview-Pfade sind endgültig inaktiv.
+- **Einstellungen** bekommen keine Kategorie-/Web-Quelle mehr; die
+  verbliebenen Web-Funktionen sind reine tote Pfade ohne Daten.
+
+### Geändert
+
+- **Smoke-Diagnose** erwartet keine Kategorien/Tabs mehr.
+- **Dashboard** öffnet News-Links direkt im Standardbrowser.
+- App-Feature-Test auf **105** Prüfungen erweitert.
+
 ## [1.11.0] – 2026-11-26
 
 ### Hinzugefügt

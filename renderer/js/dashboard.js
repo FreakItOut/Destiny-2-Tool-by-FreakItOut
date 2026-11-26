@@ -365,14 +365,9 @@ export function createDashboard(ctx) {
       try { ctx.onOpen(); } catch (error) { /* egal */ }
     }
     dashboardPanel.classList.remove('hidden');
-    ctx.web.hide();
-    if (ctx.emptyState) ctx.emptyState.classList.add('hidden');
-    ctx.hideError();
-    if (ctx.loadingBar) ctx.loadingBar.classList.add('hidden');
-    if (ctx.loadState) ctx.loadState.textContent = '';
+    ctx.hideError?.();
     if (ctx.pageTitle) ctx.pageTitle.textContent = 'Dashboard';
     ctx.updateWindowTitle();
-    if (ctx.siteDesc) ctx.siteDesc.textContent = '';
     renderDashboard();
     updateDashboardClocks();
     if (dashboardTimer) clearInterval(dashboardTimer);
@@ -1287,8 +1282,8 @@ export function createDashboard(ctx) {
         button.addEventListener('click', () => {
           const url = button.dataset.newsUrl;
           hideDashboard();
-          if (!ctx.web.navigate(url)) ctx.api.openExternal(url);
-          toast('News im Tab geöffnet.', 'info', 1600);
+          ctx.api.openExternal(url).catch(() => {});
+          toast('News im Browser geöffnet.', 'info', 1600);
         });
       }
     } catch (error) {

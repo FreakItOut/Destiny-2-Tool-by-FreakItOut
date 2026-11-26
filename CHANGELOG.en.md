@@ -6,6 +6,24 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.12.0] – 2026-11-26
+
+### Removed
+
+- **Last web remainder** – the `web` no-op stub, category/site data and the
+  related functions (URL bar, find, mute, history, tab context menu, PiP,
+  auto-refresh) are gone from `app.js`. It shrinks from ~143 KB to ~98 KB.
+- **Controller** no longer receives a `getActiveWebview` option; webview
+  paths are permanently inactive.
+- **Settings** no longer get a category/web provider; the remaining web
+  functions are dead paths without data.
+
+### Changed
+
+- **Smoke diagnostics** no longer expect categories/tabs.
+- **Dashboard** opens news links directly in the default browser.
+- App feature test expanded to **105** checks.
+
 ## [1.11.0] – 2026-11-26
 
 ### Added

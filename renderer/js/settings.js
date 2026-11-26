@@ -105,12 +105,12 @@ export function initSettings({
   api,
   getConfig,
   setConfig,
-  getCategories,
+  getCategories = () => [],
   controller,
-  web,
-  onCustomSitesChanged,
-  onReloadCurrentSite,
-  onCategoryOrderChanged
+  web = null,
+  onCustomSitesChanged = null,
+  onReloadCurrentSite = null,
+  onCategoryOrderChanged = null
 }) {
   const modal = qs('#settingsModal');
   const tabs = qsa('[data-settings-tab]', modal);

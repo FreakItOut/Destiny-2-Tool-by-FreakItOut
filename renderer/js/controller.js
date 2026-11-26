@@ -136,7 +136,6 @@ export function createController(options) {
     api,
     cursorElement,
     getConfig,
-    getActiveWebview,
     isInteractive,
     isInputBlocked,
     onToggleOverlay,
@@ -376,7 +375,7 @@ let lastDpadDownAt = 0;
       positionCursor();
       return;
     }
-    const element = getActiveWebview();
+    const element = null;
     if (element) {
       const rect = element.getBoundingClientRect();
       cursorX = rect.left + rect.width / 2;
@@ -1127,7 +1126,7 @@ let lastDpadDownAt = 0;
     // Überschreibung steckt in gamepad.siteDeadzones[siteId]; die
     // siteId kommt aus dem aktiven Webview-Element.
     let siteDeadzone = NaN;
-    const activeElement = getActiveWebview ? getActiveWebview() : null;
+    const activeElement = null;
     const siteId = activeElement && activeElement.dataset ? activeElement.dataset.siteId : null;
     if (siteId) {
       const overrides = cfg.gamepad.siteDeadzones;

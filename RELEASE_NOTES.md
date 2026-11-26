@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.11.0
+# Destiny 2 Tool by FreakItOut 1.12.0
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,9 +6,17 @@
 
 ## Deutsch
 
-Version 1.11.0 beschleunigt das Inventar: Bungie-Icons kommen aus einem lokalen Cache, Bildflächen zeigen einen Platzhalter und der erste Render hat ein festes Zeitbudget.
+Version 1.12.0 entfernt den letzten Web-Rest: kein web-Stub, keine Kategorie-/Site-Daten und deutlich weniger toter Code in app.js.
 
-### Neu in 1.11.0
+### Neu in 1.12.0
+
+- **Web-Rest entfernt** – app.js schrumpft von ~143 KB auf ~98 KB; URL-Leiste,
+  Suchen, Stummschalten, Verlauf, Tab-Menü, PiP und Auto-Refresh sind weg.
+- **Controller bereinigt** – keine Webview-Option mehr.
+- **Einstellungen** ohne Kategorie-/Web-Quelle.
+- **Dashboard** öffnet News direkt im Browser.
+
+### Enthalten aus 1.11.0
 
 - **Bungie-Icon-Cache** – Bilder werden einmal geladen und lokal ausgeliefert.
 - **Platzhalter** – kein leeres Loch mehr, während Icons laden.
@@ -70,8 +78,8 @@ Version 1.11.0 beschleunigt das Inventar: Bungie-Icons kommen aus einem lokalen 
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.11.0.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.11.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.12.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.12.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -79,7 +87,7 @@ Version 1.11.0 beschleunigt das Inventar: Bungie-Icons kommen aus einem lokalen 
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.11.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.12.0.exe`).
 
 ### Voraussetzungen
 
@@ -112,9 +120,17 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.11.0 speeds up the inventory: Bungie icons come from a local cache, image areas show a placeholder, and the first render has a fixed time budget.
+Version 1.12.0 removes the last web remainder: no web stub, no category/site data and much less dead code in app.js.
 
-### New in 1.11.0
+### New in 1.12.0
+
+- **Web remainder removed** – app.js shrinks from ~143 KB to ~98 KB; URL bar,
+  find, mute, history, tab menu, PiP and auto-refresh are gone.
+- **Controller cleaned** – no webview option anymore.
+- **Settings** without a category/web provider.
+- **Dashboard** opens news directly in the browser.
+
+### Included from 1.11.0
 
 - **Bungie icon cache** – images are downloaded once and served locally.
 - **Placeholder** – no empty hole while icons load.
@@ -176,8 +192,8 @@ Version 1.11.0 speeds up the inventory: Bungie icons come from a local cache, im
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.11.0.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.11.0.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.12.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.12.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -185,7 +201,7 @@ Version 1.11.0 speeds up the inventory: Bungie icons come from a local cache, im
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.11.0.exe`).
+(`Destiny 2 Tool by FreakItOut 1.12.0.exe`).
 
 ### Requirements
 
