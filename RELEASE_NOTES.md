@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.5.5
+# Destiny 2 Tool by FreakItOut 1.5.6
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,16 +6,17 @@
 
 ## Deutsch
 
-Version 1.5.5 räumt leere Infoboxen im Inventar auf: Die ungenutzte Detaileiste ist entfernt, leere Ergebnis-/Statusleisten kosten keinen Platz mehr.
+Version 1.5.6 macht den Inventar-Kopf flacher und schafft damit eine zusätzliche Inhaltszeile.
 
-### Neu in 1.5.5
+### Neu in 1.5.6
 
-- **Leere Inventar-Leisten entfernt** – die nie befüllte Detaileiste ist weg;
-  leere Ergebnis-, Status- und Loadout-Leisten werden ausgeblendet.
-- **Enthalten:** Champion-Anzeige, Treffer-Suche und Controller-Navigation
-  aus 1.5.3/1.5.4.
+- **Kompakter Inventar-Kopf** – kleinere Schrift, entfernte Standard-Absätze
+  und 26-px-Buttons; Titel und Untertitel passen in eine flache Zeile.
+- **Mehr Platz für Items** – die gesparte Höhe geht direkt an das Raster.
+- **Enthalten:** leere Leisten entfernt, Champion-Status, Treffer-Suche und
+  Controller-Navigation.
 
-### Enthalten aus 1.5.4
+### Enthalten aus 1.5.5
 
 - Fokus-Dashboard, Einfach-/Erweitert-Einstellungen, Loadout-Warteschlange
   mit Konflikterkennung, 90-Tage-Analyse und SBOM.
@@ -24,8 +25,8 @@ Version 1.5.5 räumt leere Infoboxen im Inventar auf: Die ungenutzte Detaileiste
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.5.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.5.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.6.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.6.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -33,7 +34,7 @@ Version 1.5.5 räumt leere Infoboxen im Inventar auf: Die ungenutzte Detaileiste
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.5.5.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.6.exe`).
 
 ### Voraussetzungen
 
@@ -66,16 +67,17 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.5.5 cleans up empty info boxes in the inventory: the unused detail bar is removed and empty result/status bars no longer take up space.
+Version 1.5.6 makes the inventory header flatter, gaining an extra content row.
 
-### New in 1.5.5
+### New in 1.5.6
 
-- **Empty inventory bars removed** – the never-filled detail bar is gone;
-  empty result, status and loadout bars are hidden.
-- **Included:** Champion display, match search and controller navigation from
-  1.5.3/1.5.4.
+- **More compact inventory header** – smaller type, removed default margins
+  and 26 px buttons; title and subtitle fit in one flat row.
+- **More room for items** – the saved height goes directly to the grid.
+- **Included:** empty bars removed, Champion status, match search and
+  controller navigation.
 
-### Included from 1.5.4
+### Included from 1.5.5
 
 - Focus dashboard, simple/advanced settings, loadout queue with conflict
   detection, 90-day analytics and SBOM.
@@ -84,8 +86,8 @@ Version 1.5.5 cleans up empty info boxes in the inventory: the unused detail bar
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.5.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.5.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.5.6.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.6.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -93,7 +95,7 @@ Version 1.5.5 cleans up empty info boxes in the inventory: the unused detail bar
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.5.5.exe`).
+(`Destiny 2 Tool by FreakItOut 1.5.6.exe`).
 
 ### Requirements
 

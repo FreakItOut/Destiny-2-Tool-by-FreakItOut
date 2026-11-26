@@ -6,6 +6,15 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.6] – 2026-11-26
+
+### Changed
+
+- **More compact inventory header** – title, subtitle and header buttons are
+  flatter (smaller type, removed default margins, 26 px buttons). This gains
+  an extra content row without hurting TV readability.
+- Version **1.5.6**.
+
 ## [1.5.5] – 2026-11-26
 
 ### Removed

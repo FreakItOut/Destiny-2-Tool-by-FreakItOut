@@ -78,9 +78,13 @@ const DIM = {
 const INVENTORY_CSS = `
 #inventoryView { position: absolute; inset: 0; z-index: 40; background: #0b1018; display: flex; flex-direction: column; overflow: hidden; --dinv-tile-h: 79px; }
 #inventoryView.hidden { display: none; }
-.inventory-view-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; flex-shrink: 0; border-bottom: 1px solid #1a2230; }
-.inventory-view-head h2 { margin: 0; font-size: 16px; font-weight: 700; color: #e8ecf2; }
-.inventory-view-head .inventory-head-controls { display: flex; gap: 8px; align-items: center; }
+.inventory-view-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 12px 4px; flex-shrink: 0; border-bottom: 1px solid #1a2230; }
+.inventory-view-head > div:first-child { min-width: 0; }
+.inventory-view-head h2 { margin: 0; font-size: 14px; line-height: 1.15; font-weight: 700; color: #e8ecf2; }
+.inventory-view-sub { margin: 1px 0 0; font-size: 10.5px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inventory-view-head .inventory-head-controls { display: flex; gap: 5px; align-items: center; }
+.inventory-view-head .inventory-head-controls .btn { height: 26px; padding: 0 8px; font-size: 11px; }
+.inventory-view-head .inventory-head-controls .icon-btn { width: 26px; height: 26px; }
 .inventory-status { padding: 4px 14px; font-size: 11px; flex-shrink: 0; }
 .inventory-status .ok { color: #29f36a; }
 .inventory-status .warn { color: #f0c66b; }

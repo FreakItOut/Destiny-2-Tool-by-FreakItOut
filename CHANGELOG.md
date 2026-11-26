@@ -6,6 +6,15 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.5.6] – 2026-11-26
+
+### Geändert
+
+- **Kompakter Inventar-Kopf** – Titel, Untertitel und Kopfbuttons sind flacher
+  (kleinere Schrift, entfernte Standard-Absätze, 26-px-Buttons). Das schafft
+  eine zusätzliche Inhaltszeile, ohne die TV-Lesbarkeit zu verlieren.
+- Version **1.5.6**.
+
 ## [1.5.5] – 2026-11-26
 
 ### Entfernt
