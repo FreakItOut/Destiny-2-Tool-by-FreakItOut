@@ -2216,10 +2216,14 @@ async function run() {
     window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
     await wait(220);
     const sub = document.querySelector('#inventoryBody .dinv-sub:not(.vault)');
-    const columns = sub ? getComputedStyle(sub).gridTemplateColumns.split(' ').filter(Boolean).length : 0;
+    const tracks = sub ? getComputedStyle(sub).gridTemplateColumns.split(' ').filter(Boolean) : [];
+    const columns = tracks.length;
+    const cellWidth = tracks.length ? parseFloat(tracks[0]) : 0;
     const tile = sub ? sub.querySelector('.dinv-tile') : null;
     const tileHeight = tile ? Math.round(tile.getBoundingClientRect().height) : 0;
-    check('TV-Inventar nutzt die Zellbreite', columns >= 4, `${columns} Spalten`);
+    // Viewport-unabhängig: entscheidend ist die feste Zellbreite (76 px),
+    // nicht wie viele Spalten auf dem jeweiligen Testmonitor passen.
+    check('TV-Inventar nutzt die Zellbreite', columns >= 2 && cellWidth >= 70 && cellWidth <= 90, `${columns} Spalten à ${cellWidth}px`);
     check('TV-Inventar nutzt größere Kacheln', tileHeight >= 70, `${tileHeight}px`);
     document.body.classList.remove('tv-mode');
     window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: tabBack } }));
@@ -2260,14 +2264,16 @@ async function run() {
     window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
     await wait(220);
     const sub = document.querySelector('#inventoryBody .dinv-sub:not(.vault)');
-    const columns = sub ? getComputedStyle(sub).gridTemplateColumns.split(' ').filter(Boolean).length : 0;
+    const overlayTracks = sub ? getComputedStyle(sub).gridTemplateColumns.split(' ').filter(Boolean) : [];
+    const columns = overlayTracks.length;
+    const overlayCell = overlayTracks.length ? parseFloat(overlayTracks[0]) : 0;
     const tile = sub ? sub.querySelector('.dinv-tile') : null;
     const tileHeight = tile ? Math.round(tile.getBoundingClientRect().height) : 0;
     const titleEl = document.querySelector('.inventory-view-head > div:first-child');
     const padHintEl = document.querySelector('.inventory-pad-hint');
     const titleHidden = !titleEl || getComputedStyle(titleEl).display === 'none';
     const padHintHidden = !padHintEl || getComputedStyle(padHintEl).display === 'none';
-    check('Overlay-Inventar nutzt die Zellbreite', columns >= 4, `${columns} Spalten`);
+    check('Overlay-Inventar nutzt die Zellbreite', columns >= 2 && overlayCell >= 58 && overlayCell <= 70, `${columns} Spalten à ${overlayCell}px`);
     check('Overlay-Inventar ist kompakt', tileHeight >= 60 && titleHidden && padHintHidden, `${tileHeight}px · Titel ${titleHidden} · Hinweis ${padHintHidden}`);
     document.body.classList.remove('mode-overlay', 'inventory-open');
     window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: tabBack } }));

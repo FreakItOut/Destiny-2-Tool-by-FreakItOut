@@ -29,6 +29,9 @@ jobs:
       - name: Installieren
         run: npm ci
 
+      - name: Stream-Deck-Abhängigkeiten
+        run: npm install --prefix streamdeck/com.freakitout.d2tool.sdPlugin --no-audit --no-fund
+
       - name: Syntax/Struktur prüfen
         run: npm run check
 
