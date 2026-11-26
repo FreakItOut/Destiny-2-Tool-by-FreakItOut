@@ -6,6 +6,21 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] – 2026-11-26
+
+### Added
+
+- **Champion audit** – the new `is:nochamp` search and “No Champion” quick
+  filter show weapons without a detected breaker. Tooltip/popup now name the
+  source (item data, frame, manual, none).
+- **Sticky character headers** – Guardian and vault headers stay visible while
+  scrolling.
+- **Back-to-top button** in the inventory after 400 px of scrolling.
+- **Loadout queue bar** – visible status with the current loadout, progress and
+  skipped entries.
+- **CSV export** for the 90-day activity history in the analytics section.
+- Version **1.6.0**.
+
 ## [1.5.6] – 2026-11-26
 
 ### Changed

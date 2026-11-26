@@ -1,4 +1,4 @@
-# Destiny 2 Tool by FreakItOut 1.5.6
+# Destiny 2 Tool by FreakItOut 1.6.0
 
 [Deutsch](#deutsch) · [English](#english)
 
@@ -6,17 +6,19 @@
 
 ## Deutsch
 
-Version 1.5.6 macht den Inventar-Kopf flacher und schafft damit eine zusätzliche Inhaltszeile.
+Version 1.6.0 bringt die Inventar-Pflege: Champion-Prüfung, Sticky-Köpfe, Nach-oben-Knopf, sichtbare Loadout-Warteschlange und CSV-Export.
 
-### Neu in 1.5.6
+### Neu in 1.6.0
 
-- **Kompakter Inventar-Kopf** – kleinere Schrift, entfernte Standard-Absätze
-  und 26-px-Buttons; Titel und Untertitel passen in eine flache Zeile.
-- **Mehr Platz für Items** – die gesparte Höhe geht direkt an das Raster.
-- **Enthalten:** leere Leisten entfernt, Champion-Status, Treffer-Suche und
-  Controller-Navigation.
+- **Champion-Prüfung** – `is:nochamp` und der Schnellfilter „Ohne Champion“
+  zeigen Waffen ohne erkannten Brecher; Tooltip nennt die Quelle.
+- **Sticky-Köpfe** – Hüter/Tresor bleiben beim Scrollen sichtbar.
+- **Nach-oben-Knopf** ab 400 px Scrolltiefe.
+- **Loadout-Warteschlange** – sichtbare Statusleiste mit Fortschritt und
+  übersprungenen Einträgen.
+- **CSV-Export** für den 90-Tage-Verlauf.
 
-### Enthalten aus 1.5.5
+### Enthalten aus 1.5.6
 
 - Fokus-Dashboard, Einfach-/Erweitert-Einstellungen, Loadout-Warteschlange
   mit Konflikterkennung, 90-Tage-Analyse und SBOM.
@@ -25,8 +27,8 @@ Version 1.5.6 macht den Inventar-Kopf flacher und schafft damit eine zusätzlich
 
 | Datei | Inhalt |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.6.exe` | Portable Version, keine Installation nötig |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.6.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.6.0.exe` | Portable Version, keine Installation nötig |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.6.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optionales Stream-Deck-Plugin |
 | `streamdeck-profile.json` | Passende Stream-Deck-Belegung |
 | `sbom.cdx.json` | Software-Stückliste (CycloneDX) |
@@ -34,7 +36,7 @@ Version 1.5.6 macht den Inventar-Kopf flacher und schafft damit eine zusätzlich
 
 GitHub ersetzt Leerzeichen in Dateinamen durch Punkte. Die Prüfsummen in
 `SHA256SUMS.txt` beziehen sich auf die Originalnamen
-(`Destiny 2 Tool by FreakItOut 1.5.6.exe`).
+(`Destiny 2 Tool by FreakItOut 1.6.0.exe`).
 
 ### Voraussetzungen
 
@@ -67,17 +69,18 @@ Zugangsdaten bleiben lokal und werden mit Windows DPAPI verschlüsselt.
 
 ## English
 
-Version 1.5.6 makes the inventory header flatter, gaining an extra content row.
+Version 1.6.0 focuses on inventory care: Champion audit, sticky headers, back-to-top, a visible loadout queue and CSV export.
 
-### New in 1.5.6
+### New in 1.6.0
 
-- **More compact inventory header** – smaller type, removed default margins
-  and 26 px buttons; title and subtitle fit in one flat row.
-- **More room for items** – the saved height goes directly to the grid.
-- **Included:** empty bars removed, Champion status, match search and
-  controller navigation.
+- **Champion audit** – `is:nochamp` and the “No Champion” quick filter show
+  weapons without a detected breaker; the tooltip names the source.
+- **Sticky headers** – Guardian/vault headers stay visible while scrolling.
+- **Back-to-top** after 400 px of scrolling.
+- **Loadout queue** – visible status bar with progress and skipped entries.
+- **CSV export** for the 90-day history.
 
-### Included from 1.5.5
+### Included from 1.5.6
 
 - Focus dashboard, simple/advanced settings, loadout queue with conflict
   detection, 90-day analytics and SBOM.
@@ -86,8 +89,8 @@ Version 1.5.6 makes the inventory header flatter, gaining an extra content row.
 
 | File | Content |
 | --- | --- |
-| `Destiny.2.Tool.by.FreakItOut.1.5.6.exe` | Portable version, no installation required |
-| `Destiny.2.Tool.by.FreakItOut.Setup.1.5.6.exe` | Installer |
+| `Destiny.2.Tool.by.FreakItOut.1.6.0.exe` | Portable version, no installation required |
+| `Destiny.2.Tool.by.FreakItOut.Setup.1.6.0.exe` | Installer |
 | `com.freakitout.d2tool.streamDeckPlugin` | Optional Stream Deck plugin |
 | `streamdeck-profile.json` | Matching Stream Deck profile |
 | `sbom.cdx.json` | Software bill of materials (CycloneDX) |
@@ -95,7 +98,7 @@ Version 1.5.6 makes the inventory header flatter, gaining an extra content row.
 
 GitHub replaces spaces in file names with dots. The checksums in
 `SHA256SUMS.txt` refer to the original names
-(`Destiny 2 Tool by FreakItOut 1.5.6.exe`).
+(`Destiny 2 Tool by FreakItOut 1.6.0.exe`).
 
 ### Requirements
 

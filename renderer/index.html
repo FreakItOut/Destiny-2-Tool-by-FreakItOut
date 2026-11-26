@@ -302,6 +302,7 @@
 
           <section class="dash-card dash-wide" id="dashAnalytics">
             <h4>Aktivitäts-Analyse <span id="dashAnalyticsMeta" class="dash-h4-meta"></span>
+              <button type="button" class="btn ghost small" data-dash-analytics-csv title="90-Tage-Verlauf als CSV exportieren">CSV</button>
               <button type="button" class="btn ghost small" data-dash-analytics-refresh>Neu laden</button>
             </h4>
             <div id="dashAnalyticsBody" class="dash-body dash-analytics"></div>
@@ -394,6 +395,7 @@
             <option value="set:"></option>
             <option value="tier:"></option>
             <option value="note:"></option>
+            <option value="is:nochamp"></option>
           </datalist>
           <button id="inventoryFilterBtn" class="btn ghost small" title="Suchfilter, zuletzt benutzte Suchen, Perk- und Stat-Suche">Filter ▾</button>
           <button id="inventorySearchOnly" class="btn ghost small" title="Nur Treffer anzeigen (aus: Treffer nur dimmen)">Nur Treffer</button>
@@ -406,6 +408,7 @@
         <div id="inventoryStatus" class="inventory-status" aria-live="polite"></div>
         <div id="inventoryLoadoutList" class="inventory-loadout-list"></div>
         <div id="inventoryResult" class="inventory-result hidden" aria-live="polite"></div>
+        <div id="loadoutQueueBar" class="loadout-queue-bar hidden" aria-live="polite"></div>
         <div id="inventoryBody" class="inventory-body"><div class="check-empty">Nicht geladen – „Aktualisieren“ drücken (setzt Anmeldung voraus).</div></div>
         <div class="inventory-pad-hint" aria-hidden="true">
           <span><kbd>A</kbd> Öffnen</span>
@@ -416,6 +419,7 @@
           <span><kbd>2. Stick</kbd> Scrollen</span>
           <span><kbd>⌨</kbd> Tastatur</span>
         </div>
+        <button id="inventoryTopBtn" class="inventory-top-btn hidden" type="button" title="Nach oben" aria-label="Nach oben">↑</button>
       </div>
       <div id="inventoryTooltip" class="inventory-tooltip"></div>
     </main>

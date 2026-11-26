@@ -104,6 +104,14 @@ export function championTypes(item) {
   return [...types].sort();
 }
 
+// Woher die Champion-Fähigkeit stammt – für Tooltip und Prüfansicht.
+export function championSource(item) {
+  if (championOverride(item)) return 'manuell';
+  if (explicitBreakerTypes(item).size) return 'daten';
+  if (frameBreakerType(item)) return 'rahmen';
+  return 'keine';
+}
+
 export function championLabels(item) {
   return championTypes(item).map((type) => CHAMPION_NAMES[type]).filter(Boolean);
 }

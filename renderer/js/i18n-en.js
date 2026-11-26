@@ -1,6 +1,15 @@
 'use strict';
 // Automatisch erzeugt von tools/make-i18n.js.
 window.__I18N_EN__ = {
+  "90-Tage-Verlauf als CSV exportieren": "Export 90-day history as CSV",
+  "Aktivitäten der letzten 12 Wochen": "Activities of the last 12 weeks",
+  "Noch keine Kategorien.": "No categories yet.",
+  "Noch keine Aktivitäten.": "No activities yet.",
+  "Analyse ist in dieser Version nicht verfügbar.": "Analytics are not available in this version.",
+  "Noch keine Aktivitäten im Verlauf gefunden.": "No activities found in the history yet.",
+  "Aktivitätsverlauf als CSV exportiert.": "Activity history exported as CSV.",
+  "Noch kein Aktivitätsverlauf zum Export vorhanden.": "No activity history to export yet.",
+  "Kein intrinsischer Champion-Brecher erkannt (Quelle: keine)": "No intrinsic Champion breaker detected (source: none)",
   "Nur Treffer anzeigen (aus: Treffer nur dimmen)": "Show only matches (off: dim matches only)",
   "Kein intrinsischer Champion-Brecher erkannt": "No intrinsic Champion breaker detected",
   "Nur Treffer": "Matches only",

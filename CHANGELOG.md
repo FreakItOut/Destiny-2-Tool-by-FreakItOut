@@ -6,6 +6,21 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.6.0] – 2026-11-26
+
+### Hinzugefügt
+
+- **Champion-Prüfung** – neue Suche `is:nochamp` und Schnellfilter „Ohne
+  Champion“ zeigen Waffen ohne erkannten Brecher. Tooltip/Popup nennen jetzt
+  die Quelle (Item-Daten, Rahmen, manuell, keine).
+- **Sticky-Charakterköpfe** – Hüter- und Tresorköpfe bleiben beim Scrollen
+  sichtbar.
+- **Nach-oben-Knopf** im Inventar ab 400 px Scrolltiefe.
+- **Loadout-Warteschlangen-Leiste** – sichtbarer Status mit aktuellem Loadout,
+  Fortschritt und übersprungenen Einträgen.
+- **CSV-Export** für den 90-Tage-Aktivitätsverlauf im Analyse-Bereich.
+- Version **1.6.0**.
+
 ## [1.5.6] – 2026-11-26
 
 ### Geändert

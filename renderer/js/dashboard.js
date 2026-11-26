@@ -947,6 +947,30 @@ export function createDashboard(ctx) {
     return { days, max, recorded: Object.keys(history).length };
   }
 
+  function exportAnalyticsCsv() {
+    const history = getConfig().analyticsHistory || {};
+    const rows = [['Datum', 'Aktivitaeten', 'Minuten']];
+    for (const key of Object.keys(history).sort()) {
+      const entry = history[key] || {};
+      rows.push([key, Number(entry.count) || 0, Number(entry.minutes) || 0]);
+    }
+    if (rows.length < 2) {
+      toast('Noch kein Aktivitätsverlauf zum Export vorhanden.', 'info', 2600);
+      return;
+    }
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `d2tool-aktivitaeten-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1200);
+    toast('Aktivitätsverlauf als CSV exportiert.', 'success', 2400);
+  }
+
   function recordAnalyticsHistory(stats) {
     if (!stats || !Array.isArray(stats.recentDays)) return;
     const history = { ...(getConfig().analyticsHistory || {}) };
@@ -1382,6 +1406,10 @@ export function createDashboard(ctx) {
       if (event.target.closest('[data-dash-analytics-refresh]')) {
         renderAnalytics(true);
         renderPostGame(false);
+        return;
+      }
+      if (event.target.closest('[data-dash-analytics-csv]')) {
+        exportAnalyticsCsv();
         return;
       }
       if (event.target.closest('[data-dash-more]')) {

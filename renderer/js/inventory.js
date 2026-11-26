@@ -7,7 +7,7 @@
 // 201,205,300,304,305).
 
 import { qs, toast, escapeHtml, positionFixedTip } from './ui.js';
-import { championTypes, championOverride, setChampionOverride, CHAMPION_NAMES, CHAMPION_SHORT, CHAMPION_COLORS } from './champions.js';
+import { championTypes, championSource, championOverride, setChampionOverride, CHAMPION_NAMES, CHAMPION_SHORT, CHAMPION_COLORS } from './champions.js';
 import { loadoutSearchText, pinLoadout, toggleLoadoutTag } from './loadouts/model.js';
 import { record as recordJournal, undo as journalUndo, redo as journalRedo, canUndo as journalCanUndo, canRedo as journalCanRedo } from './journal.js';
 import { renderBuildCard } from './build-card.js';
@@ -98,6 +98,8 @@ const INVENTORY_CSS = `
 .inventory-result { margin: 8px 14px 0; padding: 6px 10px; border: 1px solid #2a3548; border-radius: 6px; max-height: 180px; overflow-y: auto; font-size: 11px; flex-shrink: 0; }
 .inventory-result .r-ok { color: #29f36a; }
 .inventory-result .r-err { color: #ff6b6b; }
+.loadout-queue-bar { margin: 6px 14px 0; padding: 5px 10px; border: 1px solid var(--brand); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text); font-size: 11.5px; flex-shrink: 0; }
+.loadout-queue-bar.hidden { display: none !important; }
 .inventory-loadout-list { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 14px 0; flex-shrink: 0; max-height: 100px; overflow-y: auto; }
 .inv-loadout { display: flex; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid #2a3548; border-radius: 5px; font-size: 11px; }
 .inv-loadout-name { font-weight: 600; color: #e8ecf2; }
@@ -105,7 +107,9 @@ const INVENTORY_CSS = `
 /* ---- DIM-Account-Grid: 4 Spalten (3 Hüter + Tresor) ---- */
 .dinv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; align-items: start; }
 .dinv-char { display: flex; flex-direction: column; gap: 0; min-width: 0; }
-.dinv-char-head { position: relative; display: flex; align-items: center; gap: 8px; height: 52px; border: 1px solid #232b3a; border-radius: 6px; background: #12161f; overflow: hidden; margin-bottom: 4px; padding: 0 10px; box-sizing: border-box; }
+.dinv-char-head { position: sticky; top: 0; z-index: 22; display: flex; align-items: center; gap: 8px; height: 52px; border: 1px solid #232b3a; border-radius: 6px; background: #12161f; overflow: hidden; margin-bottom: 4px; padding: 0 10px; box-sizing: border-box; }
+.inventory-top-btn { position: absolute; right: 18px; bottom: 48px; z-index: 35; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--brand); background: rgba(12,18,28,0.94); color: var(--text); font-size: 18px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
+.inventory-top-btn:hover { background: var(--brand); color: var(--accent-contrast); }
 .dinv-char-bg { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.42; filter: saturate(0.8); }
 .dinv-char-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(8,12,20,0.92) 0%, rgba(8,12,20,0.5) 48%, rgba(8,12,20,0.1) 100%); }
 .dinv-char-emblem { position: relative; z-index: 2; width: 36px !important; height: 36px !important; border-radius: 4px; background-size: auto 100% !important; background-position: left center !important; background-repeat: no-repeat !important; box-shadow: 0 0 0 1px rgba(255,255,255,0.14); flex-shrink: 0; }
@@ -950,6 +954,7 @@ export function createInventory(ctx) {
   const loadoutSaveBtn = qs('#inventoryLoadoutSave');
   const loadoutList = qs('#inventoryLoadoutList');
   const resultBox = qs('#inventoryResult');
+  const loadoutQueueBar = qs('#loadoutQueueBar');
   const tooltipEl = qs('#inventoryTooltip');
   const inventoryBtn = qs('#inventoryBtn');
   const godrollBtn = qs('#inventoryGodrollFilter');
@@ -1067,7 +1072,7 @@ export function createInventory(ctx) {
     activeSearchTokens(current).forEach((token, index) => {
       chips.push(`<button type="button" class="dinv-searchchip active" data-search-remove="${index}" title="Filter entfernen: ${esc(token)}">${esc(token)} ✕</button>`);
     });
-    for (const [label, query] of [['Godrolls', 'is:godroll'], ['20+ Spike', 'is:spike20'], ['Exoten', 'is:exotic'], ['T5', 'is:tier5'], ['Armor 3.0', 'is:armor3.0'], ['Wunsch', 'is:armorwish'], ['Stat-Dupes', 'dupe:stats'], ['Schlechter', 'is:statlower'], ['Notizen', 'is:noted']]) {
+    for (const [label, query] of [['Godrolls', 'is:godroll'], ['20+ Spike', 'is:spike20'], ['Exoten', 'is:exotic'], ['T5', 'is:tier5'], ['Armor 3.0', 'is:armor3.0'], ['Wunsch', 'is:armorwish'], ['Stat-Dupes', 'dupe:stats'], ['Schlechter', 'is:statlower'], ['Notizen', 'is:noted'], ['Ohne Champion', 'is:nochamp']]) {
       chips.push(`<button type="button" class="dinv-searchchip preset${query === current ? ' on' : ''}" data-search-chip="${query}" title="${label}: ${query}">${label}</button>`);
     }
     searchChips.innerHTML = chips.join('');
@@ -1872,6 +1877,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         if (!DIM.ARMOR_SLOTS.some((slot) => slot.key === Number(item.bucket))) return false;
       } else if (token.op === 'is' && RARITY_NAMES[value]) {
         if (Number(item.rarity) !== RARITY_NAMES[value]) return false;
+      } else if (token.op === 'is' && (value === 'nochamp' || value === 'nochampion')) {
+        if (!DIM.WEAPON_SLOTS.some((slot) => slot.key === Number(item.bucket))) return false;
+        if (championTypes(item).length) return false;
       } else if (token.op === 'is' && value === 'new') {
         if (!item.isNew) return false;
       } else if (token.op === 'is' && value === 'noted') {
@@ -2216,10 +2224,12 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const elemTag = isWeapon && elemShort
       ? `<span class="dinv-tag dinv-tag-elem" style="background:${ELEMENT_COLOR[Number(item.element)] || '#cfd7e3'}" title="Element: ${esc(elemName)}">${esc(elemShort)}</span>`
       : '';
+    const champSource = isWeapon ? championSource(item) : '';
+    const champSourceLabel = { manuell: 'manuell', daten: 'Item-Daten', rahmen: 'Rahmen', keine: 'keine' }[champSource] || 'keine';
     const champTags = isWeapon
       ? (champions.length
-        ? champions.map((type) => `<span class="dinv-tag dinv-tag-champ" style="border-color:${CHAMPION_COLORS[type]};color:${CHAMPION_COLORS[type]}" title="Champion (Rahmen): ${esc(CHAMPION_NAMES[type])}">${esc(CHAMPION_SHORT[type])}</span>`).join('')
-        : '<span class="dinv-tag dinv-tag-champ none" title="Kein intrinsischer Champion-Brecher erkannt">–</span>')
+        ? champions.map((type) => `<span class="dinv-tag dinv-tag-champ" style="border-color:${CHAMPION_COLORS[type]};color:${CHAMPION_COLORS[type]}" title="Champion (${esc(champSourceLabel)}): ${esc(CHAMPION_NAMES[type])}">${esc(CHAMPION_SHORT[type])}</span>`).join('')
+        : '<span class="dinv-tag dinv-tag-champ none" title="Kein intrinsischer Champion-Brecher erkannt (Quelle: keine)">–</span>')
       : '';
     const tagRow = (elemTag || champTags) ? `<span class="dinv-tile-tagrow">${elemTag}${champTags}</span>` : '';
     const badge = (qty || power) ? `<span class="dinv-tile-badge">${qty}${power}</span>` : '';
@@ -2243,7 +2253,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       : item.statDupe
         ? '<span class="dinv-tile-diff" title="Gleiche Stats wie eine andere Kopie">⧉</span>'
         : '';
-    const label = `${item.name}${item.typeName ? ` · ${item.typeName}` : ''}${elemName ? ` · ${elemName}` : ''}${champions.length ? ` · Champion: ${champions.map((type) => CHAMPION_NAMES[type]).join(', ')}` : (isWeapon ? ' · Kein Champion-Brecher' : '')}${item.power ? ` · ${item.power} Power` : ''}${itemNote ? ` · Notiz: ${itemNote}` : ''}`;
+    const label = `${item.name}${item.typeName ? ` · ${item.typeName}` : ''}${elemName ? ` · ${elemName}` : ''}${champions.length ? ` · Champion: ${champions.map((type) => CHAMPION_NAMES[type]).join(', ')} (${champSourceLabel})` : (isWeapon ? ' · Kein Champion-Brecher' : '')}${item.power ? ` · ${item.power} Power` : ''}${itemNote ? ` · Notiz: ${itemNote}` : ''}`;
     const dimmed = searchActive && !searchMatchKeys.has(key);
     const dimClass = dimmed ? ' inv-dim' : '';
     const img = item.icon ? `<img src="https://www.bungie.net${esc(item.icon)}" alt="" loading="lazy">` : '';
@@ -2854,9 +2864,10 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     html += `<span style="color:#a0aabb">${esc(item.typeName || 'Item')}${item.power ? ` · ${item.power} Power` : ''}${rn ? ` · ${esc(rn)}` : ''}</span>`;
     const elemLabel = elementName(item);
     const champLabels = championTypes(item).map((type) => CHAMPION_NAMES[type]);
+    const champSourceLabel = { manuell: 'manuell', daten: 'Item-Daten', rahmen: 'Rahmen', keine: 'keine' }[championSource(item)] || 'keine';
     if (elemLabel || DIM.WEAPON_SLOTS.some((slot) => slot.key === Number(item.bucket))) {
       html += `<span class="inv-tip-tags"><span class="inv-tag-elem" title="Schadenselement">Element: ${esc(elemLabel || 'unbekannt')}</span>` +
-        `<span class="inv-tag-champ" title="Abgedeckte Champions">Champion (Rahmen): ${esc(champLabels.length ? champLabels.join(', ') : 'keiner')}</span></span>`;
+        `<span class="inv-tag-champ" title="Abgedeckte Champions">Champion (${esc(champSourceLabel)}): ${esc(champLabels.length ? champLabels.join(', ') : 'keiner')}</span></span>`;
     }
     // Werte (Komponente 304): Armor-3.0-Stats bzw. Waffen-Stats.
     if (Array.isArray(item.stats) && item.stats.length) {
@@ -3400,6 +3411,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     { token: 'is:dupe', label: 'Duplikat' },
     { token: 'is:new', label: 'Neu' },
     { token: 'is:noted', label: 'Notiz' },
+    { token: 'is:nochamp', label: 'Ohne Champion' },
     { token: 'is:locked', label: 'Markiert' },
     { token: 'is:masterworked', label: 'Meisterwerk' },
     { token: 'is:armor3.0', label: 'Armor 3.0' },
@@ -4050,10 +4062,11 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       : '';
     const elemLabel = elementName(item);
     const champLabels = championTypes(item).map((type) => CHAMPION_NAMES[type]);
+    const champSourceLabel = { manuell: 'manuell', daten: 'Item-Daten', rahmen: 'Rahmen', keine: 'keine' }[championSource(item)] || 'keine';
     const isWeaponItem = DIM.WEAPON_SLOTS.some((slot) => slot.key === Number(item.bucket))
       || /gewehr|handfeuerwaffe|pulvergewehr|kampfgewehr|sniper|schrotflinte|rakete|schwert|bogen|fusionsgewehr|maschinengewehr|pistole|revolver|glaive|fackel/i.test(String(item.typeName || ''));
     const elementChampHtml = (elemLabel || isWeaponItem)
-      ? `<span class="inv-tip-tags"><span class="inv-tag-elem">Element: ${esc(elemLabel || 'unbekannt')}</span><span class="inv-tag-champ">Champion (Rahmen): ${esc(champLabels.length ? champLabels.join(', ') : 'keiner')}</span></span>`
+      ? `<span class="inv-tip-tags"><span class="inv-tag-elem">Element: ${esc(elemLabel || 'unbekannt')}</span><span class="inv-tag-champ">Champion (${esc(champSourceLabel)}): ${esc(champLabels.length ? champLabels.join(', ') : 'keiner')}</span></span>`
       : '';
     const champOverride = championOverride(item);
     const championOverrideHtml = isWeaponItem
@@ -7967,6 +7980,15 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   // Loadout-Warteschlange: mehrere Loadouts nacheinander anwenden.
   const loadoutQueue = [];
   let loadoutQueueRunning = false;
+  function showQueueBar(text, sticky = false) {
+    if (!loadoutQueueBar) return;
+    loadoutQueueBar.textContent = text;
+    loadoutQueueBar.classList.remove('hidden');
+    if (loadoutQueueBar._hideTimer) clearTimeout(loadoutQueueBar._hideTimer);
+    if (!sticky) {
+      loadoutQueueBar._hideTimer = setTimeout(() => loadoutQueueBar.classList.add('hidden'), 4200);
+    }
+  }
   function queueLoadout(loadoutId) {
     const loadout = ((getCfg().bungie && getCfg().bungie.loadouts) || []).find((entry) => entry.id === loadoutId);
     if (!loadout) return;
@@ -7975,6 +7997,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       return;
     }
     loadoutQueue.push(loadoutId);
+    showQueueBar(`Warteschlange: ${loadoutQueue.length} · „${loadout.name}“ hinzugefügt`, true);
     toast(`„${loadout.name}“ in Warteschlange (${loadoutQueue.length}).`, 'info', 2000);
     processLoadoutQueue();
   }
@@ -7990,9 +8013,11 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
         failed += 1;
         continue;
       }
+      showQueueBar(`Läuft: „${loadout.name}“ · ${done} fertig, ${failed} übersprungen`, true);
       const blocking = loadoutConflicts(loadout, loadout.characterId).filter((entry) => entry.blocking);
       if (blocking.length) {
         failed += 1;
+        showQueueBar(`Übersprungen: „${loadout.name}“ – ${blocking[0].text}`, true);
         toast(`„${loadout.name}“ übersprungen: ${blocking[0].text}`, 'warning', 3600);
         continue;
       }
@@ -8005,11 +8030,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       await new Promise((resolve) => setTimeout(resolve, 350));
     }
     loadoutQueueRunning = false;
-    toast(
-      `Warteschlange fertig: ${done} angewendet${failed ? `, ${failed} übersprungen` : ''}.`,
-      failed ? 'warning' : 'success',
-      3800
-    );
+    const summary = `Warteschlange fertig: ${done} angewendet${failed ? `, ${failed} übersprungen` : ''}.`;
+    showQueueBar(summary);
+    toast(summary, failed ? 'warning' : 'success', 3800);
   }
 
   async function applyLoadout(loadoutId, options = {}) {
@@ -9600,6 +9623,15 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       hideTooltip();
     });
     body.addEventListener('scroll', hideTooltip, { passive: true });
+    const topBtn = qs('#inventoryTopBtn');
+    if (topBtn) {
+      body.addEventListener('scroll', () => {
+        topBtn.classList.toggle('hidden', body.scrollTop < 400);
+      }, { passive: true });
+      topBtn.addEventListener('click', () => {
+        try { body.scrollTo({ top: 0, behavior: 'smooth' }); } catch (error) { body.scrollTop = 0; }
+      });
+    }
     // TV-Modus: Item-Details per Fokus statt Hover.
     body.addEventListener('focusin', (event) => {
       if (!(window.isTvMode && window.isTvMode())) return;
