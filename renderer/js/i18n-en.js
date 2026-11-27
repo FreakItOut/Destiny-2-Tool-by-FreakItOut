@@ -4339,6 +4339,10 @@ window.__I18N_EN__ = {
   "Chip-Zone": "Chip zone",
   "Abstand in px": "Gap in px",
   "HUD-Layout zurückgesetzt.": "HUD layout reset.",
+  "Artefakt wählen": "Choose artifact",
+  "Artefakt bearbeiten": "Edit artifact",
+  "ausgerüstet": "equipped",
+  "Artefakt übernommen.": "Artifact taken over.",
   "Set-Bonus aktiv": "Set bonus active",
   "DIM nutzt nach Edge of Fate die Skala 0–200. Die alten Resilienz-Prozente gelten nicht mehr.": "According to Edge of Fate, DIM uses the 0-200 scale. The old resilience percentages no longer apply."
 };

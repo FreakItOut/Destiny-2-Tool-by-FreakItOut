@@ -6,6 +6,35 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.18.0] – 2026-11-27
+
+### Hinzugefügt
+
+- **Artefakt-Auswahl im Loadout-Editor** – das Artefakt-Feld öffnet jetzt
+  eine Auswahl aller verfügbaren Artefakte (Backpack, ausgerüstet, Tresor,
+  andere Charaktere), dedupliziert nach Artefakt und mit
+  „ausgerüstet“-Markierung. Die Auswahl setzt die Referenz des Loadouts und
+  übernimmt die aktuell gesteckten Perks samt Reihe.
+- **Perk-Auswahl nach Reihe** – die Perk-Liste zeigt nur noch die Perks des
+  gewählten Artefakts, gruppiert nach Reihe/Socket. Pro Reihe ist ein Perk
+  aktiv; eine neue Auswahl ersetzt den bisherigen Perk.
+- **Artefakt bearbeiten** – öffnet das Socket-Grid des gewählten Artefakts
+  und wendet Perks direkt über die API an.
+
+### Geändert
+
+- „Vom Artefakt übernehmen“ setzt jetzt Referenz **und** die aktuell
+  gesteckten Perks statt nur die Referenz.
+
+### Behoben
+
+- Die Perk-Liste mischte zuvor die Perks **aller** Artefakte aus Inventar und
+  Tresor; dadurch erschienen überall dieselben Perks.
+
+### Technik
+
+- E2E auf **564** Schritte, App-Features auf **110** Prüfungen erweitert.
+
 ## [1.17.3] – 2026-11-27
 
 ### Behoben

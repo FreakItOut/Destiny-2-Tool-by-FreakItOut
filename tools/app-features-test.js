@@ -82,6 +82,21 @@ check('Artefakt-Perks über die API',
   inventory.includes('Artefakt-Perk(s) angewendet') &&
   inventory.includes('ist nicht ausgerüstet') &&
   !inventory.includes('Artefakt-Perks (nur dokumentiert)'));
+{
+  const perkPoolStart = inventory.indexOf('function perkPool()');
+  const perkRowsStart = inventory.indexOf('function perkRows()');
+  const perkPoolBlock = perkPoolStart >= 0 && perkRowsStart > perkPoolStart
+    ? inventory.slice(perkPoolStart, perkRowsStart)
+    : '';
+  check('Artefakt-Auswahl im Loadout-Editor',
+    inventory.includes('data-dw-artifact-select') &&
+    inventory.includes("pickKind = 'artifact'") &&
+    !inventory.includes("dwTileHtml(shown, 'Artefakt', { attr: 'data-dw-perks-open'") &&
+    perkPoolBlock.includes('perkArtifactItem()') &&
+    perkPoolBlock.includes('socketPlugsFor') &&
+    !perkPoolBlock.includes('data.vault') &&
+    !perkPoolBlock.includes('Object.values'));
+}
 check('Titelleiste: Chips und Fensterknöpfe verdrahtet',
   app.includes('initClock({') &&
   app.includes("qsa('[data-win]')") &&

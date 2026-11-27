@@ -6,6 +6,35 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.18.0] – 2026-11-27
+
+### Added
+
+- **Artifact selection in the loadout editor** – the artifact field now opens
+  a chooser with all available artifacts (backpack, equipped, vault, other
+  characters), deduplicated by artifact and marked "equipped". Selecting one
+  sets the loadout reference and adopts its currently plugged perks including
+  their row.
+- **Perk selection by row** – the perk list shows only the perks of the
+  selected artifact, grouped by row/socket. One perk per row is active; a new
+  selection replaces the previous perk.
+- **Edit artifact** – opens the socket grid of the selected artifact and
+  applies perks directly through the API.
+
+### Changed
+
+- "Take over artifact" now sets the reference **and** the currently plugged
+  perks instead of only the reference.
+
+### Fixed
+
+- The perk list previously mixed the perks of **all** artifacts from inventory
+  and vault, so the same perks appeared everywhere.
+
+### Technical
+
+- E2E expanded to **564** steps, app features to **110** checks.
+
 ## [1.17.3] – 2026-11-27
 
 ### Fixed

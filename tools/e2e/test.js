@@ -191,7 +191,9 @@ const backpack = {
     item({ hash: 3303, instanceId: 'i-engram', name: 'Test-Engramm', bucket: 375726501, typeName: 'Engramm' }),
     item({ hash: 3304, instanceId: 'i-currency', name: 'Test-Währung', bucket: 3703306570, typeName: 'Währung' }),
     // Accessoires sind ein echtes Inventar-Bucket (DIM: Inventory).
-    item({ hash: 3305, instanceId: 'i-acc', name: 'Test-Accessoire', bucket: 687325600, typeName: 'Accessoires' })
+    item({ hash: 3305, instanceId: 'i-acc', name: 'Test-Accessoire', bucket: 687325600, typeName: 'Accessoires' }),
+    // Zweites Artefakt für die Auswahl im Loadout-Editor.
+    item({ hash: 3406, instanceId: 'i-art-b', name: 'Alternatives Artefakt', bucket: 1506418338, typeName: 'Artefakt' })
   ]
 };
 
@@ -236,12 +238,15 @@ const upgradePlugs = [
   { h: 6001, n: 'Rüstung verbessern', i: '', p: 'v460.plugs.armor.masterworks.stat.resilience', d: 'v460 plugs armor masterworks stat resilience', s: [] },
   { h: 6002, n: 'Rüstung verbessern', i: '', p: 'v460.plugs.armor.masterworks.stat.mobility', d: 'v460 plugs armor masterworks stat mobility', s: [] }
 ];
-const artifactPerks = [
-  { h: 8001, n: 'Artefakt-Mod: Überladung', i: '', p: 'artifact_perks', d: 'Saison-Perk', s: [] }
-];
+const artifactPerkA1 = { h: 8001, n: 'Artefakt-Mod: Überladung', i: '', p: 'artifact_perks', d: 'Saison-Perk A1', s: [], selected: true };
+const artifactPerkA2 = { h: 8002, n: 'Artefakt-Perk A2', i: '', p: 'artifact_perks', d: 'Saison-Perk A2', s: [], selected: true };
+const artifactPerkB1 = { h: 8101, n: 'Artefakt-Perk B1', i: '', p: 'artifact_perks', d: 'Saison-Perk B1', s: [], selected: true };
+const artifactPerkB1alt = { h: 8103, n: 'Artefakt-Perk B1 alt', i: '', p: 'artifact_perks', d: 'Saison-Perk B1 Alternative', s: [], selected: false };
+const artifactPerkB2 = { h: 8102, n: 'Artefakt-Perk B2', i: '', p: 'artifact_perks', d: 'Saison-Perk B2', s: [], selected: true };
 const sockDefs = {
   1001: subclassPlugs,
-  3306: [{ idx: 0, plugs: artifactPerks }],
+  3306: [{ idx: 0, plugs: [artifactPerkA1] }, { idx: 1, plugs: [artifactPerkA2] }],
+  3406: [{ idx: 0, plugs: [artifactPerkB1, artifactPerkB1alt] }, { idx: 1, plugs: [artifactPerkB2] }],
   2001: [{ idx: 0, plugs: mods }, { idx: 1, plugs: upgradePlugs }],
   2002: [{ idx: 0, plugs: mods }, { idx: 1, plugs: upgradePlugs }],
   2003: [{ idx: 0, plugs: mods }, { idx: 1, plugs: upgradePlugs }],
@@ -1416,6 +1421,57 @@ async function run() {
   const modTiles = [...document.querySelectorAll('[data-dw-mod-edit]')];
   const mobilityModTile = modTiles.find((tile) => /Waffen-Mod/.test(tile.getAttribute('title') || ''));
   check('Importierte Mod-Icons sichtbar', Boolean(mobilityModTile && mobilityModTile.querySelector('img')), mobilityModTile && mobilityModTile.innerHTML.slice(0, 80));
+
+  // --- Artefakt-Auswahl und Perk-Pool nur für das gewählte Artefakt ----
+  document.querySelector('[data-dw-artifact-select]')?.click();
+  await wait(180);
+  const artifactPicker = document.querySelector('.inv-dw-sheet');
+  const artifactOptions = [...document.querySelectorAll('[data-dw-pickartifact]')];
+  check('Artefakt-Auswahl öffnet', Boolean(artifactPicker && !artifactPicker.classList.contains('hidden')));
+  check('Beide Artefakte wählbar', artifactOptions.length === 2,
+    artifactOptions.map((option) => option.dataset.dwPickartifact).join(', '));
+  const artifactPickerText = (artifactPicker && artifactPicker.textContent) || '';
+  check('Artefakt-Auswahl nennt ausgerüstet',
+    /Test-Artefakt/.test(artifactPickerText) && /Alternatives Artefakt/.test(artifactPickerText) && /ausgerüstet/.test(artifactPickerText),
+    artifactPickerText.slice(0, 160));
+  document.querySelector('[data-dw-pickartifact="3406"]')?.click();
+  await wait(220);
+  const selectedArtifactTile = document.querySelector('.inv-dw-tile[data-dw-artifact-select]');
+  check('Artefakt-Auswahl setzt Referenz',
+    /Alternatives Artefakt/.test(selectedArtifactTile?.getAttribute('title') || ''),
+    selectedArtifactTile?.getAttribute('title'));
+  check('Artefakt-Auswahl füllt Perks vor', / 2 Perks/.test((document.querySelector('.inv-dw-foot') || {}).textContent || ''),
+    (document.querySelector('.inv-dw-foot') || {}).textContent);
+  check('Artefakt bearbeiten für gewähltes Artefakt', Boolean(document.querySelector('[data-dw-artifact-open]')));
+  const perksBtn = [...document.querySelectorAll('button[data-dw-perks-open]')].find((button) => /Perks wählen/.test(button.textContent || ''));
+  check('Perks-wählen-Knopf vorhanden', Boolean(perksBtn));
+  perksBtn?.click();
+  await wait(180);
+  const perkPicker = document.querySelector('.inv-dw-sheet');
+  const perkPickerText = (perkPicker && perkPicker.textContent) || '';
+  const pickerHashes = [...document.querySelectorAll('[data-dw-pickperk]')]
+    .map((button) => String(button.dataset.dwPickperk)).sort();
+  check('Perk-Picker nur gewähltes Artefakt', JSON.stringify(pickerHashes) === JSON.stringify(['8101', '8102', '8103']), pickerHashes.join(', '));
+  check('Perk-Picker nennt keine fremden Perks', !/8001|8002/.test(perkPickerText), perkPickerText.slice(0, 200));
+  check('Perk-Picker gruppiert nach Reihe', /Reihe 1/.test(perkPickerText) && /Reihe 2/.test(perkPickerText), perkPickerText.slice(0, 120));
+  document.querySelector('[data-dw-pickperk="8103"]')?.click();
+  await wait(180);
+  check('Ein Perk pro Reihe (ersetzt)', / 2 Perks/.test((document.querySelector('.inv-dw-foot') || {}).textContent || ''),
+    (document.querySelector('.inv-dw-foot') || {}).textContent);
+  check('Ersatz-Perk ist gewählt', Boolean(document.querySelector('[data-dw-pickperk="8103"].on')));
+  check('Alter Perk der Reihe ist ersetzt', !document.querySelector('[data-dw-pickperk="8101"].on'));
+  document.querySelector('.inv-dw-sheet-head [data-dw-sheet-close]')?.click();
+  await wait(150);
+  document.querySelector('[data-dw-artifact-take]')?.click();
+  await wait(220);
+  const perkTileTitles = [...document.querySelectorAll('[data-dw-perk-edit]')]
+    .map((tile) => tile.getAttribute('title') || '').join(' ');
+  const artifactTileTitle = document.querySelector('.inv-dw-tile[data-dw-artifact-select]')?.getAttribute('title') || '';
+  check('Vom Artefakt übernehmen setzt Referenz und Perks',
+    /Alternatives Artefakt/.test(artifactTileTitle) &&
+    /Artefakt-Perk B1/.test(perkTileTitles) && /Artefakt-Perk B2/.test(perkTileTitles),
+    `${artifactTileTitle} | ${perkTileTitles}`);
+
   const closeImported = document.querySelector('[data-dw-close]');
   if (closeImported) closeImported.click();
   await wait(250);

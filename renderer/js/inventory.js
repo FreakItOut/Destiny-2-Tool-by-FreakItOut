@@ -825,6 +825,9 @@ body.pad-active .inv-popup-pad-hint { display: flex; }
 .inv-dw-search { width: 100%; box-sizing: border-box; height: 30px; margin-bottom: 8px; padding: 0 10px; border-radius: 6px; border: 1px solid #2a3548; background: #0b1018; color: #e8ecf2; font-size: 12px; outline: none; }
 .inv-dw-search:focus { border-color: var(--brand); }
 .inv-dw-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px; }
+.inv-dw-perk-group { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px; }
+.inv-dw-perk-row-head { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: #7a8494; }
+.inv-dw-perk-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px; }
 .inv-dw-pick { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border: 1px solid #232b3a; border-radius: 7px; background: #111722; color: #e8ecf2; cursor: pointer; text-align: left; min-width: 0; }
 .inv-dw-pick:hover { border-color: var(--brand); background: #16202e; }
 .inv-dw-pick.on { border-color: #29f36a; background: rgba(41, 243, 106, 0.08); }
@@ -5970,13 +5973,14 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   }
 
   function dwArtifactSection() {
-    const backpack = ((data && data.backpack && data.backpack[editorCharId]) || []);
-    const current = backpack.find((it) => Number(it.bucket) === DIM.B.ARTIFACT) ||
-      equippedFor(editorCharId).find((it) => Number(it.bucket) === DIM.B.ARTIFACT) || null;
-    const shown = editorArtifact || (current ? { hash: current.hash, name: current.name, icon: current.icon, rarity: current.rarity, instanceId: current.instanceId } : null);
+    const equippedArtifact = equippedArtifactItem();
+    const live = editorArtifact ? findArtifactItem(editorArtifact) : equippedArtifact;
+    const shown = editorArtifact || (equippedArtifact
+      ? { hash: equippedArtifact.hash, name: equippedArtifact.name, icon: equippedArtifact.icon, rarity: equippedArtifact.rarity, instanceId: equippedArtifact.instanceId }
+      : null);
     const tile = shown
-      ? dwTileHtml(shown, 'Artefakt', { attr: 'data-dw-perks-open', noRemove: true })
-      : '<div class="inv-dw-slotwrap"><div class="inv-dw-tile empty" role="button" tabindex="0" data-dw-artifact-take title="Artefakt übernehmen"><span class="inv-dw-plus">+</span></div><span class="inv-dw-slotlabel">Artefakt</span></div>';
+      ? dwTileHtml(shown, 'Artefakt', { attr: 'data-dw-artifact-select', noRemove: true })
+      : '<div class="inv-dw-slotwrap"><div class="inv-dw-tile empty" role="button" tabindex="0" data-dw-artifact-select title="Artefakt wählen"><span class="inv-dw-plus">+</span></div><span class="inv-dw-slotlabel">Artefakt</span></div>';
     const perkTiles = editorPerks.map((perk, i) =>
       '<div class="inv-dw-slotwrap"><div class="inv-dw-tile" role="button" tabindex="0" title="' + esc(perk.n) + '" data-dw-perk-edit="' + i + '"' +
       (perk.h ? ' data-dw-tip-plug="' + esc(String(perk.h)) + '"' : '') + '>' +
@@ -5985,7 +5989,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       '<span class="inv-dw-slotlabel">' + esc(perk.n) + '</span></div>').join('');
     const add = '<div class="inv-dw-slotwrap"><div class="inv-dw-tile empty" role="button" tabindex="0" data-dw-perks-open title="Artefakt-Perk hinzufügen"><span class="inv-dw-plus">+</span></div><span class="inv-dw-slotlabel">Perk</span></div>';
     const actions =
+      '<button type="button" class="btn ghost small" data-dw-artifact-select>Artefakt wählen</button>' +
       '<button type="button" class="btn ghost small" data-dw-perks-open>Perks wählen</button>' +
+      (live && live.instanceId ? '<button type="button" class="btn ghost small" data-dw-artifact-open>Artefakt bearbeiten</button>' : '') +
       '<button type="button" class="btn ghost small" data-dw-artifact-take>Vom Artefakt übernehmen</button>';
     return dwSection('Artefakt', actions,
       '<div class="inv-dw-row">' + tile + perkTiles + add + '</div>' +
@@ -6129,28 +6135,138 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     });
   }
 
+  // Artefakt, das der Editor als Referenz nutzt: gewählte Referenz oder
+  // das ausgerüstete Artefakt des Editor-Charakters.
+  function equippedArtifactItem() {
+    return equippedFor(editorCharId).find((it) => Number(it.bucket) === DIM.B.ARTIFACT) || null;
+  }
+
+  function findArtifactItem(ref) {
+    if (!ref) return null;
+    if (ref.instanceId) {
+      const found = findItemByKey(ref.instanceId);
+      if (found && Number(found.bucket) === DIM.B.ARTIFACT) return found;
+    }
+    const hash = Number(ref.hash);
+    if (!hash) return null;
+    return allItemsPool().find((it) => Number(it.bucket) === DIM.B.ARTIFACT && Number(it.hash) === hash) || null;
+  }
+
+  function perkArtifactItem() {
+    if (editorArtifact) return findArtifactItem(editorArtifact) || editorArtifact;
+    return equippedArtifactItem();
+  }
+
+  // Alle verfügbaren Artefakte (Backpack/ausgerüstet/Tresor/andere
+  // Charaktere), dedupliziert nach Hash. Ausgerüstet hat Vorrang.
+  function availableArtifacts() {
+    if (!data) return [];
+    const ranked = [];
+    const collect = (list, rank, equipped) => {
+      for (const item of list || []) {
+        if (!item || Number(item.bucket) !== DIM.B.ARTIFACT || !Number(item.hash)) continue;
+        ranked.push({ item, rank, equipped: equipped === true });
+      }
+    };
+    collect(equippedArtifactItem() ? [equippedArtifactItem()] : [], 0, true);
+    collect((data.backpack || {})[editorCharId] || [], 1, false);
+    for (const [charId, list] of Object.entries(data.equipped || {})) {
+      if (charId === editorCharId) continue;
+      collect(list || [], 2, false);
+    }
+    for (const [charId, list] of Object.entries(data.backpack || {})) {
+      if (charId === editorCharId) continue;
+      collect(list || [], 3, false);
+    }
+    collect(data.vault || [], 4, false);
+    ranked.sort((a, b) => a.rank - b.rank);
+    const byHash = new Map();
+    for (const entry of ranked) {
+      const hash = Number(entry.item.hash);
+      if (byHash.has(hash)) continue;
+      byHash.set(hash, {
+        hash,
+        name: entry.item.name || `Artefakt ${hash}`,
+        icon: entry.item.icon || '',
+        rarity: Number(entry.item.rarity) || 5,
+        instanceId: entry.item.instanceId || '',
+        equipped: entry.equipped === true
+      });
+    }
+    return [...byHash.values()].sort((a, b) =>
+      (b.equipped ? 1 : 0) - (a.equipped ? 1 : 0) ||
+      String(a.name || '').localeCompare(String(b.name || ''), 'de'));
+  }
+
+  // Artefakt-Referenz setzen und die aktuell gesteckten Perks (selected
+  // im Socket bzw. item.perks) als Startwerte übernehmen.
+  function selectEditorArtifact(artifact) {
+    if (!artifact || !Number(artifact.hash)) return;
+    const perks = [];
+    const usedIdx = new Set();
+    for (const sock of socketPlugsFor(artifact)) {
+      const idx = Number(sock && sock.idx) || 0;
+      if (usedIdx.has(idx)) continue;
+      const plugs = (sock.plugs || []).filter((plug) => plug && plug.h);
+      const saved = (artifact.perks || []).find((perk) => Number(perk.idx) === idx);
+      let plug = plugs.find((candidate) => candidate.selected === true);
+      if (!plug && saved) {
+        plug = plugs.find((candidate) => Number(candidate.h) === Number(saved.hash || saved.h)) || null;
+      }
+      if (!plug) continue;
+      usedIdx.add(idx);
+      perks.push({
+        h: Number(plug.h),
+        n: plug.n,
+        i: plug.i,
+        p: plug.p,
+        d: plug.d,
+        s: plug.s || [],
+        idx
+      });
+      if (perks.length >= 8) break;
+    }
+    editorArtifact = {
+      hash: Number(artifact.hash),
+      name: artifact.name,
+      icon: artifact.icon,
+      rarity: artifact.rarity,
+      instanceId: artifact.instanceId
+    };
+    editorPerks = perks;
+    closeSheet();
+    toast(perks.length ? `${perks.length} Artefakt-Perk(s) übernommen.` : 'Artefakt übernommen.', 'success', 1800);
+  }
+
+  // Nur die Perks des gewählten (sonst ausgerüsteten) Artefakts. Kein
+  // Mischen über Backpack/Tresor/andere Charaktere.
   function perkPool() {
+    const artifact = perkArtifactItem();
+    if (!artifact) return [];
     const pool = [];
-    const seen = new Set();
-    const sources = [
-      ...((data && data.backpack && data.backpack[editorCharId]) || []),
-      ...equippedFor(editorCharId),
-      ...((data && data.vault) || [])
-    ];
-    for (const it of sources) {
-      if (Number(it.bucket) !== DIM.B.ARTIFACT) continue;
-      for (const sock of socketPlugsFor(it)) {
-        for (const p of (sock.plugs || [])) {
-          if (!p || !p.h || seen.has(String(p.h))) continue;
-          seen.add(String(p.h));
-          pool.push(p);
-        }
+    for (const sock of socketPlugsFor(artifact)) {
+      const idx = Number(sock && sock.idx) || 0;
+      for (const p of (sock.plugs || [])) {
+        if (!p || !p.h) continue;
+        pool.push({ ...p, idx });
       }
     }
     return pool.filter((p) => {
       if (!editorPickerQuery) return true;
       return (String(p.n || '') + ' ' + String(p.d || '')).toLowerCase().includes(editorPickerQuery);
     });
+  }
+
+  function perkRows() {
+    const rows = new Map();
+    for (const plug of perkPool()) {
+      const idx = Number(plug.idx) || 0;
+      if (!rows.has(idx)) rows.set(idx, []);
+      rows.get(idx).push(plug);
+    }
+    return [...rows.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([idx, plugs]) => ({ idx, plugs }));
   }
 
   function subPool() {
@@ -6202,8 +6318,37 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       return list.length ? list.map((p) => plugPickHtml(p, 'data-dw-pickmod="' + p.h + '"', selectedFor(p.h))).join('') : '<p class="inv-dw-hint">Keine passenden Mods gefunden.</p>';
     }
     if (pickKind === 'perk') {
-      const list = perkPool();
-      return list.length ? list.map((p) => plugPickHtml(p, 'data-dw-pickperk="' + p.h + '"', editorPerks.some((m) => Number(m.h) === Number(p.h)))).join('') : '<p class="inv-dw-hint">Keine passenden Artefakt-Perks gefunden.</p>';
+      const artifact = perkArtifactItem();
+      if (!artifact) return '<p class="inv-dw-hint">Kein Artefakt gefunden.</p>';
+      const rows = perkRows();
+      if (!rows.length) return '<p class="inv-dw-hint">Keine passenden Artefakt-Perks gefunden.</p>';
+      return rows.map(({ idx, plugs }) => {
+        const selectedInRow = (hash) => editorPerks.some((m) =>
+          Number(m.h) === Number(hash) && (m.idx == null || Number(m.idx) === idx));
+        return '<div class="inv-dw-perk-group" data-perk-row="' + idx + '">' +
+          '<div class="inv-dw-perk-row-head">Reihe ' + (idx + 1) + '</div>' +
+          '<div class="inv-dw-perk-row">' + plugs.map((p) =>
+            plugPickHtml(p, 'data-dw-pickperk="' + p.h + '" data-dw-perk-idx="' + idx + '"', selectedInRow(p.h))
+          ).join('') + '</div></div>';
+      }).join('');
+    }
+    if (pickKind === 'artifact') {
+      const list = availableArtifacts().filter((artifact) => !editorPickerQuery ||
+        (String(artifact.name || '') + ' ' + String(artifact.hash)).toLowerCase().includes(editorPickerQuery));
+      if (!list.length) return '<p class="inv-dw-hint">Kein Artefakt gefunden.</p>';
+      const currentHash = Number(editorArtifact && editorArtifact.hash) || 0;
+      return list.map((artifact) => {
+        const rarity = Number(artifact.rarity) || 5;
+        const selected = currentHash === Number(artifact.hash);
+        const sub = artifact.equipped ? 'ausgerüstet' : String(artifact.hash);
+        return '<button type="button" class="inv-dw-pick' + (selected ? ' on' : '') + '" data-dw-pickartifact="' + artifact.hash + '"' +
+          (artifact.instanceId ? ' data-dw-tip-item="' + esc(String(artifact.instanceId)) + '"' : '') + '>' +
+          (artifact.icon
+            ? '<img src="' + bungieIcon(artifact.icon) + '" style="background:' + (DIM.RARITY_BG[rarity] || '#522f65') + '" alt="">'
+            : '<span class="inv-dw-pick-noicon">?</span>') +
+          '<span class="inv-dw-pick-text"><span class="inv-dw-pick-name">' + esc(artifact.name || 'Artefakt') + '</span>' +
+          '<span class="inv-dw-pick-sub">' + esc(sub) + '</span></span></button>';
+      }).join('');
     }
     if (pickKind === 'sub') {
       const list = subPool();
@@ -6217,6 +6362,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     if (pickKind === 'slot') return ((EDITOR_SLOTS.find((s) => s.key === pickBucket) || {}).label || 'Gegenstand') + ' wählen';
     if (pickKind === 'mod') return pickSubIdx >= 0 ? ('Mod wählen — ' + (pickSocketLabel || 'Rüstung')) : 'Wähle deine Mods';
     if (pickKind === 'perk') return 'Artefakt-Perks wählen';
+    if (pickKind === 'artifact') return 'Artefakt wählen';
     if (pickKind === 'sub') {
       const sub = editorSlots.get(DIM.B.SUBCLASS);
       const sock = sub ? socketPlugsFor(sub).find((s) => Number(s.idx) === Number(pickSubIdx)) : null;
@@ -6333,7 +6479,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       '</div>';
     if (!drawerSheetEl.contains(document.activeElement)) {
       setTimeout(() => {
-        const target = drawerSheetEl.querySelector('.inv-dw-search, [data-dw-pick], [data-dw-pickmod], [data-dw-picksub], [data-dw-pickperk], button');
+        const target = drawerSheetEl.querySelector('.inv-dw-search, [data-dw-pick], [data-dw-pickmod], [data-dw-picksub], [data-dw-pickperk], [data-dw-pickartifact], button');
         if (target) target.focus();
       }, 30);
     }
@@ -7573,19 +7719,16 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
   }
 
   function currentArtifactItem() {
+    if (editorArtifact) {
+      const selected = findArtifactItem(editorArtifact);
+      if (selected) return selected;
+    }
+    const equipped = equippedArtifactItem();
+    if (equipped) return equipped;
     const all = [
       ...(((data && data.backpack) || {})[editorCharId] || []),
-      ...equippedFor(editorCharId),
       ...((data && data.vault) || [])
     ];
-    if (editorArtifact && editorArtifact.instanceId) {
-      const found = findItemByKey(editorArtifact.instanceId);
-      if (found) return found;
-    }
-    if (editorArtifact && editorArtifact.hash) {
-      const found = all.find((it) => Number(it.hash) === Number(editorArtifact.hash) && Number(it.bucket) === DIM.B.ARTIFACT);
-      if (found) return found;
-    }
     return all.find((it) => Number(it.bucket) === DIM.B.ARTIFACT) || null;
   }
 
@@ -7857,20 +8000,26 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       return;
     }
 
+    if (target.closest('[data-dw-artifact-select]')) {
+      pickKind = 'artifact';
+      editorPickerQuery = '';
+      renderSheet();
+      return;
+    }
+
     if (target.closest('[data-dw-artifact-take]')) {
       const art = currentArtifactItem();
       if (art) {
-        editorArtifact = { hash: art.hash, name: art.name, icon: art.icon, rarity: art.rarity, instanceId: art.instanceId };
-        toast('Artefakt im Loadout dokumentiert.', 'success', 1800);
-        renderDrawer();
+        selectEditorArtifact(art);
       } else {
         toast('Kein Artefakt gefunden.', 'warning', 2000);
       }
       return;
     }
     if (target.closest('[data-dw-artifact-open]')) {
-      const art = currentArtifactItem();
-      if (art) openArtifactMenu(art);
+      const art = editorArtifact ? findArtifactItem(editorArtifact) : equippedArtifactItem();
+      if (art && art.instanceId) openArtifactMenu(art);
+      else toast('Kein Artefakt gefunden.', 'warning', 2000);
       return;
     }
 
@@ -7950,28 +8099,39 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       return;
     }
 
+    const pickArtifact = target.closest('[data-dw-pickartifact]');
+    if (pickArtifact) {
+      const hash = Number(pickArtifact.dataset.dwPickartifact);
+      const artifact = availableArtifacts().find((entry) => Number(entry.hash) === hash);
+      if (artifact) selectEditorArtifact(artifact);
+      return;
+    }
+
     const pickPerk = target.closest('[data-dw-pickperk]');
     if (pickPerk) {
       const hash = Number(pickPerk.dataset.dwPickperk);
-      const existing = editorPerks.findIndex((p) => Number(p.h) === hash);
-      if (existing >= 0) {
-        editorPerks.splice(existing, 1);
-      } else if (editorPerks.length < 8) {
-        // Echten Artefakt-Socket merken: der Apply-Pfad steckt den Perk
-        // über genau diesen Index (InsertSocketPlugFree).
-        const artifact = currentArtifactItem();
-        const artifactSockets = artifact ? socketPlugsFor(artifact) : [];
-        const socket = artifactSockets.find((sock) =>
-          (sock.plugs || []).some((plug) => Number(plug.h) === hash));
-        editorPerks.push({
-          h: hash,
-          n: pickPerk.dataset.dwName || 'Perk',
-          i: pickPerk.dataset.dwIcon || '',
-          p: pickPerk.dataset.dwCat || '',
-          d: pickPerk.dataset.dwDesc || '',
-          s: [],
-          idx: socket ? Number(socket.idx) : undefined
-        });
+      const idxRaw = pickPerk.dataset.dwPerkIdx;
+      const idx = idxRaw == null || idxRaw === '' ? null : Number(idxRaw);
+      const sameHash = editorPerks.findIndex((p) => Number(p.h) === hash);
+      if (sameHash >= 0) {
+        editorPerks.splice(sameHash, 1);
+      } else {
+        // Ein Perk pro Reihe: vorhandenen Perk mit demselben idx ersetzen.
+        if (idx != null && Number.isFinite(idx)) {
+          const sameRow = editorPerks.findIndex((p) => Number(p.idx) === idx);
+          if (sameRow >= 0) editorPerks.splice(sameRow, 1);
+        }
+        if (editorPerks.length < 8) {
+          editorPerks.push({
+            h: hash,
+            n: pickPerk.dataset.dwName || 'Perk',
+            i: pickPerk.dataset.dwIcon || '',
+            p: pickPerk.dataset.dwCat || '',
+            d: pickPerk.dataset.dwDesc || '',
+            s: [],
+            idx: idx != null && Number.isFinite(idx) ? idx : undefined
+          });
+        }
       }
       renderSheet();
       renderDrawer();
