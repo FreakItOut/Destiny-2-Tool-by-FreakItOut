@@ -72,6 +72,11 @@ check('Einstellungen lazy geladen', app.includes("import('./settings.js')") && s
 check('Offline-Ausgang Detailpanel', inventory.includes('renderOutboxPanel') && index.includes('inventoryOutboxPanel'));
 check('Loadout-Warteschlange Panel', inventory.includes('renderLoadoutQueuePanel') && index.includes('loadoutQueuePanel'));
 check('Champion-Prüfung', inventory.includes('openChampionAudit') && index.includes('championAuditPanel'));
+check('Item-Frame in Popup und Champion-Gruppen',
+  inventory.includes('item.frame') &&
+  inventory.includes('championFrameLabel') &&
+  champions.includes('championFrameLabel') &&
+  champions.includes('item.frame'));
 check('Artefakt-Perks über die API',
   inventory.includes('Artefakt-Perks werden beim Anwenden über den Artefakt-Socket gesteckt.') &&
   inventory.includes('Artefakt-Perk(s) angewendet') &&

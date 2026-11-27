@@ -50,6 +50,9 @@ jobs:
       - name: Champion-Rahmen
         run: node tools/champion-frames-test.js
 
+      - name: Manifest-Rahmen
+        run: node tools/manifest-frame-test.js
+
       - name: Bundle-Budget
         run: npm run test:bundle
 

@@ -6,6 +6,29 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.1] – 2026-11-27
+
+### Fixed
+
+- **Champion display for all weapons** – the intrinsic frame is now read
+  while building the manifest, and the anti-champion type is taken directly
+  from the frame plug. Weapons in the vault or older instances without live
+  socket data now show their champion as well.
+- **German frame names** – "Leichtes Gehäuse" (Lightweight) and
+  "Hohe Durchschlagskraft" / "Hohe-Durchschlagskraft-Gehäuse" (High-Impact)
+  are mapped correctly.
+- **Frame in the item popup** – the header shows the frame, e.g.
+  "Submachine Gun · Leichtes Gehäuse · 508 Power · Legendary", and also in
+  the hover tooltip and tile title.
+- **Manifest cache** – the item cache was bumped to v5 and includes the frame
+  per weapon; it rebuilds once on the first inventory fetch after the update.
+
+### Technical
+
+- New manifest frame test with **26** checks; champion frame test expanded to
+  **101** checks, E2E to **550** steps. CI and release run the manifest frame
+  test.
+
 ## [1.17.0] – 2026-11-27
 
 ### Added

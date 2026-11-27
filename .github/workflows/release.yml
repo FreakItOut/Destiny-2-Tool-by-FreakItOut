@@ -57,6 +57,7 @@ jobs:
           npm run test:types
           npm run test:app-features
           node tools/champion-frames-test.js
+          node tools/manifest-frame-test.js
           npm run test:bundle
           npm run test:installer
           node tools/installer-upgrade-test.js

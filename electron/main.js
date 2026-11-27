@@ -2182,6 +2182,7 @@ function localApiItemList(snapshot) {
         instanceId: String((item && item.instanceId) || ''),
         name: String((item && item.name) || ''),
         typeName: String((item && item.typeName) || ''),
+        frame: item.frame || '',
         icon: String((item && item.icon) || ''),
         rarity: Math.round(Number(item && item.rarity) || 0),
         bucket: Math.round(Number(item && item.bucket) || 0),
@@ -5222,8 +5223,93 @@ function bungieCachePath(name) {
 // Kleine Namensmatrix (hash → Name/Typ/Icon) für die Hashes, die im
 // Inventar auftauchen. Auf Disk gecacht; fehlen Einträge, wird die
 // große Definitions-Datei gezogen (einmalig, dann ebenfalls auf Disk).
+// >>> manifest-frame-block
+// Reine Rahmen-Ermittlung aus Manifest-Definitionen (ohne Electron/FS),
+// damit tools/manifest-frame-test.js sie direkt per vm prüfen kann.
+// Bevorzugt den Intrinsic-Traits-Socket (DIM-Enum 3956125808); sonst
+// werden die ersten Socket-Einträge nach einem Rahmen-Namen durchsucht.
+const MANIFEST_INTRINSIC_TRAITS = 3956125808;
+const MANIFEST_FRAME_NAME = /(?:frame|rahmen|intrinsic|adaptive|adaptiv|precision|präzision|lightweight|leichtgewicht|rapid|schnellfeuer|aggressive|aggressiv|high\s*impact|hochenergie|wave|welle|support|unterstützung|caster|vortex|disruption|störung|burst|salve|heat|hitze|missile|raketen|double\s*fire|doppelfeuer|rocket|spread|streuschuss|area\s*denial|flächenschaden|legacy\s*pr-?55)/iu;
+
+function manifestFrameName(name) {
+  return MANIFEST_FRAME_NAME.test(String(name || ''));
+}
+
+function manifestFrameBreaker(plugDef) {
+  const breaker = Math.round(Number(plugDef && plugDef.breakerType) || 0);
+  return breaker >= 1 && breaker <= 3 ? breaker : 0;
+}
+
+function manifestPlugHash(entry) {
+  if (!entry) return 0;
+  // singleInitialItemHash hat Vorrang; erst danach der erste Reusable-Plug.
+  const initial = Math.round(Number(entry.singleInitialItemHash) || 0);
+  if (initial) return initial;
+  const plugs = Array.isArray(entry.reusablePlugItems) ? entry.reusablePlugItems : [];
+  for (const plug of plugs) {
+    const hash = Math.round(Number(plug && plug.plugItemHash) || 0);
+    if (hash) return hash;
+  }
+  return 0;
+}
+
+function manifestFrameInfo(def, defs) {
+  const empty = { name: '', breaker: 0 };
+  if (!def || !defs || typeof defs !== 'object') return empty;
+  // Nur Waffen (DestinyItemCategoryDefinition 41) haben einen Rahmen.
+  // Rüstung, Geist, Mods usw. dürfen keinen Intrinsic-Namen als „Rahmen“
+  // anzeigen.
+  const itemCategories = Array.isArray(def.itemCategoryHashes) ? def.itemCategoryHashes : [];
+  if (!itemCategories.includes(41)) return empty;
+  const sockets = def.sockets || {};
+  const entries = Array.isArray(sockets.socketEntries) ? sockets.socketEntries : [];
+  if (!entries.length) return empty;
+  const categories = Array.isArray(sockets.socketCategories) ? sockets.socketCategories : [];
+  const intrinsic = categories.find((category) => category
+    && Math.round(Number(category.socketCategoryHash) || 0) === MANIFEST_INTRINSIC_TRAITS);
+  const resolve = (hash) => (hash ? defs[String(hash)] || null : null);
+
+  if (intrinsic) {
+    const indexes = Array.isArray(intrinsic.socketIndexes) ? intrinsic.socketIndexes : [];
+    for (const index of indexes) {
+      const entry = entries[Math.round(Number(index))];
+      if (!entry) continue;
+      const plugDef = resolve(manifestPlugHash(entry));
+      if (!plugDef) continue;
+      const name = String((plugDef.displayProperties && plugDef.displayProperties.name) || '').trim();
+      const breaker = manifestFrameBreaker(plugDef);
+      if (name || breaker) return { name: name.slice(0, 60), breaker };
+    }
+  }
+
+  // Fallback ohne Intrinsic-Kategorie: nur Plug-Namen, die wie ein Rahmen
+  // aussehen, damit z. B. „Rampage“ nicht als Rahmen gilt.
+  for (let index = 0; index < Math.min(8, entries.length); index += 1) {
+    const entry = entries[index];
+    if (!entry) continue;
+    const hashes = [];
+    const initial = Math.round(Number(entry.singleInitialItemHash) || 0);
+    if (initial) hashes.push(initial);
+    if (Array.isArray(entry.reusablePlugItems)) {
+      for (const plug of entry.reusablePlugItems) {
+        const hash = Math.round(Number(plug && plug.plugItemHash) || 0);
+        if (hash) hashes.push(hash);
+      }
+    }
+    for (const hash of hashes) {
+      const plugDef = resolve(hash);
+      const name = String((plugDef && plugDef.displayProperties && plugDef.displayProperties.name) || '').trim();
+      if (name && manifestFrameName(name)) {
+        return { name: name.slice(0, 60), breaker: manifestFrameBreaker(plugDef) };
+      }
+    }
+  }
+  return empty;
+}
+// <<< manifest-frame-block
+
 async function ensureCompactItemNames(version, hashes) {
-  const compactPath = bungieCachePath(`item-names-v4-${version}-${contentLanguage()}.json`);
+  const compactPath = bungieCachePath(`item-names-v5-${version}-${contentLanguage()}.json`);
   if (!compactItemNames || compactItemNames.version !== version) {
     compactItemNames = { version, path: compactPath, map: null };
     try {
@@ -5236,7 +5322,8 @@ async function ensureCompactItemNames(version, hashes) {
     const entry = compactItemNames.map[String(hash)];
     if (entry && entry.x === 1) return false;
     return !entry || entry.r === undefined || entry.f === undefined || entry.b === undefined || entry.c === undefined || entry.p === undefined || entry.d === undefined
-      || (entry.p === 'artifact_perks' && !entry.d) || entry.s === undefined || entry.bt === undefined || entry.sg === undefined || entry.cat === undefined || entry.se === undefined || entry.sh === undefined || entry.e === undefined;
+      || (entry.p === 'artifact_perks' && !entry.d) || entry.s === undefined || entry.bt === undefined || entry.sg === undefined || entry.cat === undefined || entry.se === undefined || entry.sh === undefined || entry.e === undefined
+      || entry.fr === undefined;
   });
   if (!missing.length) return compactItemNames.map;
   const defs = await loadRawItemDefinitions(version);
@@ -5246,9 +5333,12 @@ async function ensureCompactItemNames(version, hashes) {
       // Unbekannte/entfernte Hashes dauerhaft als „nicht vorhanden“
       // markieren, damit nicht bei JEDEM Inventar-Abruf die große
       // Definitionsdatei erneut geparst wird.
-      compactItemNames.map[String(hash)] = { x: 1, n: '', t: '', i: '', r: 0, f: '', b: 0, c: 3, p: '', d: '', s: [], bt: 0, sg: 0, cat: [], se: [], e: 0 };
+      compactItemNames.map[String(hash)] = { x: 1, n: '', t: '', i: '', r: 0, f: '', b: 0, c: 3, p: '', d: '', s: [], bt: 0, sg: 0, cat: [], se: [], e: 0, fr: '' };
       continue;
     }
+    const frame = Array.isArray(def.itemCategoryHashes) && def.itemCategoryHashes.includes(41)
+      ? manifestFrameInfo(def, defs)
+      : { name: '', breaker: 0 };
     compactItemNames.map[String(hash)] = {
       n: String((def.displayProperties && def.displayProperties.name) || '').slice(0, 80),
       t: String(def.itemTypeDisplayName || '').slice(0, 40),
@@ -5301,7 +5391,10 @@ async function ensureCompactItemNames(version, hashes) {
       // und kompakte Socket-Einträge. So kann der Inventar-Abruf die
       // riesige DestinyInventoryItemDefinition-Datei nach dem ersten
       // Lauf überspringen (deutlich schnellerer Start).
-      bt: Math.round(Number(def.breakerType) || 0),
+      // Item-Breaker (z. B. Exoten) hat Vorrang; sonst zählt der Breaker
+      // des Intrinsic-Rahmens (fr).
+      bt: Math.round(Number(def.breakerType) || 0) || frame.breaker,
+      fr: frame.name,
       sg: Math.round(Number(def.stats && def.stats.statGroupHash) || 0),
       cat: (Array.isArray(def.itemCategoryHashes) ? def.itemCategoryHashes : [])
         .filter((hash) => hash === 41 || hash === 59),
@@ -5345,6 +5438,7 @@ function compactRawDefs(map, wanted) {
       },
       itemCategoryHashes: Array.isArray(info.cat) ? info.cat : [],
       breakerType: Math.round(Number(info.bt) || 0),
+      frame: info.fr || '',
       equippingBlock: { equipableItemSetHash: Math.round(Number(info.sh) || 0) },
       sockets: {
         socketEntries: (info.se || []).map((entry) => ({
@@ -6342,7 +6436,7 @@ let compactNameFileCache = { key: '', map: null };
 function loadExistingItemNames(version) {
   const key = `${version}-${contentLanguage()}`;
   if (compactNameFileCache.map && compactNameFileCache.key === key) return compactNameFileCache.map;
-  const cachePath = bungieCachePath(`item-names-v4-${key}.json`);
+  const cachePath = bungieCachePath(`item-names-v5-${key}.json`);
   try {
     compactNameFileCache = { key, map: parseBungieJson(fs.readFileSync(cachePath, 'utf8')) };
   } catch (error) {
@@ -8040,6 +8134,8 @@ async function fetchBungieInventory() {
         // Eigener Breaker-Typ: bevorzugt von der Instanz (Komponente
         // 300), sonst aus der Manifest-Definition (Exoten).
         breakerType: instanceBreakerType || breakerOf(item.hash),
+        // Intrinsic-Rahmen aus dem Manifest (z. B. „Adaptive Frame“).
+        frame: info.fr || '',
         breakerTypeHash: instance ? Math.round(Number(instance.breakerTypeHash) || 0) : 0,
         bucket,
         // Klasse für die Tresor-Rüstungs-Gruppierung (DIM-Layout).

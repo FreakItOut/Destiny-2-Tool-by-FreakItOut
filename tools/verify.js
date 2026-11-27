@@ -37,6 +37,7 @@ const ALL = [
   { script: 'test:dashboard-analytics', label: 'Dashboard-Analytik', timeout: 120000 },
   { script: 'test:i18n-qa', label: 'i18n-QA', timeout: 120000 },
   { script: 'test:app-features', label: 'App-Features', timeout: 120000 },
+  { script: 'test:manifest-frame', node: 'tools/manifest-frame-test.js', label: 'Manifest-Rahmen', timeout: 120000 },
   { script: 'test:gamepad-ui', label: 'Controller-Auswahl', timeout: 120000 },
   { script: 'test:api-e2e', label: 'Stream-Deck-API (Laufzeit)', timeout: 300000 },
   { script: 'test:plugin', label: 'Stream-Deck-Plugin', timeout: 120000 },

@@ -6,6 +6,30 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.17.1] – 2026-11-27
+
+### Behoben
+
+- **Champion-Anzeige für alle Waffen** – der Intrinsic-Rahmen wird jetzt beim
+  Manifest-Aufbau gelesen und der Anti-Champion-Typ direkt vom Rahmen-Plug
+  übernommen. Damit zeigen auch Waffen im Tresor oder ältere Instanzen ohne
+  Live-Socket-Daten ihren Champion.
+- **Deutsche Rahmen-Namen** – „Leichtes Gehäuse“ (Lightweight) und
+  „Hohe Durchschlagskraft“ / „Hohe-Durchschlagskraft-Gehäuse“ (High-Impact)
+  werden jetzt korrekt zugeordnet.
+- **Rahmen im Item-Popup** – die Kopfzeile zeigt den Rahmen, z. B.
+  „Maschinenpistole · Leichtes Gehäuse · 508 Power · Legendär“, ebenso im
+  Hover-Tooltip und Kachel-Titel.
+- **Manifest-Cache** – der Item-Cache wurde auf v5 gehoben und enthält den
+  Rahmen je Waffe; er wird beim ersten Inventar-Abruf nach dem Update
+  einmalig neu aufgebaut.
+
+### Technik
+
+- Neuer Manifest-Rahmen-Test mit **26** Prüfungen; Champion-Rahmen-Test auf
+  **101** Prüfungen, E2E auf **550** Schritte erweitert. CI und Release prüfen
+  den Manifest-Rahmen mit.
+
 ## [1.17.0] – 2026-11-27
 
 ### Hinzugefügt

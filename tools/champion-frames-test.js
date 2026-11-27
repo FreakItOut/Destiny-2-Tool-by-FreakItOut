@@ -48,7 +48,7 @@ const RULE_SAMPLES = {
   caster: ['Caster', 'Zauberer'],
   precision: ['Precision', 'Präzision'],
   adaptive: ['Adaptive', 'Adaptiv'],
-  lightweight: ['Lightweight', 'Leichtgewicht'],
+  lightweight: ['Lightweight', 'Leichtgewicht', 'Leichtes Gehäuse', 'Leichtgewichtiges Gehäuse'],
   'rapid-fire': ['Rapid-Fire', 'Schnellfeuer'],
   'area-denial': ['Area Denial', 'Flächenschaden'],
   vortex: ['Vortex', 'Vortex'],
@@ -56,7 +56,7 @@ const RULE_SAMPLES = {
   'dynamic-heat': ['Dynamic Heat', 'Dynamische Hitze'],
   'balanced-heat': ['Balanced Heat', 'Ausgeglichene Hitze'],
   aggressive: ['Aggressive', 'Aggressiv'],
-  'high-impact': ['High-Impact', 'Hochenergie'],
+  'high-impact': ['High-Impact', 'Hochenergie', 'Hohe Durchschlagskraft', 'Hohe-Durchschlagskraft-Gehäuse'],
   wave: ['Wave', 'Welle']
 };
 

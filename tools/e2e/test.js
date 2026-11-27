@@ -196,6 +196,18 @@ const backpack = {
 };
 
 backpack.c1[0].modSockets = [{ idx: 0, hash: 5001, n: 'Waffen-Mod', i: '', p: 'enhancements.armor', d: '+10 Waffen', s: [{ h: 2996146975, v: 10 }] }];
+
+// Backend liefert den Intrinsic-Rahmen als item.frame (keine Socket-Daten).
+// Daraus muss die Oberfläche den Champion-Typ ableiten.
+const adaptiveFrameWeapon = weapon(3108, 'i-frame-adaptive', 'Rahmen-Testgewehr', B.KINETIC);
+adaptiveFrameWeapon.typeName = 'Testgewehr';
+adaptiveFrameWeapon.frame = 'Adaptive Frame';
+adaptiveFrameWeapon.breakerType = 0;
+const rapidFrameWeapon = weapon(3109, 'i-frame-rapid', 'Rahmen-Testpuls', B.ENERGY);
+rapidFrameWeapon.typeName = 'Testpuls';
+rapidFrameWeapon.frame = 'Rapid-Fire Frame';
+rapidFrameWeapon.breakerType = 0;
+backpack.c1.push(adaptiveFrameWeapon, rapidFrameWeapon);
 const armor3Fixture = backpack.c1.find((entry) => entry.instanceId === 'i-armor3');
 if (armor3Fixture) {
   const classStat = armor3Fixture.stats.find((stat) => stat.hash === 1943323491);
@@ -997,6 +1009,24 @@ async function run() {
   check('Champion-Badge auf Waffe', Boolean(document.querySelector('.dinv-tag-champ:not(.none)')), 'kein Champion-Badge');
   const frameWeaponTile = document.querySelector('.dinv-tile[title^="Perk-Testwaffe"]');
   check('Champion aus Rahmen ohne Mod', Boolean(frameWeaponTile && frameWeaponTile.parentElement && frameWeaponTile.parentElement.querySelector('.dinv-tag-champ:not(.none)')), 'kein Rahmen-Badge');
+  const adaptiveFrameTile = document.querySelector('.dinv-tile[title^="Rahmen-Testgewehr"]');
+  const adaptiveFrameBadge = adaptiveFrameTile?.parentElement?.querySelector('.dinv-tag-champ:not(.none)');
+  check('Champion aus item.frame: Barriere',
+    Boolean(adaptiveFrameBadge) && /Barriere/.test(adaptiveFrameBadge.getAttribute('title') || ''),
+    adaptiveFrameBadge && adaptiveFrameBadge.getAttribute('title'));
+  const rapidFrameTile = document.querySelector('.dinv-tile[title^="Rahmen-Testpuls"]');
+  const rapidFrameBadge = rapidFrameTile?.parentElement?.querySelector('.dinv-tag-champ:not(.none)');
+  check('Champion aus item.frame: Überladung',
+    Boolean(rapidFrameBadge) && /Überladung/.test(rapidFrameBadge.getAttribute('title') || ''),
+    rapidFrameBadge && rapidFrameBadge.getAttribute('title'));
+  if (adaptiveFrameTile) {
+    adaptiveFrameTile.click();
+    const framePopup = await until(() => document.querySelector('.inv-popup-backdrop.open'));
+    const framePopupText = (framePopup && framePopup.querySelector('.inv-popup-sub')?.textContent) || '';
+    check('Item-Popup zeigt item.frame', /Adaptive Frame/.test(framePopupText), framePopupText);
+    document.querySelector('.inv-popup [data-inv-act="close"]')?.click();
+    await until(() => !document.querySelector('.inv-popup-backdrop.open'));
+  }
   await setSearch('is:godroll');
   const dimWrap = document.querySelector('.dinv-tile-wrap.inv-dim');
   check('Suche zeigt standardmäßig nur Treffer',
@@ -1078,6 +1108,10 @@ async function run() {
     Boolean(auditGroup?.querySelector('.champion-audit-confidence')) &&
     /\d+ Waffen?/.test(auditGroup?.querySelector('.champion-audit-group-head')?.textContent || ''),
     auditGroup?.querySelector('.champion-audit-group-head')?.textContent);
+  const auditText = (auditPanel && auditPanel.textContent) || '';
+  check('Champion-Gruppen nutzen item.frame',
+    /Adaptive Frame/.test(auditText) && /Rapid-Fire Frame/.test(auditText),
+    auditText.slice(0, 200));
   const auditInput = auditPanel?.querySelector('[data-champion-audit-key]');
   check('Champion-Prüfung listet Waffen ohne Brecher', Boolean(auditInput),
     auditPanel?.querySelector('#championAuditCount')?.textContent);

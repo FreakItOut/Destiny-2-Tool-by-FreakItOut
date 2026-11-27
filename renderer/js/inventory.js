@@ -2398,7 +2398,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       : item.statDupe
         ? '<span class="dinv-tile-diff" title="Gleiche Stats wie eine andere Kopie">⧉</span>'
         : '';
-    const label = `${item.name}${item.typeName ? ` · ${item.typeName}` : ''}${elemName ? ` · ${elemName}` : ''}${champions.length ? ` · Champion: ${champions.map((type) => CHAMPION_NAMES[type]).join(', ')} (${champSourceLabel})` : (isWeapon ? ' · Kein Champion-Brecher' : '')}${item.power ? ` · ${item.power} Power` : ''}${itemNote ? ` · Notiz: ${itemNote}` : ''}`;
+    const label = `${item.name}${item.typeName ? ` · ${item.typeName}` : ''}${item.frame ? ` · ${item.frame}` : ''}${elemName ? ` · ${elemName}` : ''}${champions.length ? ` · Champion: ${champions.map((type) => CHAMPION_NAMES[type]).join(', ')} (${champSourceLabel})` : (isWeapon ? ' · Kein Champion-Brecher' : '')}${item.power ? ` · ${item.power} Power` : ''}${itemNote ? ` · Notiz: ${itemNote}` : ''}`;
     const dimmed = searchActive && !searchMatchKeys.has(key);
     const dimClass = dimmed ? ' inv-dim' : '';
     const img = item.icon ? `<img src="https://www.bungie.net${esc(item.icon)}" alt="" loading="lazy">` : '';
@@ -3567,7 +3567,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const r = Number(item.rarity) || 0;
     const rn = DIM.RARITY_NAME[r] || '';
     let html = `<strong class="dinv-tip-name tt${r}">${highlightSearchText(item.name || 'Item')}</strong>`;
-    html += `<span style="color:#a0aabb">${highlightSearchText(item.typeName || 'Item')}${item.power ? ` · ${item.power} Power` : ''}${rn ? ` · ${esc(rn)}` : ''}</span>`;
+    html += `<span style="color:#a0aabb">${highlightSearchText(item.typeName || 'Item')}${item.frame ? ` · ${esc(item.frame)}` : ''}${item.power ? ` · ${item.power} Power` : ''}${rn ? ` · ${esc(rn)}` : ''}</span>`;
     const elemLabel = elementName(item);
     const champLabels = championTypes(item).map((type) => CHAMPION_NAMES[type]);
     const champSourceLabel = { manuell: 'manuell', daten: 'Item-Daten', rahmen: 'Rahmen', keine: 'keine' }[championSource(item)] || 'keine';
@@ -4859,7 +4859,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       (item.icon ? `<img class="inv-popup-icon" style="background:${DIM.RARITY_BG[r] || '#522f65'}" src="https://www.bungie.net${esc(item.icon)}" alt="">` : '') +
       `<div class="inv-popup-title">` +
       `<strong class="inv-popup-name n${r}">${highlightSearchText(item.name || 'Item')}</strong>` +
-      `<span class="inv-popup-sub">${esc(item.typeName || 'Item')}${item.power ? ` · ${item.power} Power` : ''}${rn ? ` · ${esc(rn)}` : ''}${item.masterwork ? ' · Meisterwerk' : ''}</span>` +
+      `<span class="inv-popup-sub">${esc(item.typeName || 'Item')}${item.frame ? ` · ${esc(item.frame)}` : ''}${item.power ? ` · ${item.power} Power` : ''}${rn ? ` · ${esc(rn)}` : ''}${item.masterwork ? ' · Meisterwerk' : ''}</span>` +
       (notes ? notes : '') +
       (nearNotes ? nearNotes : '') +
       (nearDiagnose ? nearDiagnose : '') +

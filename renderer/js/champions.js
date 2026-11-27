@@ -60,7 +60,7 @@ export const FRAME_CHAMPION_RULES = [
   // Basisrahmen
   { id: 'precision', type: 1, patterns: [/\bprecision\b/i, /\bpr[äa]zision/i] },
   { id: 'adaptive', type: 1, patterns: [/\badaptive\b/i, /\badaptiv/i] },
-  { id: 'lightweight', type: 2, patterns: [/\blightweight\b/i, /\bleichtgewicht\b/i] },
+  { id: 'lightweight', type: 2, patterns: [/\blightweight\b/i, /\bleichtgewicht\b/i, /\bleichtes?[\s-]*gehäuse\b/i, /\bleichtgewichtige?s?[\s-]*gehäuse\b/i] },
   { id: 'rapid-fire', type: 2, patterns: [/rapid[\s-]*fire/i, /schnellfeuer/i] },
   { id: 'area-denial', type: 2, patterns: [/area[\s-]*denial/i, /fl[äa]chenschaden/i] },
   { id: 'vortex', type: 2, patterns: [/\bvortex\b/i] },
@@ -68,7 +68,7 @@ export const FRAME_CHAMPION_RULES = [
   { id: 'dynamic-heat', type: 2, patterns: [/dynamic[\s-]*heat/i, /dynamische[\s-]*hitze/i] },
   { id: 'balanced-heat', type: 2, patterns: [/balanced[\s-]*heat/i, /ausgeglichene[\s-]*hitze/i] },
   { id: 'aggressive', type: 3, patterns: [/\baggressive\b/i, /\baggressiv(?:e[rnms]?)?\b/i] },
-  { id: 'high-impact', type: 3, patterns: [/high[\s-]*impact/i, /hochenergie/i] },
+  { id: 'high-impact', type: 3, patterns: [/high[\s-]*impact/i, /hochenergie/i, /hohe[-\s]*durchschlagskraft(?:\s*-?\s*gehäuse)?/i] },
   { id: 'wave', type: 3, patterns: [/\bwaves?\b/i, /\bwellen?(?:rahmen)?\b/i] }
 ];
 
