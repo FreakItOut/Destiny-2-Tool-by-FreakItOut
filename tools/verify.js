@@ -44,6 +44,7 @@ const ALL = [
   { script: 'test:contract', label: 'Preload-Vertrag', timeout: 120000 },
   { script: 'test:events', label: 'Ereignis-Vertrag', timeout: 120000 },
   { script: 'test:sockets', label: 'Socket-Spalten', timeout: 180000 },
+  { script: 'test:champions', node: 'tools/champion-frames-test.js', label: 'Champion-Rahmen', timeout: 120000 },
   { script: 'test:config', label: 'Konfiguration', timeout: 300000 },
   { script: 'test:bundle', label: 'Bundle-Budget', timeout: 120000 },
   { script: 'test:installer', label: 'Installer-Datenerhalt', timeout: 120000 },

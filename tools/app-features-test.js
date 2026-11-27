@@ -60,7 +60,7 @@ check('Such-Autocomplete', index.includes('inventorySearchHints') && index.inclu
 check('Backup-Diff-UI', settings.includes('data-backup-diff') && settings.includes('backupsDiff'));
 check('Snapshot-Index', inventory.includes('ensureItemIndex') && inventory.includes('itemIndexCache'));
 check('Element- und Champion-Anzeige', inventory.includes('elementName') && inventory.includes('championTypes') && inventory.includes('dinv-tag-champ') && inventory.includes('dinv-tag-elem') && inventory.includes('inventoryLegend') && main.includes('breakerType') && main.includes('def.enumValue') && main.includes('elem-icons-${version}-v2'));
-check('Anti-Champion 2.0 aus dem Rahmen', champions.includes('Anti-Champion 2.0') && champions.includes('frameBreakerType') && champions.includes('aggressiv') && champions.includes('rapid.?fire'));
+check('Anti-Champion 2.0 aus dem Rahmen', champions.includes('Anti-Champion 2.0') && champions.includes('FRAME_CHAMPION_RULES') && champions.includes('frameBreakerType') && champions.includes('aggressiv') && champions.includes('rapid[\\s-]*fire'));
 check('Xûr nutzt externes Stylesheet', xurHtml.includes('href="xur.css"') && !xurHtml.includes('<style>'));
 check('Offline-Ausgang puffert Transfers', inventory.includes('d2tool.outbox') && inventory.includes('runOutbox') && index.includes('inventoryOutbox'));
 check('HUD-Layout-Editor im Overlay', index.includes('hudEditorPanel') && overlayHud.includes('maybeApplyAutoHudProfile') && config.includes('hudAutoProfile') && settings.includes('hudScale'));
@@ -72,6 +72,15 @@ check('Einstellungen lazy geladen', app.includes("import('./settings.js')") && s
 check('Offline-Ausgang Detailpanel', inventory.includes('renderOutboxPanel') && index.includes('inventoryOutboxPanel'));
 check('Loadout-Warteschlange Panel', inventory.includes('renderLoadoutQueuePanel') && index.includes('loadoutQueuePanel'));
 check('Champion-Prüfung', inventory.includes('openChampionAudit') && index.includes('championAuditPanel'));
+check('Titelleiste: Chips und Fensterknöpfe verdrahtet',
+  app.includes('initClock({') &&
+  app.includes("qsa('[data-win]')") &&
+  app.includes('api.windowTogglePin()') &&
+  /titlebar\.addEventListener\('dblclick'/.test(app));
+check('Champion-Rahmen zentralisiert',
+  champions.includes('FRAME_CHAMPION_RULES') &&
+  !dashboardSource.includes('function frameBreakerType') &&
+  !tools.includes('legacyFrameBreakerType'));
 check('Suche hervorheben', inventory.includes('highlightSearchText') && inventory.includes('dinv-mark'));
 check('Release-Workflow', releaseWorkflow.includes('gh release create') && releaseWorkflow.includes('npm run dist'));
 check('Web-Einstellungsseiten entfernt', !index.includes('data-settings-panel="web"') && !index.includes('data-settings-panel="custom"'));

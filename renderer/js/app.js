@@ -235,6 +235,11 @@ const inventory = {
       instance && typeof instance.refresh === 'function' ? instance.refresh(force === true) : undefined
     ));
   },
+  refreshInventory(force) {
+    return loadInventory().then((instance) => (
+      instance && typeof instance.refresh === 'function' ? instance.refresh(force === true) : undefined
+    ));
+  },
   refreshWishlist() {
     return loadInventory().then((instance) => (
       instance && typeof instance.refreshWishlist === 'function' ? instance.refreshWishlist() : undefined
@@ -309,6 +314,51 @@ const dashboard = createDashboard({
   qs,
   qsa
 });
+
+// ------------------------------------------------------------
+// Titelleiste: Reset-/Xûr-Chips und Fenstersteuerung
+// ------------------------------------------------------------
+initClock({
+  onToday: () => dashboard.open(),
+  onXur: () => {
+    try { showInventoryPage(); } catch (error) { /* egal */ }
+    try { inventory.openTools('vendor', { vendorHash: 2190858386 }); } catch (error) { /* egal */ }
+  },
+  onReset: () => {
+    toast('Wöchentlicher Reset', 'info', 4000);
+    try { inventory.refreshInventory(); } catch (error) { /* egal */ }
+    try { dashboard.render(); } catch (error) { /* egal */ }
+  }
+});
+
+for (const button of qsa('[data-win]')) {
+  button.addEventListener('click', async () => {
+    const action = button.dataset.win;
+    if (action === 'minimize') await api.minimizeWindow();
+    else if (action === 'maximize') await api.toggleMaximizeWindow();
+    else if (action === 'close') await api.closeWindow();
+  });
+}
+const pinBtn = qs('#pinBtn');
+if (pinBtn) {
+  pinBtn.addEventListener('click', async () => {
+    const result = await api.windowTogglePin();
+    if (result && result.ok) {
+      pinBtn.classList.toggle('active', result.pinned === true);
+      toast(result.pinned ? 'Fenster immer im Vordergrund.' : 'Fenster-Vordergrund aus.', 'info', 1600);
+    } else if (result && result.error) {
+      toast(result.error, 'warning', 2200);
+    }
+  });
+}
+const titlebar = qs('#titlebar');
+if (titlebar) {
+  titlebar.addEventListener('dblclick', (event) => {
+    if (event.target.closest('button, select, input')) return;
+    api.toggleMaximizeWindow().catch(() => {});
+  });
+}
+
 const palette = createPalette({
   api,
   getConfig: () => cfg,

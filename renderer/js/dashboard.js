@@ -14,6 +14,7 @@
 import { qs, qsa, escapeHtml, toast, formatDuration } from './ui.js';
 import { icon } from './icons.js';
 import { nextDailyReset, nextWeeklyReset, xurEnd, xurActive } from './clock.js';
+import { BREAKER_LABELS, championTypes } from './champions.js';
 
 export function createDashboard(ctx) {
   const { getConfig, setConfig } = ctx;
@@ -100,7 +101,6 @@ export function createDashboard(ctx) {
     { key: 20886954, label: 'Beine' },
     { key: 1585787867, label: 'Klasse' }
   ];
-  const BREAKER_LABELS = { 1: 'Anti-Barriere', 2: 'Überladung', 3: 'Unaufhaltsam' };
   const CHAMPION_LABELS = ['Anti-Barriere', 'Überladung', 'Unaufhaltsam'];
 
   function gearEntries(data) {
@@ -132,33 +132,7 @@ export function createDashboard(ctx) {
   }
 
   function breakerTypesOf(item) {
-    const types = new Set();
-    const add = (value) => {
-      const type = Math.round(Number(value) || 0);
-      if (type > 0) types.add(type);
-    };
-    add(item && item.breakerType);
-    for (const perk of (item && item.perks) || []) add(perk && perk.breakerType);
-    for (const column of (item && item.socketColumns) || []) {
-      for (const option of (column && column.options) || []) if (option && option.selected) add(option.breakerType);
-    }
-    for (const plug of (item && item.modSockets) || []) add(plug && plug.breakerType);
-    return types;
-  }
-
-  function frameBreakerType(item) {
-    const frames = [];
-    for (const column of (item && item.socketColumns) || []) {
-      if (Number(column.idx) !== 0) continue;
-      for (const option of (column.options || [])) if (option && option.selected) frames.push(option.n, option.p);
-    }
-    for (const perk of ((item && item.perks) || []).slice(0, 2)) if (perk && perk.n) frames.push(perk.n);
-    const text = frames.filter(Boolean).join(' ').toLowerCase();
-    if (!text) return 0;
-    if (/mikro.?raketen|micro.?missile|doppelfeuer|double.?fire|wellen|wave|komprimierte welle|compressed wave|schwere salve|heavy.?burst|aggressiv|aggressive|hochenergie|high.?impact|raketenunterstützt|rocket.?assisted/.test(text)) return 3;
-    if (/flächenschaden|area.?denial|leichtgewicht|lightweight|schnellfeuer|rapid.?fire|vortex|spread.?shot|dynamische hitze|dynamic heat|ausgeglichene hitze|balanced heat|unterstützung|support/.test(text)) return 2;
-    if (/präzision|precision|adaptiv|adaptive|legacy pr.?55|disruption weapon|störungswaffe|schildbrechend|caster/.test(text)) return 1;
-    return 0;
+    return new Set(championTypes(item));
   }
 
   function championCoverage(data) {
@@ -172,10 +146,6 @@ export function createDashboard(ctx) {
         for (const type of breakerTypesOf(entry.item)) {
           const label = BREAKER_LABELS[type];
           if (label) abilities.add(label);
-        }
-        if (!abilities.size) {
-          const fallback = BREAKER_LABELS[frameBreakerType(entry.item)];
-          if (fallback) abilities.add(fallback);
         }
         if (abilities.size) weapons.push({ name: entry.item.name || 'Waffe', abilities: [...abilities] });
       }

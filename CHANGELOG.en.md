@@ -6,6 +6,30 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.16.1] – 2026-11-27
+
+### Fixed
+
+- **Window controls** – always-on-top (pin), minimize, maximize/restore and
+  close work again; double-clicking the title bar maximizes the window. The
+  handlers were lost during the 1.12.0 web cleanup.
+- **Reset and Xûr chips** – both chips are filled with icon and value again
+  and open the dashboard or Xûr view on click (`initClock` was missing since
+  1.12.0).
+- **Champion detection** – the Anti-Champion 2.0 table (Update 9.7.0) is
+  complete and centralized: Support counts as Overload; Precision/Adaptive,
+  Lightweight/Rapid-Fire, Aggressive/High-Impact and all specialized frames
+  (Area Denial, Wave, Caster, Vortex, Legacy PR-55, Disruption, Heavy Burst,
+  Micro-Missile, Double Fire, Rocket-Assisted, Compressed Wave, Spread Shot,
+  Dynamic/Balanced Heat, Adaptive Burst) are mapped correctly. Explicit
+  Bungie breakers and manual overrides keep priority.
+
+### Technical
+
+- New champion frame test with **97** checks (DE/EN, priorities, word
+  boundaries); app features expanded to **107** checks. CI and release run the
+  champion test.
+
 ## [1.16.0] – 2026-11-27
 
 ### Added

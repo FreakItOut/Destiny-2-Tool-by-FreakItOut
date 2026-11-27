@@ -6,7 +6,7 @@
 // Netzwerkzugriffe gibt es nur für Xûr (Bungie-API, auf Knopfdruck).
 
 import { formatDuration, positionFixedTip } from './ui.js';
-import { BREAKER_LABELS, championTypes, frameBreakerType } from './champions.js';
+import { BREAKER_LABELS, championTypes } from './champions.js';
 import { renderBuildCard } from './build-card.js';
 import { nextDailyReset, nextWeeklyReset } from './clock.js';
 import { ARMOR_STAT_DEFS, ARMOR_STAT_MAX, effectiveStat, scoreArmorStats } from './armor-math.js';
@@ -3547,31 +3547,9 @@ export function createInventoryTools(ctx) {
     return new Set(championTypes(item));
   }
 
-  // Fallback für Fälle, in denen Bungie an der Instanz keinen Breaker
-  // liefert: Anti-Champion 2.0 leitet die Fähigkeit aus dem Rahmen ab.
-  // Es wird ausschließlich der Rahmen-/Intrinsic-Name geprüft, nicht
-  // die Beschreibung – so entstehen keine Fehltreffer durch Perk-Texte.
-  function legacyFrameBreakerType(item) {
-    const frames = [];
-    for (const column of (item.socketColumns || [])) {
-      if (Number(column.idx) !== 0) continue;
-      for (const option of (column.options || [])) {
-        if (option && option.selected) frames.push(option.n, option.p);
-      }
-    }
-    for (const perk of (item.perks || []).slice(0, 2)) {
-      if (perk && perk.n) frames.push(perk.n);
-    }
-    const text = frames.filter(Boolean).join(' ').toLowerCase();
-    if (!text) return 0;
-    if (/mikro.?raketen|micro.?missile|doppelfeuer|double.?fire|wellen|wave|komprimierte welle|compressed wave|schwere salve|heavy.?burst|aggressiv|aggressive|hochenergie|high.?impact|raketenunterstützt|rocket.?assisted/.test(text)) return 3;
-    if (/flächenschaden|area.?denial|leichtgewicht|lightweight|schnellfeuer|rapid.?fire|vortex|spread.?shot|dynamische hitze|dynamic heat|ausgeglichene hitze|balanced heat|unterstützung|support/.test(text)) return 2;
-    if (/präzision|precision|adaptiv|adaptive|legacy pr.?55|disruption weapon|störungswaffe|schildbrechend|caster/.test(text)) return 1;
-    return 0;
-  }
-
   // Champion-Fähigkeiten stecken direkt in der Waffe (Instanz-Breaker
-  // aus Bungies Komponente 300, sonst Manifest-Definition/Perk).
+  // aus Bungies Komponente 300, sonst Manifest-Definition/Perk) oder
+  // ergeben sich aus dem intrinsischen Rahmen (champions.js).
   function championCoverage() {
     return (data && data.characters || []).map((character) => {
       const weapons = [];
@@ -3582,10 +3560,6 @@ export function createInventoryTools(ctx) {
         for (const type of breakerTypesOf(entry.item)) {
           const label = BREAKER_LABELS[type];
           if (label) abilities.add(label);
-        }
-        if (!abilities.size) {
-          const fallback = BREAKER_LABELS[frameBreakerType(entry.item)];
-          if (fallback) abilities.add(fallback);
         }
         if (abilities.size) weapons.push({ name: entry.item.name || 'Waffe', abilities: [...abilities] });
       }

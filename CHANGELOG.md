@@ -6,6 +6,31 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.16.1] – 2026-11-27
+
+### Behoben
+
+- **Fensterknöpfe** – Immer-im-Vordergrund (Pin), Minimieren, Maximieren/
+  Wiederherstellen und Schließen funktionieren wieder; ein Doppelklick auf
+  die Titelleiste maximiert das Fenster. Die Handler waren beim Web-Cleanup
+  in 1.12.0 verloren gegangen.
+- **Reset- und Xûr-Chips** – beide Chips werden wieder mit Symbol und Wert
+  gefüllt und öffnen per Klick das Dashboard bzw. die Xûr-Ansicht
+  (`initClock` fehlte seit 1.12.0).
+- **Champion-Erkennung** – die Anti-Champion-2.0-Tabelle (Update 9.7.0) ist
+  vollständig und zentral: Support zählt zu Überladung; Precision/Adaptive,
+  Lightweight/Rapid-Fire, Aggressive/High-Impact sowie alle Spezialrahmen
+  (Area Denial, Wave, Caster, Vortex, Legacy PR-55, Disruption, Heavy Burst,
+  Micro-Missile, Double Fire, Rocket-Assisted, Compressed Wave, Spread Shot,
+  Dynamic/Balanced Heat, Adaptive Burst) werden korrekt zugeordnet.
+  Explizite Bungie-Breaker und manuelle Korrekturen behalten Vorrang.
+
+### Technik
+
+- Neuer Champion-Rahmen-Test mit **97** Prüfungen (DE/EN, Prioritäten,
+  Wortgrenzen); App-Features auf **107** Prüfungen erweitert. CI und Release
+  führen den Champion-Test aus.
+
 ## [1.16.0] – 2026-11-27
 
 ### Hinzugefügt

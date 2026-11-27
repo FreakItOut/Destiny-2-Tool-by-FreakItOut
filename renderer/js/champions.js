@@ -37,32 +37,93 @@ export function explicitBreakerTypes(item) {
   return types;
 }
 
-function frameText(item) {
-  if (!item) return '';
-  const parts = [
-    item.frame,
-    item.archetypeName,
-    item.archetype && item.archetype.name,
-    item.typeName
-  ];
-  for (const column of item.socketColumns || []) {
-    for (const option of column && column.options || []) {
-      parts.push(option && option.n, option && option.p);
-    }
+// Anti-Champion 2.0 (Update 9.7.0): Jede Waffe hat eine intrinsische
+// Fähigkeit aus ihrem Rahmen/Archetyp. EINE Tabelle ist die gemeinsame
+// Quelle für Inventar, Dashboard, Werkzeuge und API. Spezialrahmen
+// stehen vor den Basisrahmen, damit z. B. "Compressed Wave" vor "Wave"
+// und "Adaptive Burst" vor "Adaptive" greift.
+export const FRAME_CHAMPION_RULES = [
+  // Unaufhaltsam – Spezialrahmen
+  { id: 'micro-missile', type: 3, patterns: [/micro[\s-]*missiles?/i, /mikro[\s-]*raketen/i] },
+  { id: 'double-fire', type: 3, patterns: [/double[\s-]*fire/i, /doppelfeuer/i] },
+  { id: 'rocket-assisted', type: 3, patterns: [/rocket[\s-]*assisted/i, /raketenunterst[üu]tzt/i] },
+  { id: 'compressed-wave', type: 3, patterns: [/compressed[\s-]*wave/i, /komprimierte[\s-]*welle/i] },
+  { id: 'heavy-burst', type: 3, patterns: [/heavy[\s-]*burst/i, /schwere[\s-]*salve/i] },
+  { id: 'aggressive-burst', type: 3, patterns: [/aggressive[\s-]*burst/i, /aggressiver?[\s-]*stoß/i] },
+  // Überladung – Support ist ausschließlich "Support AR" (kein Basis-Support)
+  { id: 'support', type: 2, patterns: [/\bsupport\b/i, /\bunterstützung/i] },
+  // Barriere – Spezialrahmen
+  { id: 'adaptive-burst', type: 1, patterns: [/adaptive[\s-]*burst/i, /adaptiver?[\s-]*stoß/i] },
+  { id: 'legacy-pr-55', type: 1, patterns: [/legacy[\s-]*pr[\s-]*55/i] },
+  { id: 'disruption-sniper', type: 1, patterns: [/\bdisruption\b/i, /st[öo]rung/i] },
+  { id: 'caster', type: 1, patterns: [/\bcaster\b/i, /\bzauberer/i] },
+  // Basisrahmen
+  { id: 'precision', type: 1, patterns: [/\bprecision\b/i, /\bpr[äa]zision/i] },
+  { id: 'adaptive', type: 1, patterns: [/\badaptive\b/i, /\badaptiv/i] },
+  { id: 'lightweight', type: 2, patterns: [/\blightweight\b/i, /\bleichtgewicht\b/i] },
+  { id: 'rapid-fire', type: 2, patterns: [/rapid[\s-]*fire/i, /schnellfeuer/i] },
+  { id: 'area-denial', type: 2, patterns: [/area[\s-]*denial/i, /fl[äa]chenschaden/i] },
+  { id: 'vortex', type: 2, patterns: [/\bvortex\b/i] },
+  { id: 'spread-shot', type: 2, patterns: [/spread[\s-]*shot/i, /streuschuss/i] },
+  { id: 'dynamic-heat', type: 2, patterns: [/dynamic[\s-]*heat/i, /dynamische[\s-]*hitze/i] },
+  { id: 'balanced-heat', type: 2, patterns: [/balanced[\s-]*heat/i, /ausgeglichene[\s-]*hitze/i] },
+  { id: 'aggressive', type: 3, patterns: [/\baggressive\b/i, /\baggressiv(?:e[rnms]?)?\b/i] },
+  { id: 'high-impact', type: 3, patterns: [/high[\s-]*impact/i, /hochenergie/i] },
+  { id: 'wave', type: 3, patterns: [/\bwaves?\b/i, /\bwellen?(?:rahmen)?\b/i] }
+];
+
+// Quellen für den Rahmen: direkte Felder, intrinsische Socket-Optionen
+// (bevorzugt die ausgewählte, sonst alle) und die ersten Perks. Bewusst
+// KEINE Perk-/Socket-Beschreibungen, damit z. B. Flavor-Texte keine
+// Champion-Fähigkeit vortäuschen.
+function frameNameGroups(item) {
+  if (!item) return [];
+  const direct = [];
+  const intrinsic = [];
+  const perks = [];
+  const push = (list, value) => {
+    if (typeof value === 'string' && value.trim()) list.push(value.trim());
+  };
+  push(direct, item.frame);
+  push(direct, item.archetypeName);
+  if (item.archetype) push(direct, item.archetype.name);
+
+  const columns = (item.socketColumns || []).filter(Boolean);
+  const isIntrinsic = (column) => Number(column.idx) === 0 || /intrinsic/i.test(String(column.cat || ''));
+  let intrinsicColumns = columns.filter(isIntrinsic);
+  // Ohne erkennbare Intrinsic-Spalte zählt die erste Spalte als Rahmen.
+  if (!intrinsicColumns.length) intrinsicColumns = columns.slice(0, 1);
+  for (const column of intrinsicColumns) {
+    const options = (column.options || []).filter((option) => option && option.n);
+    if (!options.length) continue;
+    const selected = options.filter((option) => option.selected === true);
+    for (const option of (selected.length ? selected : options)) push(intrinsic, option.n);
   }
-  for (const perk of item.perks || []) parts.push(perk && perk.n, perk && perk.p);
-  for (const plug of item.modSockets || []) parts.push(plug && plug.n, plug && plug.p);
-  return parts.filter(Boolean).join(' ').toLocaleLowerCase('de');
+
+  for (const perk of (item.perks || []).slice(0, 2)) {
+    if (perk) push(perks, perk.n);
+  }
+  return [direct, intrinsic, perks];
 }
 
-// Anti-Champion 2.0 (Update 9.7.0): Rahmen/Archetyp bestimmt den Effekt.
-// Spezialisierte Rahmen werden vor den Basisrahmen geprüft.
-export function frameBreakerType(item) {
-  const text = frameText(item);
+function matchFrameRule(text) {
   if (!text) return 0;
-  if (/mikro.?raketen|micro.?missile|doppelfeuer|double.?fire|komprimierte welle|compressed.?wave|schwere salve|heavy.?burst|aggressiv|aggressive|hochenergie|high.?impact|raketenunterstützt|rocket.?assisted|wellen|wave/.test(text)) return 3;
-  if (/flächenschaden|flaechenschaden|area.?denial|leichtgewicht|lightweight|schnellfeuer|rapid.?fire|vortex|streuschuss|spread.?shot|dynamische hitze|dynamic.?heat|ausgeglichene hitze|balanced.?heat|unterstützung|support/.test(text)) return 2;
-  if (/präzision|praezision|precision|adaptiv|adaptive|legacy.?pr.?55|störung|stoerung|disruption|zauberer|caster/.test(text)) return 1;
+  for (const rule of FRAME_CHAMPION_RULES) {
+    for (const pattern of rule.patterns) {
+      if (pattern.test(text)) return rule.type;
+    }
+  }
+  return 0;
+}
+
+// Anti-Champion 2.0: ausschließlich Rahmen/Intrinsic bestimmt den Effekt.
+// Manueller Override und explizite Bungie-Breaker haben Vorrang (siehe
+// championTypes), diese Funktion liefert nur die Rahmen-Zuordnung.
+export function frameBreakerType(item) {
+  for (const names of frameNameGroups(item)) {
+    const type = matchFrameRule(names.join(' '));
+    if (type) return type;
+  }
   return 0;
 }
 
@@ -92,16 +153,16 @@ export function setChampionOverride(item, type) {
   } catch (error) { /* egal */ }
 }
 
-// Alle Champion-Fähigkeiten einer Waffe: explizite Daten + intrinsischer
-// Rahmen. Jede Waffe mit erkennbarem Rahmen liefert damit mindestens einen
-// Treffer, auch ohne Mods. Eine lokale Korrektur überschreibt die Automatik.
+// Alle Champion-Fähigkeiten einer Waffe. Priorität:
+// manueller Override > expliziter Bungie-Breaker > Rahmen-Tabelle.
+// Unbekannt (leer) nur, wenn wirklich kein Rahmen erkannt wird.
 export function championTypes(item) {
   const override = championOverride(item);
   if (override) return [override];
-  const types = new Set(explicitBreakerTypes(item));
+  const explicit = [...explicitBreakerTypes(item)].sort();
+  if (explicit.length) return explicit;
   const frame = frameBreakerType(item);
-  if (frame) types.add(frame);
-  return [...types].sort();
+  return frame ? [frame] : [];
 }
 
 // Woher die Champion-Fähigkeit stammt – für Tooltip und Prüfansicht.
@@ -122,23 +183,15 @@ export function championLabels(item) {
 // oder nur als Name eines Intrinsic-/Perk-Sockets vorliegen.
 export function championFrameLabel(item) {
   if (!item) return '';
-  const candidates = [item.frame, item.archetypeName, item.archetype && item.archetype.name];
-  for (const candidate of candidates) {
-    const label = typeof candidate === 'string' ? candidate.trim() : '';
-    if (label) return label;
-  }
-  // Fallback: den Socket-/Perk-Namen nehmen, der den Rahmen erkennt
-  // (frameBreakerType prüft genau diese Texte).
-  const names = [];
-  for (const column of item.socketColumns || []) {
-    for (const option of column && column.options || []) {
-      if (option && option.n) names.push(String(option.n));
+  const direct = [item.frame, item.archetypeName, item.archetype && item.archetype.name]
+    .find((value) => typeof value === 'string' && value.trim());
+  if (direct) return direct.trim();
+  // Fallback: den intrinsischen Socket-/Perk-Namen nehmen, der laut
+  // zentraler Tabelle einen Rahmen erkennt.
+  for (const names of frameNameGroups(item)) {
+    for (const name of names) {
+      if (frameBreakerType({ frame: name })) return name;
     }
-  }
-  for (const perk of item.perks || []) if (perk && perk.n) names.push(String(perk.n));
-  for (const plug of item.modSockets || []) if (plug && plug.n) names.push(String(plug.n));
-  for (const name of names) {
-    if (frameBreakerType({ frame: name })) return name;
   }
   return '';
 }

@@ -56,6 +56,7 @@ jobs:
           npm run test:i18n
           npm run test:types
           npm run test:app-features
+          node tools/champion-frames-test.js
           npm run test:bundle
           npm run test:installer
           node tools/installer-upgrade-test.js
