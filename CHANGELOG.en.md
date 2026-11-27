@@ -6,6 +6,23 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.2] – 2026-11-27
+
+### Fixed
+
+- **Champion detection via frame perks** – Bungie often stores the
+  anti-champion effect as a perk on the intrinsic frame (e.g.
+  "[Disruption] Overload"), not as `breakerType` on the plug. The app now
+  also reads the perks of the frame plug (and of the weapon); item breakers
+  and item perks take priority over the frame.
+- **Manifest cache v6** – the item cache is bumped again so users who already
+  built the v5 cache receive the new perk-breaker values (one-time rebuild).
+
+### Technical
+
+- Manifest frame test expanded to **35** checks (plug perk breaker, item perk
+  priority, cache v6 check).
+
 ## [1.17.1] – 2026-11-27
 
 ### Fixed

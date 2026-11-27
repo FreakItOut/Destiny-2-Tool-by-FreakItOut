@@ -5240,6 +5240,27 @@ function manifestFrameBreaker(plugDef) {
   return breaker >= 1 && breaker <= 3 ? breaker : 0;
 }
 
+// Anti-Champion kann bei Rahmen auch als Perk am Plug hängen
+// (z. B. „[Disruption] Overload“). Reihenfolge: eigener breakerType,
+// dann Perks; der erste gültige Treffer gewinnt.
+function manifestPerkBreaker(def, defs) {
+  if (!def) return 0;
+  const own = manifestFrameBreaker(def);
+  if (own) return own;
+  if (!defs || typeof defs !== 'object') return 0;
+  const perks = Array.isArray(def.perks) ? def.perks : [];
+  for (const perk of perks) {
+    const rawHash = perk && typeof perk === 'object'
+      ? (perk.perkHash || perk.plugItemHash || perk.hash)
+      : perk;
+    const hash = Math.round(Number(rawHash) || 0);
+    if (!hash) continue;
+    const breaker = manifestFrameBreaker(defs[String(hash)]);
+    if (breaker) return breaker;
+  }
+  return 0;
+}
+
 function manifestPlugHash(entry) {
   if (!entry) return 0;
   // singleInitialItemHash hat Vorrang; erst danach der erste Reusable-Plug.
@@ -5261,14 +5282,17 @@ function manifestFrameInfo(def, defs) {
   // anzeigen.
   const itemCategories = Array.isArray(def.itemCategoryHashes) ? def.itemCategoryHashes : [];
   if (!itemCategories.includes(41)) return empty;
+  // Item-Breaker bzw. Item-Perks haben Vorrang vor dem Rahmen.
+  const itemBreaker = manifestPerkBreaker(def, defs);
   const sockets = def.sockets || {};
   const entries = Array.isArray(sockets.socketEntries) ? sockets.socketEntries : [];
-  if (!entries.length) return empty;
+  if (!entries.length) return { name: '', breaker: itemBreaker };
   const categories = Array.isArray(sockets.socketCategories) ? sockets.socketCategories : [];
   const intrinsic = categories.find((category) => category
     && Math.round(Number(category.socketCategoryHash) || 0) === MANIFEST_INTRINSIC_TRAITS);
   const resolve = (hash) => (hash ? defs[String(hash)] || null : null);
 
+  let namelessBreaker = 0;
   if (intrinsic) {
     const indexes = Array.isArray(intrinsic.socketIndexes) ? intrinsic.socketIndexes : [];
     for (const index of indexes) {
@@ -5277,8 +5301,9 @@ function manifestFrameInfo(def, defs) {
       const plugDef = resolve(manifestPlugHash(entry));
       if (!plugDef) continue;
       const name = String((plugDef.displayProperties && plugDef.displayProperties.name) || '').trim();
-      const breaker = manifestFrameBreaker(plugDef);
-      if (name || breaker) return { name: name.slice(0, 60), breaker };
+      const plugBreaker = manifestPerkBreaker(plugDef, defs);
+      if (name) return { name: name.slice(0, 60), breaker: itemBreaker || plugBreaker || namelessBreaker };
+      namelessBreaker = namelessBreaker || plugBreaker;
     }
   }
 
@@ -5300,16 +5325,16 @@ function manifestFrameInfo(def, defs) {
       const plugDef = resolve(hash);
       const name = String((plugDef && plugDef.displayProperties && plugDef.displayProperties.name) || '').trim();
       if (name && manifestFrameName(name)) {
-        return { name: name.slice(0, 60), breaker: manifestFrameBreaker(plugDef) };
+        return { name: name.slice(0, 60), breaker: itemBreaker || manifestPerkBreaker(plugDef, defs) };
       }
     }
   }
-  return empty;
+  return { name: '', breaker: itemBreaker || namelessBreaker };
 }
 // <<< manifest-frame-block
 
 async function ensureCompactItemNames(version, hashes) {
-  const compactPath = bungieCachePath(`item-names-v5-${version}-${contentLanguage()}.json`);
+  const compactPath = bungieCachePath(`item-names-v6-${version}-${contentLanguage()}.json`);
   if (!compactItemNames || compactItemNames.version !== version) {
     compactItemNames = { version, path: compactPath, map: null };
     try {
@@ -6436,7 +6461,7 @@ let compactNameFileCache = { key: '', map: null };
 function loadExistingItemNames(version) {
   const key = `${version}-${contentLanguage()}`;
   if (compactNameFileCache.map && compactNameFileCache.key === key) return compactNameFileCache.map;
-  const cachePath = bungieCachePath(`item-names-v5-${key}.json`);
+  const cachePath = bungieCachePath(`item-names-v6-${key}.json`);
   try {
     compactNameFileCache = { key, map: parseBungieJson(fs.readFileSync(cachePath, 'utf8')) };
   } catch (error) {

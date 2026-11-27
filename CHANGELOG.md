@@ -6,6 +6,24 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.17.2] – 2026-11-27
+
+### Behoben
+
+- **Champion-Erkennung über Rahmen-Perks** – Bungie legt den
+  Anti-Champion-Effekt oft als Perk am Intrinsic-Rahmen ab (z. B.
+  „[Disruption] Overload“), nicht als `breakerType` am Plug. Die App liest
+  jetzt zusätzlich die Perks des Rahmen-Plugs (und der Waffe); Item-Breaker
+  und Item-Perks haben Vorrang vor dem Rahmen.
+- **Manifest-Cache v6** – der Item-Cache wird erneut gebumpt, damit auch
+  Nutzer mit bereits aufgebautem v5-Cache die neuen Perk-Breaker-Werte
+  erhalten (einmaliger Neuaufbau).
+
+### Technik
+
+- Manifest-Rahmen-Test auf **35** Prüfungen erweitert (Plug-Perk-Breaker,
+  Item-Perk-Vorrang, Cache-v6-Prüfung).
+
 ## [1.17.1] – 2026-11-27
 
 ### Behoben

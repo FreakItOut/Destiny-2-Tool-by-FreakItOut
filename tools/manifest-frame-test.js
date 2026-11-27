@@ -35,12 +35,13 @@ if (start < 0 || end < 0 || end < start) {
 const block = MAIN.slice(start, end + END.length);
 const sandbox = { module: { exports: {} }, exports: {} };
 vm.runInNewContext(
-  `${block}\nmodule.exports = { manifestFrameInfo };`,
+  `${block}\nmodule.exports = { manifestFrameInfo, manifestPerkBreaker };`,
   sandbox,
   { filename: 'electron/main.js#manifest-frame' }
 );
-const { manifestFrameInfo } = sandbox.module.exports;
+const { manifestFrameInfo, manifestPerkBreaker } = sandbox.module.exports;
 check('Block exportiert manifestFrameInfo', typeof manifestFrameInfo === 'function');
+check('Block exportiert manifestPerkBreaker', typeof manifestPerkBreaker === 'function');
 
 const INTRINSIC = 3956125808;
 const plug = (name, breakerType) => ({ displayProperties: { name }, breakerType });
@@ -98,6 +99,82 @@ const withCategory = (entries, indexes = [0]) => ({
   check('Erster reusablePlugItems-Plug wird genutzt',
     result.name === 'Rapid-Fire Frame' && result.breaker === 0, JSON.stringify(result));
 }
+
+// ------------------------------------------------------------
+// Breaker aus Perks (Rahmen-Plug bzw. Item-Perk)
+// ------------------------------------------------------------
+{
+  // light.gg-Beispiel: „Leichtes Gehäuse“ hat den Breaker als Perk
+  // am Plug, nicht als plugDef.breakerType.
+  const result = manifestFrameInfo(withCategory([{ singleInitialItemHash: 113 }]), {
+    113: {
+      displayProperties: { name: 'Lightweight Frame' },
+      breakerType: 0,
+      perks: [{ perkHash: 9001 }]
+    },
+    9001: { breakerType: 2 }
+  });
+  check('Rahmen-Perk liefert den Breaker',
+    result.name === 'Lightweight Frame' && result.breaker === 2, JSON.stringify(result));
+}
+{
+  // Item-Perk (z. B. Exot) hat Vorrang vor dem Rahmen-Plug.
+  const result = manifestFrameInfo({
+    itemCategoryHashes: [41],
+    breakerType: 0,
+    perks: [{ perkHash: 9002 }],
+    sockets: {
+      socketCategories: [{ socketCategoryHash: INTRINSIC, socketIndexes: [0] }],
+      socketEntries: [{ singleInitialItemHash: 114 }]
+    }
+  }, {
+    114: plug('Adaptive Frame', 1),
+    9002: { breakerType: 3 }
+  });
+  check('Item-Perk hat Vorrang vor dem Rahmen',
+    result.name === 'Adaptive Frame' && result.breaker === 3, JSON.stringify(result));
+}
+{
+  // Eigener breakerType der Item-Definition hat Vorrang vor Item-Perks.
+  const result = manifestFrameInfo({
+    itemCategoryHashes: [41],
+    breakerType: 1,
+    perks: [{ perkHash: 9002 }],
+    sockets: {
+      socketCategories: [{ socketCategoryHash: INTRINSIC, socketIndexes: [0] }],
+      socketEntries: [{ singleInitialItemHash: 115 }]
+    }
+  }, {
+    115: plug('Adaptive Frame', 2),
+    9002: { breakerType: 3 }
+  });
+  check('Item-breakerType hat Vorrang vor Item-Perks',
+    result.name === 'Adaptive Frame' && result.breaker === 1, JSON.stringify(result));
+}
+{
+  // Auch ohne erkannten Rahmen zählt ein Item-Perk für den Breaker.
+  const result = manifestFrameInfo({
+    itemCategoryHashes: [41],
+    breakerType: 0,
+    perks: [{ perkHash: 9009 }],
+    sockets: { socketEntries: [{ singleInitialItemHash: 999 }] }
+  }, {
+    999: plug('Rampage', 0),
+    9009: { breakerType: 3 }
+  });
+  check('Item-Perk wirkt auch ohne erkannten Rahmen',
+    result.name === '' && result.breaker === 3, JSON.stringify(result));
+}
+check('manifestPerkBreaker: eigener Breaker vor Perks',
+  manifestPerkBreaker({ breakerType: 1, perks: [{ perkHash: 9002 }] }, { 9002: { breakerType: 3 } }) === 1);
+check('manifestPerkBreaker: erster gültiger Perk gewinnt',
+  manifestPerkBreaker({ breakerType: 0, perks: [{ perkHash: 9004 }, { perkHash: 9005 }] }, {
+    9004: { breakerType: 4 },
+    9005: { breakerType: 2 }
+  }) === 2);
+check('manifestPerkBreaker: plugItemHash/hash werden gelesen',
+  manifestPerkBreaker({ breakerType: 0, perks: [{ plugItemHash: 9006 }] }, { 9006: { breakerType: 1 } }) === 1
+  && manifestPerkBreaker({ breakerType: 0, perks: [{ hash: 9007 }] }, { 9007: { breakerType: 3 } }) === 3);
 
 // ------------------------------------------------------------
 // Fallback ohne Intrinsic-Kategorie
@@ -174,12 +251,17 @@ const withCategory = (entries, indexes = [0]) => ({
   // Rüstung hat zwar Intrinsic-Sockets, aber keinen Waffen-Rahmen.
   const armorDef = {
     itemCategoryHashes: [20],
+    breakerType: 0,
+    perks: [{ perkHash: 9008 }],
     sockets: {
       socketCategories: [{ socketCategoryHash: INTRINSIC, socketIndexes: [0] }],
       socketEntries: [{ singleInitialItemHash: 112 }]
     }
   };
-  const result = manifestFrameInfo(armorDef, { 112: plug('Adaptive Frame', 2) });
+  const result = manifestFrameInfo(armorDef, {
+    112: plug('Adaptive Frame', 2),
+    9008: { breakerType: 3 }
+  });
   check('Rüstung erhält keinen Rahmen',
     result.name === '' && result.breaker === 0, JSON.stringify(result));
 }
@@ -195,7 +277,8 @@ check('Fehlender Item-Breaker greift auf den Rahmen zurück', compactBreaker(und
 // ------------------------------------------------------------
 // Verdrahtung im Cache/Snapshot (statisch)
 // ------------------------------------------------------------
-check('Cache wurde auf v5 gehoben', MAIN.includes('item-names-v5-') && !MAIN.includes('item-names-v4-'));
+check('Cache wurde auf v6 gehoben (Writer und Reader)',
+  (MAIN.match(/item-names-v6-/g) || []).length >= 2 && !/item-names-v[1-5]-/.test(MAIN));
 check('Ungültig-Prüfung enthält fr', MAIN.includes('entry.fr === undefined'));
 check('Cache-Eintrag speichert fr', /fr:\s*frame\.name/.test(MAIN));
 check('Cache-Eintrag priorisiert den Item-Breaker',
@@ -206,6 +289,10 @@ check('ensureCompactItemNames nutzt manifestFrameInfo',
 check('Rahmen nur für Waffen (Kategorie 41)',
   MAIN.includes('const frame = Array.isArray(def.itemCategoryHashes) && def.itemCategoryHashes.includes(41)')
   && MAIN.includes('if (!itemCategories.includes(41)) return empty;'));
+check('Perk-Breaker ist am Rahmen-Plug und Item verdrahtet',
+  MAIN.includes('function manifestPerkBreaker(def, defs)')
+  && MAIN.includes('manifestPerkBreaker(plugDef, defs)')
+  && MAIN.includes('const itemBreaker = manifestPerkBreaker(def, defs);'));
 check('localApiItemList gibt frame aus', /frame: item\.frame \|\| ''/.test(MAIN));
 
 if (failed) {
