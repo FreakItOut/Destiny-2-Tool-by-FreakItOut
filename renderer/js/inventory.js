@@ -7,7 +7,7 @@
 // 201,205,300,304,305).
 
 import { qs, toast, escapeHtml, positionFixedTip } from './ui.js';
-import { championTypes, championSource, championOverride, setChampionOverride, CHAMPION_NAMES, CHAMPION_SHORT, CHAMPION_COLORS } from './champions.js';
+import { championTypes, championSource, championOverride, setChampionOverride, championGroupKey, championFrameLabel, championGroupSuggestion, CHAMPION_NAMES, CHAMPION_SHORT, CHAMPION_COLORS } from './champions.js';
 import { loadoutSearchText, pinLoadout, toggleLoadoutTag } from './loadouts/model.js';
 import { record as recordJournal, undo as journalUndo, redo as journalRedo, canUndo as journalCanUndo, canRedo as journalCanRedo } from './journal.js';
 import { renderBuildCard } from './build-card.js';
@@ -141,6 +141,17 @@ const INVENTORY_CSS = `
 .champion-audit-toolbar select { height: 26px; }
 .champion-audit-check { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #9aa6b6; }
 .champion-audit-list { display: flex; flex-direction: column; gap: 4px; }
+.champion-audit-group { display: flex; flex-direction: column; gap: 4px; padding: 5px; border: 1px solid #2a3548; border-radius: 6px; background: rgba(255,255,255,0.02); }
+.champion-audit-group-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.champion-audit-group-name { flex: 1 1 130px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: #dbe3ee; }
+.champion-audit-group-head small { color: #9aa6b6; font-size: 9.5px; white-space: nowrap; }
+.champion-audit-confidence { padding: 1px 6px; border: 1px solid #2a3548; border-radius: 999px; font-size: 9.5px; white-space: nowrap; }
+.champion-audit-confidence[data-confidence="high"] { color: #7bd88f; border-color: #2f5c3a; }
+.champion-audit-confidence[data-confidence="medium"] { color: #f3c66a; border-color: #6b5626; }
+.champion-audit-confidence[data-confidence="low"] { color: #9aa6b6; border-color: #3a4557; }
+.champion-audit-suggest { font-size: 10px; color: #c7d2e0; white-space: nowrap; }
+.champion-audit-group-head .btn { margin-left: auto; }
+.champion-audit-group-rows { display: flex; flex-direction: column; gap: 4px; }
 .champion-audit-row { display: flex; align-items: center; gap: 6px; padding: 4px 5px; border: 1px solid #2a3548; border-radius: 5px; background: rgba(255,255,255,0.03); font-size: 11px; }
 .champion-audit-row img { width: 22px; height: 22px; border-radius: 4px; object-fit: cover; background: rgba(0,0,0,0.35); }
 .champion-audit-row .champion-audit-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -2798,9 +2809,16 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     return `${className}${character.light ? ` ${character.light}` : ''}`;
   }
 
-  // ---------- Champion-Prüfung: Waffen ohne erkannten Brecher ----------
+  // ---------- Champion-Prüfung: Waffen nach Typ + Rahmen gruppiert ----------
   let championAuditOriginals = new Map();
+  let championAuditGroups = new Map();
   let championAuditUndo = null;
+
+  const CHAMPION_CONFIDENCE_LABELS = {
+    high: 'Hoch · sicher',
+    medium: 'Mittel · wahrscheinlich',
+    low: 'Niedrig · unklar'
+  };
 
   function updateChampionAuditUndoButton() {
     const button = qs('#championAuditUndo');
@@ -2828,34 +2846,95 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     return [...map.values()];
   }
 
-  function championAuditEntries() {
+  function isWeaponEntry(entry) {
+    return Boolean(entry && entry.item) && DIM.WEAPON_SLOTS.some((slot) => slot.key === Number(entry.item.bucket));
+  }
+
+  function championCountLabel(count) {
+    const value = Number(count) || 0;
+    return `${value} ${value === 1 ? 'Waffe' : 'Waffen'}`;
+  }
+
+  function championWeaponEntries() {
     return collectInventoryEntries()
-      .filter(({ item }) => DIM.WEAPON_SLOTS.some((slot) => slot.key === Number(item.bucket)))
-      .filter(({ item }) => championTypes(item).length === 0)
+      .filter(isWeaponEntry)
       .sort((a, b) => String(a.item.name || '').localeCompare(String(b.item.name || ''), 'de'));
+  }
+
+  function buildChampionAuditGroups(weapons) {
+    const groups = new Map();
+    for (const entry of weapons) {
+      const key = championGroupKey(entry.item);
+      let group = groups.get(key);
+      if (!group) {
+        const typeName = String(entry.item.typeName || '').trim();
+        const frame = championFrameLabel(entry.item);
+        const label = `${typeName || 'Waffe'}${frame ? ` · ${frame}` : ''}`;
+        group = { key, label, entries: [], open: [] };
+        groups.set(key, group);
+      }
+      group.entries.push(entry);
+    }
+    for (const group of groups.values()) {
+      group.suggestion = championGroupSuggestion(group.entries.map((entry) => entry.item));
+      group.open = group.entries
+        .filter(({ item }) => championTypes(item).length === 0)
+        .sort((a, b) => String(a.item.name || '').localeCompare(String(b.item.name || ''), 'de'));
+    }
+    return [...groups.values()].sort((a, b) => a.label.localeCompare(b.label, 'de'));
   }
 
   function renderChampionAudit() {
     if (!championAuditPanel || !championAuditList) return;
-    const entries = championAuditEntries();
-    const allWeapons = collectInventoryEntries()
-      .filter(({ item }) => DIM.WEAPON_SLOTS.some((slot) => slot.key === Number(item.bucket)));
+    const allWeapons = championWeaponEntries();
+    const entries = allWeapons.filter(({ item }) => championTypes(item).length === 0);
+    const groups = buildChampionAuditGroups(allWeapons);
     championAuditOriginals = new Map(entries.map((entry) => [entry.key, entry]));
+    championAuditGroups = new Map(groups.map((group) => [group.key, group]));
     const count = qs('#championAuditCount');
-    if (count) count.textContent = `${entries.length} ohne Brecher · ${allWeapons.length} Waffen`;
-    if (!entries.length) {
-      championAuditList.innerHTML = '<span class="inv-tool-muted">Alle Waffen haben einen erkannten oder manuell gesetzten Champion-Brecher.</span>';
+    if (count) count.textContent = `${entries.length} ohne Brecher · ${championCountLabel(allWeapons.length)}`;
+    if (!allWeapons.length) {
+      championAuditList.innerHTML = '<span class="inv-tool-muted">Keine Waffen im Inventar gefunden.</span>';
       updateChampionAuditUndoButton();
       return;
     }
-    championAuditList.innerHTML = entries.slice(0, 200).map(({ key, item, where }) => `
+    let renderedRows = 0;
+    const cards = groups.map((group) => {
+      const { type, confidence } = group.suggestion;
+      const confidenceLabel = CHAMPION_CONFIDENCE_LABELS[confidence] || CHAMPION_CONFIDENCE_LABELS.low;
+      const suggestLabel = type
+        ? `Vorschlag: ${CHAMPION_NAMES[type] || ''}`.trim()
+        : 'Vorschlag: kein Brecher erkannt';
+      const rows = [];
+      for (const { key, item, where } of group.open) {
+        if (renderedRows >= 200) break;
+        renderedRows += 1;
+        rows.push(`
       <label class="champion-audit-row">
         <input type="checkbox" data-champion-audit-key="${esc(key)}">
         ${item.icon ? `<img src="https://www.bungie.net${esc(item.icon)}" alt="" loading="lazy">` : ''}
         <span class="champion-audit-name">${esc(item.name || 'Item')}</span>
         <small>${esc(item.typeName || '')}${where ? ` · ${esc(where)}` : ''}</small>
-      </label>`).join('')
-      + (entries.length > 200 ? `<span class="inv-tool-muted">… und ${entries.length - 200} weitere. Suche nutzt weiterhin „Ohne Champion“.</span>` : '');
+      </label>`);
+      }
+      if (!rows.length) {
+        rows.push('<span class="inv-tool-muted">Alle Waffen dieser Gruppe haben einen Champion-Brecher.</span>');
+      }
+      return `<section class="champion-audit-group" data-champion-group="${esc(group.key)}" data-champion-group-size="${group.entries.length}">
+        <div class="champion-audit-group-head">
+          <span class="champion-audit-group-name" title="${esc(group.label)}">${esc(group.label)}</span>
+          <small>${championCountLabel(group.entries.length)}</small>
+          <span class="champion-audit-confidence" data-confidence="${confidence}" title="Konfidenz">${confidenceLabel}</span>
+          <span class="champion-audit-suggest" title="${esc(suggestLabel)}">${esc(suggestLabel)}</span>
+          <button type="button" class="btn ghost small" data-champion-group-apply="${esc(group.key)}"
+            data-champion-group-size="${group.entries.length}" data-champion-group-type="${type || 0}"
+            title="${type ? 'Champion für alle Waffen dieser Gruppe setzen' : 'Kein Vorschlag für diese Gruppe.'}" ${type ? '' : 'disabled'}>Alle übernehmen</button>
+        </div>
+        <div class="champion-audit-group-rows">${rows.join('')}</div>
+      </section>`;
+    });
+    championAuditList.innerHTML = cards.join('')
+      + (entries.length > renderedRows ? `<span class="inv-tool-muted">… und ${entries.length - renderedRows} weitere. Suche nutzt weiterhin „Ohne Champion“.</span>` : '');
     updateChampionAuditUndoButton();
   }
 
@@ -2865,6 +2944,10 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     championAuditPanel.classList.remove('hidden');
   }
 
+  function championOverridesSnapshot() {
+    try { return window.localStorage.getItem('d2tool.championOverrides') || '{}'; } catch (error) { return '{}'; }
+  }
+
   function applyChampionAudit(type) {
     const selected = [...championAuditList.querySelectorAll('[data-champion-audit-key]:checked')]
       .map((input) => String(input.dataset.championAuditKey || ''));
@@ -2872,8 +2955,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       toast('Erst Waffen auswählen.', 'info', 1800);
       return;
     }
-    let previous = '{}';
-    try { previous = window.localStorage.getItem('d2tool.championOverrides') || '{}'; } catch (error) { previous = '{}'; }
+    const previous = championOverridesSnapshot();
     let changed = 0;
     for (const key of selected) {
       const entry = championAuditOriginals.get(key);
@@ -2888,6 +2970,34 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     render();
     renderChampionAudit();
     toast(`${changed} Waffe${changed === 1 ? '' : 'n'} aktualisiert.`, 'success', 2200);
+  }
+
+  // „Alle übernehmen“: Vorschlag der Gruppe auf jede Waffe der Gruppe
+  // anwenden. Nutzt dieselbe Override-/Undo-Mechanik wie die Einzelwahl.
+  function applyChampionGroup(key, fallbackType) {
+    const group = championAuditGroups.get(String(key || ''));
+    if (!group) {
+      toast('Gruppe nicht gefunden.', 'info', 2000);
+      return;
+    }
+    const type = Number(fallbackType) || Number(group.suggestion && group.suggestion.type) || 0;
+    if (!type) {
+      toast('Kein Vorschlag für diese Gruppe.', 'info', 2200);
+      return;
+    }
+    const previous = championOverridesSnapshot();
+    let changed = 0;
+    for (const { item } of group.entries) {
+      setChampionOverride(item, type);
+      changed += 1;
+    }
+    if (changed) {
+      championAuditUndo = previous;
+      updateChampionAuditUndoButton();
+    }
+    render();
+    renderChampionAudit();
+    toast(`${changed} Waffe${changed === 1 ? '' : 'n'} übernommen.`, 'success', 2200);
   }
 
   function undoChampionAudit() {
@@ -10971,6 +11081,14 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     for (const input of championAuditList?.querySelectorAll('[data-champion-audit-key]') || []) {
       input.checked = event.target.checked === true;
     }
+  });
+  championAuditList?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-champion-group-apply]');
+    if (!button) return;
+    applyChampionGroup(
+      String(button.dataset.championGroupApply || ''),
+      Number(button.dataset.championGroupType) || 0
+    );
   });
   qs('#championAuditExport')?.addEventListener('click', exportChampionOverrides);
   qs('#championAuditImport')?.addEventListener('click', () => qs('#championAuditFile')?.click());

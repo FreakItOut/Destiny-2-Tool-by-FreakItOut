@@ -38,6 +38,11 @@ const api = {
   configRestoreBackup: (name) => ipcRenderer.invoke('config:restoreBackup', name),
   configExport: () => ipcRenderer.invoke('config:exportFile'),
   configImport: () => ipcRenderer.invoke('config:importFile'),
+  // Konfigurations-Transfer (Vorschau, Export, Import ohne Tokens)
+  configTransferPreview: () => ipcRenderer.invoke('config:transferExportPreview'),
+  configTransferExport: () => ipcRenderer.invoke('config:transferExport'),
+  configTransferOpen: () => ipcRenderer.invoke('config:transferOpen'),
+  configTransferApply: (transferId) => ipcRenderer.invoke('config:transferApply', { transferId: String(transferId || '') }),
   actionsRecent: (limit) => ipcRenderer.invoke('actions:recent', limit),
   backupsList: () => ipcRenderer.invoke('backup:list'),
   backupSetFolder: () => ipcRenderer.invoke('backup:setFolder'),

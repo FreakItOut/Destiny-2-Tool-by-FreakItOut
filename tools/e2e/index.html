@@ -141,6 +141,70 @@
       </div>
     </div>
   </div>
+  <div class="overlay-bar" id="overlayBar">
+    <div class="overlay-brand"><span>D2</span></div>
+    <div class="overlay-spacer"></div>
+    <button id="overlayHudEditBtn" type="button" aria-label="HUD-Layout bearbeiten">▦</button>
+    <div class="overlay-clock" id="overlayClock" title="Nächster Reset"><span>Reset</span><strong>—</strong></div>
+    <div class="overlay-weekly" id="overlayWeekly" title="Wöchentlicher Reset"><span>Weekly</span><strong>—</strong></div>
+    <div class="overlay-clock overlay-stopwatch" id="overlayStopwatch" title="Stoppuhr"><span>Timer</span><strong>0:00</strong></div>
+    <div class="overlay-session" id="overlaySession" title="Spielzeit"><span>Session</span><strong>0:00</strong></div>
+    <div class="overlay-activity" id="overlayActivity" title="Status"><span>Status</span><strong></strong></div>
+    <div class="overlay-champion" id="overlayChampion" title="Champion-Abdeckung"><span>Champ</span><strong>—</strong></div>
+    <div class="overlay-battery" id="overlayBattery" title="Controller-Akku"><span>Akku</span><strong>—</strong></div>
+    <div class="overlay-vault" id="overlayVault" title="Tresor"><span>Tresor</span><strong>—</strong></div>
+    <div class="overlay-minidash" id="overlayMiniDash"><span>— Reset</span></div>
+    <button type="button" class="overlay-focus" id="overlayFocus" title="Fokus"><span>Fokus</span><strong>—</strong></button>
+    <div class="overlay-chip-zones" id="overlayChipZones">
+      <div class="overlay-chip-zone" id="overlayZoneLeft" data-hud-zone="left"></div>
+      <div class="overlay-chip-zone" id="overlayZoneCenter" data-hud-zone="center"></div>
+      <div class="overlay-chip-zone" id="overlayZoneRight" data-hud-zone="right"></div>
+    </div>
+  </div>
+  <div id="hudEditorPanel" class="hud-editor hidden" role="dialog" aria-label="HUD-Layout">
+    <div class="hud-editor-head">
+      <strong>HUD-Layout</strong>
+      <button id="hudEditorClose" type="button" aria-label="Schließen">✕</button>
+    </div>
+    <div class="hud-editor-body">
+      <div class="hud-editor-row">
+        <span>Größe</span>
+        <div class="hud-seg" id="hudScaleSeg">
+          <button type="button" data-hud-scale="s">Klein</button>
+          <button type="button" data-hud-scale="m">Normal</button>
+          <button type="button" data-hud-scale="l">Groß</button>
+          <button type="button" data-hud-scale="xl">XL</button>
+        </div>
+      </div>
+      <div id="hudChipList" class="hud-chip-list"></div>
+      <label class="hud-editor-check"><input id="hudAutoProfile" type="checkbox"> Profil automatisch nach Aktivität</label>
+      <div class="hud-editor-row">
+        <span>Profil</span>
+        <select id="hudProfileSelect"></select>
+        <button id="hudProfileApply" class="btn ghost small" type="button">Anwenden</button>
+      </div>
+      <div class="hud-editor-save">
+        <input id="hudProfileName" type="text" maxlength="30" placeholder="Profilname">
+        <select id="hudProfileMatch" aria-label="Profil-Aktivität">
+          <option value="all">Alle Aktivitäten</option>
+          <option value="pvp">PvP</option>
+          <option value="raid">Raid / Dungeon</option>
+        </select>
+        <button id="hudProfileSave" class="btn primary small" type="button">Speichern</button>
+      </div>
+      <label class="hud-editor-check"><input id="hudProfileDisplay" type="checkbox"> Nur dieser Monitor</label>
+      <div class="hud-editor-actions">
+        <button id="hudProfileExport" class="btn ghost small" type="button">Export</button>
+        <button id="hudProfileImport" class="btn ghost small" type="button">Import</button>
+        <input id="hudProfileFile" type="file" hidden>
+        <span class="hud-editor-hint">Profile als JSON sichern/teilen.</span>
+      </div>
+      <div class="hud-editor-actions">
+        <button id="hudReset" class="btn ghost small" type="button">Zurücksetzen</button>
+        <span id="hudEditorHint" class="hud-editor-hint"></span>
+      </div>
+    </div>
+  </div>
   <div id="inventoryView" class="hidden">
     <div class="inventory-view-head">
       <h2>Inventar</h2>

@@ -1,6 +1,7 @@
 import { BUTTONS } from './controller.js';
 import { qs, qsa, escapeHtml, formatAccelerator, toast, modalOpen, modalClose, clamp, debounce } from './ui.js';
 import { BINDING_ACTIONS } from './settings-bindings.js';
+import { icon } from './icons.js';
 
 export { BINDING_ACTIONS };
 
@@ -124,6 +125,238 @@ export function initSettings({
     }
   }
   buildQuickMenuConfig();
+
+  // ------------------------------------------------------------
+  // Konfigurations-Transfer (Daten/Diagnose)
+  // ------------------------------------------------------------
+  // Panel wird hier erzeugt (kein Markup in index.html). Export/Import
+  // laufen über den Hauptprozess: erst Vorschau, anwenden erst nach
+  // Bestätigung. Tokens und Secrets entfernt dort bereits der Main.
+  function buildConfigTransferPanel() {
+    const diag = qs('[data-settings-panel="diag"]');
+    if (!diag || qs('#configTransferPanel', diag)) return;
+
+    const group = document.createElement('details');
+    group.className = 'settings-group';
+    group.id = 'configTransferGroup';
+    group.open = true;
+
+    const summary = document.createElement('summary');
+    summary.textContent = 'Konfiguration';
+    group.appendChild(summary);
+
+    const panel = document.createElement('div');
+    panel.id = 'configTransferPanel';
+    panel.className = 'config-transfer';
+
+    const actions = document.createElement('div');
+    actions.className = 'field-actions-row';
+
+    const exportBtn = document.createElement('button');
+    exportBtn.type = 'button';
+    exportBtn.id = 'configTransferExportBtn';
+    exportBtn.className = 'btn ghost';
+    exportBtn.insertAdjacentHTML('afterbegin', icon('external'));
+    const exportLabel = document.createElement('span');
+    exportLabel.textContent = 'Konfiguration exportieren';
+    exportBtn.appendChild(exportLabel);
+
+    const importBtn = document.createElement('button');
+    importBtn.type = 'button';
+    importBtn.id = 'configTransferImportBtn';
+    importBtn.className = 'btn ghost';
+    importBtn.insertAdjacentHTML('afterbegin', icon('external'));
+    const importLabel = document.createElement('span');
+    importLabel.textContent = 'Konfiguration importieren';
+    importBtn.appendChild(importLabel);
+
+    actions.append(exportBtn, importBtn);
+    panel.appendChild(actions);
+
+    const preview = document.createElement('div');
+    preview.id = 'configTransferPreview';
+    preview.hidden = true;
+
+    const previewTitle = document.createElement('h4');
+    previewTitle.textContent = 'Vorschau';
+    preview.appendChild(previewTitle);
+
+    const sourceLine = document.createElement('p');
+    sourceLine.id = 'configTransferSource';
+    sourceLine.className = 'field-hint';
+    preview.appendChild(sourceLine);
+
+    const sectionList = document.createElement('div');
+    sectionList.id = 'configTransferSections';
+    sectionList.className = 'history-list';
+    preview.appendChild(sectionList);
+
+    const totalLine = document.createElement('p');
+    totalLine.id = 'configTransferTotal';
+    totalLine.className = 'field-hint';
+    preview.appendChild(totalLine);
+
+    const confirmRow = document.createElement('div');
+    confirmRow.className = 'field-actions-row';
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.id = 'configTransferConfirmBtn';
+    confirmBtn.className = 'btn primary';
+    confirmBtn.textContent = 'Bestätigen';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.id = 'configTransferCancelBtn';
+    cancelBtn.className = 'btn ghost';
+    cancelBtn.textContent = 'Abbrechen';
+    confirmRow.append(confirmBtn, cancelBtn);
+    preview.appendChild(confirmRow);
+
+    panel.appendChild(preview);
+    group.appendChild(panel);
+
+    // Direkt vor den Konfig-Backups einsortieren (gleiche Datengruppe).
+    const backupAnchor = qs('#backupCreateBtn', diag);
+    const backupGroup = backupAnchor && backupAnchor.closest ? backupAnchor.closest('details.settings-group') : null;
+    if (backupGroup && backupGroup.parentElement === diag) diag.insertBefore(group, backupGroup);
+    else diag.appendChild(group);
+
+    const transferApiReady = api
+      && typeof api.configTransferPreview === 'function'
+      && typeof api.configTransferExport === 'function'
+      && typeof api.configTransferOpen === 'function'
+      && typeof api.configTransferApply === 'function';
+    if (!transferApiReady) {
+      exportBtn.disabled = true;
+      importBtn.disabled = true;
+      return;
+    }
+
+    let pendingAction = '';
+    let pendingTransferId = '';
+    let transferBusy = false;
+
+    function setTransferBusy(value) {
+      transferBusy = value === true;
+      exportBtn.disabled = transferBusy;
+      importBtn.disabled = transferBusy;
+      confirmBtn.disabled = transferBusy;
+      cancelBtn.disabled = transferBusy;
+    }
+
+    function resetTransferPreview() {
+      pendingAction = '';
+      pendingTransferId = '';
+      preview.hidden = true;
+      sourceLine.textContent = '';
+      sectionList.textContent = '';
+      totalLine.textContent = '';
+    }
+
+    function renderTransferPreview(action, result) {
+      const summaryData = (result && result.summary) || {};
+      const sections = Array.isArray(summaryData.sections) ? summaryData.sections : [];
+      pendingAction = action;
+      pendingTransferId = action === 'import' ? String((result && result.transferId) || '') : '';
+      sourceLine.textContent = String((result && result.file) || '');
+      sectionList.textContent = '';
+      for (const entry of sections) {
+        const row = document.createElement('div');
+        row.className = 'custom-item';
+        const main = document.createElement('div');
+        main.className = 'custom-item-main';
+        const name = document.createElement('span');
+        name.className = 'custom-item-name';
+        name.textContent = String((entry && entry.section) || '');
+        const count = document.createElement('span');
+        count.className = 'custom-item-url';
+        count.textContent = String(Number(entry && entry.keys) || 0);
+        main.append(name, count);
+        row.appendChild(main);
+        sectionList.appendChild(row);
+      }
+      totalLine.textContent = '';
+      const totalLabel = document.createElement('span');
+      totalLabel.textContent = 'Gesamt';
+      const totalValue = document.createElement('strong');
+      totalValue.textContent = String(Number(summaryData.total) || 0);
+      totalLine.append(totalLabel, ' ', totalValue);
+      preview.hidden = false;
+    }
+
+    exportBtn.addEventListener('click', async () => {
+      if (transferBusy) return;
+      setTransferBusy(true);
+      try {
+        const result = await api.configTransferPreview();
+        if (result && result.ok) renderTransferPreview('export', result);
+        else toast((result && result.error) || 'Export fehlgeschlagen.', 'error');
+      } catch (error) {
+        toast('Export fehlgeschlagen.', 'error');
+      } finally {
+        setTransferBusy(false);
+      }
+    });
+
+    importBtn.addEventListener('click', async () => {
+      if (transferBusy) return;
+      setTransferBusy(true);
+      try {
+        const result = await api.configTransferOpen();
+        if (result && result.ok) renderTransferPreview('import', result);
+        else if (result && !result.canceled) toast((result && result.error) || 'Import fehlgeschlagen.', 'error');
+      } catch (error) {
+        toast('Import fehlgeschlagen.', 'error');
+      } finally {
+        setTransferBusy(false);
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      if (transferBusy) return;
+      resetTransferPreview();
+    });
+
+    confirmBtn.addEventListener('click', async () => {
+      if (transferBusy) return;
+      if (pendingAction === 'export') {
+        setTransferBusy(true);
+        try {
+          const result = await api.configTransferExport();
+          if (result && result.ok) {
+            resetTransferPreview();
+            toast('Konfiguration exportiert.', 'success', 2800);
+          } else if (result && !result.canceled) {
+            toast((result && result.error) || 'Export fehlgeschlagen.', 'error');
+          }
+        } catch (error) {
+          toast('Export fehlgeschlagen.', 'error');
+        } finally {
+          setTransferBusy(false);
+        }
+        return;
+      }
+      if (pendingAction === 'import' && pendingTransferId) {
+        if (!window.confirm('Konfiguration importieren? Die aktuelle Konfiguration wird vorher gesichert.')) return;
+        setTransferBusy(true);
+        try {
+          const result = await api.configTransferApply(pendingTransferId);
+          if (result && result.ok) {
+            resetTransferPreview();
+            toast('Konfiguration importiert.', 'success', 3200);
+            refresh().catch(() => {});
+          } else {
+            toast((result && result.error) || 'Import fehlgeschlagen.', 'error');
+          }
+        } catch (error) {
+          toast('Import fehlgeschlagen.', 'error');
+        } finally {
+          setTransferBusy(false);
+        }
+      }
+    });
+  }
+  buildConfigTransferPanel();
+
   const padGrid = qs('#padGrid');
   const padCells = [];
 

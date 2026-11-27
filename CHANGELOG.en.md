@@ -6,6 +6,33 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.16.0] – 2026-11-27
+
+### Added
+
+- **Champion suggestions** – the champion audit groups weapons by weapon type
+  and frame, shows a suggestion with confidence (high, medium, low) and applies
+  the breaker to the whole group via "Apply all". Single assignment and undo
+  remain available.
+- **Free HUD placement** – chips can be assigned to the left, center or right
+  zone; the gap per chip is adjustable from 0 to 32 px and takes effect
+  immediately in the overlay. HUD profiles store zones and gaps.
+- **Transfer configuration** – export and import settings without tokens,
+  secrets, API keys, OAuth/session values, webhooks, PIN material or
+  machine-specific paths. A preview appears before applying; a backup is
+  created automatically before an import.
+
+### Changed
+
+- The focus chip in the overlay updates immediately on overlay changes instead
+  of waiting for the next interval.
+
+### Technical
+
+- E2E expanded to **539** steps; new configuration transfer test with **95**
+  checks. New config keys `overlay.chipZones` and `overlay.chipGaps`; visual
+  references updated.
+
 ## [1.15.0] – 2026-11-27
 
 ### Removed

@@ -1373,6 +1373,9 @@ function applyOverlayState(next) {
   }
   wasOverlayVisible = visible;
 
+  // Fokus-Chip sofort an den neuen Overlay-Zustand anpassen; das
+  // 1,2-s-Intervall bleibt nur als Fallback für externe Fokuswechsel.
+  updateOverlayFocusChip();
   updateHints();
   setInterval(updateHints, 1500);
 }

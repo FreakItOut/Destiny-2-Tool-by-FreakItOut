@@ -32,6 +32,9 @@ const HUD_CHIP_SELECTORS = {
 const HUD_DEFAULT_ORDER = HUD_CHIPS.map(([key]) => key);
 const HUD_SCALE_LABELS = { s: 'Klein', m: 'Normal', l: 'Groß', xl: 'XL' };
 const HUD_HIDEABLE = ['clock', 'session', 'activity', 'champion', 'battery', 'focus'];
+const HUD_ZONES = ['left', 'center', 'right'];
+const HUD_DEFAULT_GAP = 8;
+const HUD_MAX_GAP = 32;
 
 let hudApi = null;
 let hudGetConfig = null;
@@ -67,6 +70,52 @@ function hudChipStyle(key) {
 function hudChipRules() {
   const raw = hudOverlay().chipRules;
   return raw && typeof raw === 'object' ? raw : {};
+}
+
+// Zone (links/Mitte/rechts) und Abstand pro Chip. Standard ist rechts,
+// damit bestehende Konfigurationen unverändert aussehen.
+function hudChipZones() {
+  const raw = hudOverlay().chipZones;
+  return raw && typeof raw === 'object' ? raw : {};
+}
+
+function hudChipZone(key) {
+  const value = hudChipZones()[key];
+  return HUD_ZONES.includes(value) ? value : 'right';
+}
+
+function hudChipGaps() {
+  const raw = hudOverlay().chipGaps;
+  return raw && typeof raw === 'object' ? raw : {};
+}
+
+function hudChipGap(key) {
+  const value = Number(hudChipGaps()[key]);
+  if (!Number.isFinite(value)) return HUD_DEFAULT_GAP;
+  return Math.min(HUD_MAX_GAP, Math.max(0, Math.round(value)));
+}
+
+function hudZoneId(zone) {
+  return `overlayZone${zone === 'left' ? 'Left' : zone === 'center' ? 'Center' : 'Right'}`;
+}
+
+function hudEnsureZoneContainers() {
+  const bar = qs('#overlayBar');
+  if (!bar) return null;
+  let container = qs('#overlayChipZones');
+  if (container) return container;
+  container = document.createElement('div');
+  container.id = 'overlayChipZones';
+  container.className = 'overlay-chip-zones';
+  for (const zone of HUD_ZONES) {
+    const element = document.createElement('div');
+    element.id = hudZoneId(zone);
+    element.className = 'overlay-chip-zone';
+    element.dataset.hudZone = zone;
+    container.appendChild(element);
+  }
+  bar.appendChild(container);
+  return container;
 }
 
 function hudGameMode() {
@@ -118,11 +167,17 @@ function applyHudScale() {
 function applyChipOrder() {
   const bar = qs('#overlayBar');
   if (!bar) return;
+  const container = hudEnsureZoneContainers();
   for (const key of hudOrder()) {
     const node = qs(HUD_CHIP_SELECTORS[key]);
     if (!node) continue;
+    const zone = hudChipZone(key);
     node.dataset.hudChip = key;
-    bar.appendChild(node);
+    node.dataset.hudZone = zone;
+    const target = qs(`#${hudZoneId(zone)}`) || container || bar;
+    target.appendChild(node);
+    // Abstand als Margin: gilt pro Chip in seiner Zone.
+    node.style.marginLeft = `${hudChipGap(key)}px`;
   }
   applyHudScale();
   applyHudChipStyles();
@@ -147,9 +202,12 @@ function applyHudProfile(profile, options = {}) {
       showItems: { ...(overlay.showItems || {}), ...(profile.showItems || {}) },
       hudScale: profile.hudScale || hudScale(),
       chipStyles: profile.chipStyles && typeof profile.chipStyles === 'object' ? profile.chipStyles : overlay.chipStyles,
-      chipRules: profile.chipRules && typeof profile.chipRules === 'object' ? profile.chipRules : overlay.chipRules
+      chipRules: profile.chipRules && typeof profile.chipRules === 'object' ? profile.chipRules : overlay.chipRules,
+      chipZones: profile.chipZones && typeof profile.chipZones === 'object' ? profile.chipZones : overlay.chipZones,
+      chipGaps: profile.chipGaps && typeof profile.chipGaps === 'object' ? profile.chipGaps : overlay.chipGaps
     }
   });
+  applyChipOrder();
   renderHudEditor();
   if (!options.silent) toast(`HUD-Profil „${profile.name}“ angewendet.`, 'success', 1800);
 }
@@ -191,26 +249,40 @@ function renderHudEditor() {
       const style = hudChipStyle(key);
       const chipScale = ['s', 'm', 'l'].includes(style.scale) ? style.scale : 'm';
       const chipColor = style.color || '#9aa6b6';
+      const chipZone = hudChipZone(key);
+      const chipGap = hudChipGap(key);
       const toggle = HUD_HIDEABLE.includes(key)
         ? `<input type="checkbox" data-hud-visible="${key}" ${visible ? 'checked' : ''} title="Chip anzeigen">`
         : '';
       return `<div class="hud-chip-row${visible ? '' : ' hidden-chip'}" draggable="true" data-hud-chip="${key}" title="Ziehen zum Sortieren">
         <span class="hud-chip-name">${escapeHtml(label)}</span>
-        ${toggle}
-        <select data-hud-chip-scale="${key}" title="Chip-Größe">
-          <option value="s" ${chipScale === 's' ? 'selected' : ''}>S</option>
-          <option value="m" ${chipScale === 'm' ? 'selected' : ''}>M</option>
-          <option value="l" ${chipScale === 'l' ? 'selected' : ''}>L</option>
-        </select>
-        <input type="color" data-hud-chip-color="${key}" value="${chipColor}" title="Chip-Farbe">
-        <button type="button" data-hud-color-clear="${key}" title="Farbe zurücksetzen">×</button>
-        <select data-hud-rule="${key}" title="Sichtbarkeit nach Aktivität">
-          <option value="always" ${(hudChipRules()[key] || 'always') === 'always' ? 'selected' : ''}>Alle</option>
-          <option value="pve" ${hudChipRules()[key] === 'pve' ? 'selected' : ''}>PvE</option>
-          <option value="pvp" ${hudChipRules()[key] === 'pvp' ? 'selected' : ''}>PvP</option>
-        </select>
-        <button type="button" data-hud-move="up" data-hud-key="${key}" ${index === 0 ? 'disabled' : ''} title="Nach vorne">↑</button>
-        <button type="button" data-hud-move="down" data-hud-key="${key}" ${index === order.length - 1 ? 'disabled' : ''} title="Nach hinten">↓</button>
+        <span class="hud-chip-tools">
+          ${toggle}
+          <select data-hud-chip-scale="${key}" title="Chip-Größe">
+            <option value="s" ${chipScale === 's' ? 'selected' : ''}>S</option>
+            <option value="m" ${chipScale === 'm' ? 'selected' : ''}>M</option>
+            <option value="l" ${chipScale === 'l' ? 'selected' : ''}>L</option>
+          </select>
+          <input type="color" data-hud-chip-color="${key}" value="${chipColor}" title="Chip-Farbe">
+          <button type="button" data-hud-color-clear="${key}" title="Farbe zurücksetzen">×</button>
+          <select data-hud-rule="${key}" title="Sichtbarkeit nach Aktivität">
+            <option value="always" ${(hudChipRules()[key] || 'always') === 'always' ? 'selected' : ''}>Alle</option>
+            <option value="pve" ${hudChipRules()[key] === 'pve' ? 'selected' : ''}>PvE</option>
+            <option value="pvp" ${hudChipRules()[key] === 'pvp' ? 'selected' : ''}>PvP</option>
+          </select>
+          <button type="button" data-hud-move="up" data-hud-key="${key}" ${index === 0 ? 'disabled' : ''} title="Nach vorne">↑</button>
+          <button type="button" data-hud-move="down" data-hud-key="${key}" ${index === order.length - 1 ? 'disabled' : ''} title="Nach hinten">↓</button>
+        </span>
+        <span class="hud-chip-pos">
+          <span class="hud-chip-pos-label">Zone</span>
+          <select data-hud-chip-zone="${key}" title="Chip-Zone">
+            <option value="left" ${chipZone === 'left' ? 'selected' : ''}>Links</option>
+            <option value="center" ${chipZone === 'center' ? 'selected' : ''}>Mitte</option>
+            <option value="right" ${chipZone === 'right' ? 'selected' : ''}>Rechts</option>
+          </select>
+          <span class="hud-chip-pos-label">Abstand</span>
+          <input type="number" data-hud-gap="${key}" min="0" max="32" step="1" value="${chipGap}" title="Abstand in px">
+        </span>
       </div>`;
     }).join('');
   }
@@ -251,6 +323,7 @@ function moveHudChip(key, direction) {
   const next = order.slice();
   [next[index], next[target]] = [next[target], next[index]];
   hudSetConfig({ overlay: { chipOrder: next } });
+  applyChipOrder();
   renderHudEditor();
 }
 
@@ -285,6 +358,8 @@ async function saveHudProfileFromEditor() {
     hudScale: hudScale(),
     chipStyles: { ...hudChipStyles() },
     chipRules: { ...hudChipRules() },
+    chipZones: { ...hudChipZones() },
+    chipGaps: { ...hudChipGaps() },
     display: onlyDisplay ? hudDisplaySignature : '',
     match: ['pvp', 'raid'].includes(match) ? match : 'all'
   };
@@ -358,15 +433,24 @@ function resetHudLayout() {
   const overlay = hudOverlay();
   const showItems = { ...(overlay.showItems || {}) };
   for (const key of HUD_HIDEABLE) showItems[key] = true;
+  const chipZones = {};
+  const chipGaps = {};
+  for (const key of HUD_DEFAULT_ORDER) {
+    chipZones[key] = 'right';
+    chipGaps[key] = HUD_DEFAULT_GAP;
+  }
   hudSetConfig({
     overlay: {
       chipOrder: HUD_DEFAULT_ORDER.slice(),
       hudScale: 'm',
       chipStyles: {},
       chipRules: {},
+      chipZones,
+      chipGaps,
       showItems
     }
   });
+  applyChipOrder();
   renderHudEditor();
   toast('HUD-Layout zurückgesetzt.', 'success', 1800);
 }
@@ -448,6 +532,25 @@ function bindHudEditor() {
         renderHudEditor();
         return;
       }
+      const chipZone = event.target.closest('[data-hud-chip-zone]');
+      if (chipZone) {
+        const key = String(chipZone.dataset.hudChipZone || '');
+        const value = HUD_ZONES.includes(chipZone.value) ? chipZone.value : 'right';
+        hudSetConfig({ overlay: { chipZones: { [key]: value } } });
+        applyChipOrder();
+        renderHudEditor();
+        return;
+      }
+      const chipGap = event.target.closest('[data-hud-gap]');
+      if (chipGap) {
+        const key = String(chipGap.dataset.hudGap || '');
+        const raw = Math.round(Number(chipGap.value));
+        const value = Number.isFinite(raw) ? Math.min(HUD_MAX_GAP, Math.max(0, raw)) : HUD_DEFAULT_GAP;
+        hudSetConfig({ overlay: { chipGaps: { [key]: value } } });
+        applyChipOrder();
+        renderHudEditor();
+        return;
+      }
       if (event.target.closest('#hudProfileFile')) {
         importHudProfiles(event.target.files && event.target.files[0]).catch(() => {});
         event.target.value = '';
@@ -491,6 +594,7 @@ function bindHudEditor() {
       order.splice(targetIndex, 0, hudDragKey);
       hudSetConfig({ overlay: { chipOrder: order } });
       hudDragKey = '';
+      applyChipOrder();
       renderHudEditor();
     });
     panel.addEventListener('dragend', () => {
@@ -532,8 +636,12 @@ function bindHudEditor() {
       const targetIndex = order.indexOf(targetKey);
       if (targetIndex < 0) return;
       order.splice(targetIndex, 0, barDragKey);
-      hudSetConfig({ overlay: { chipOrder: order } });
+      const targetZone = hudChipZone(targetKey);
+      const patch = { chipOrder: order };
+      if (hudChipZone(barDragKey) !== targetZone) patch.chipZones = { [barDragKey]: targetZone };
+      hudSetConfig({ overlay: patch });
       barDragKey = '';
+      applyChipOrder();
       renderHudEditor();
     });
     bar.addEventListener('dragend', () => {

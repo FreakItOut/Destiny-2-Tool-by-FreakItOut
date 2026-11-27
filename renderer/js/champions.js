@@ -115,3 +115,65 @@ export function championSource(item) {
 export function championLabels(item) {
   return championTypes(item).map((type) => CHAMPION_NAMES[type]).filter(Boolean);
 }
+
+// ---------- Gruppen für die Champion-Prüfung ----------
+// Gruppen = Waffentyp + Rahmen. Ein Rahmen kann in den Bungie-Daten an
+// verschiedenen Stellen stehen (frame, archetypeName, archetype.name)
+// oder nur als Name eines Intrinsic-/Perk-Sockets vorliegen.
+export function championFrameLabel(item) {
+  if (!item) return '';
+  const candidates = [item.frame, item.archetypeName, item.archetype && item.archetype.name];
+  for (const candidate of candidates) {
+    const label = typeof candidate === 'string' ? candidate.trim() : '';
+    if (label) return label;
+  }
+  // Fallback: den Socket-/Perk-Namen nehmen, der den Rahmen erkennt
+  // (frameBreakerType prüft genau diese Texte).
+  const names = [];
+  for (const column of item.socketColumns || []) {
+    for (const option of column && column.options || []) {
+      if (option && option.n) names.push(String(option.n));
+    }
+  }
+  for (const perk of item.perks || []) if (perk && perk.n) names.push(String(perk.n));
+  for (const plug of item.modSockets || []) if (plug && plug.n) names.push(String(plug.n));
+  for (const name of names) {
+    if (frameBreakerType({ frame: name })) return name;
+  }
+  return '';
+}
+
+export function championGroupKey(item) {
+  const type = String((item && (item.typeName || item.type)) || '').trim().toLocaleLowerCase('de');
+  const frame = championFrameLabel(item).toLocaleLowerCase('de');
+  return `${type || 'waffe'}|${frame}`;
+}
+
+// Vorschlag und Konfidenz einer Gruppe:
+//  - explizit erkannt (Daten, Perks, Sockets oder Override) = hoch / sicher
+//  - nur über den Rahmen erkannt                            = mittel / wahrscheinlich
+//  - kein erkannter Brecher                                 = niedrig / unklar
+export function championGroupSuggestion(items) {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  const votes = new Map();
+  let hasExplicit = false;
+  let hasFrame = false;
+  for (const item of list) {
+    if (championOverride(item) || explicitBreakerTypes(item).size) hasExplicit = true;
+    else if (frameBreakerType(item)) hasFrame = true;
+    for (const type of championTypes(item)) votes.set(type, (votes.get(type) || 0) + 1);
+  }
+  let type = 0;
+  let best = 0;
+  for (const [candidate, count] of votes) {
+    if (count > best || (count === best && (!type || candidate < type))) {
+      type = candidate;
+      best = count;
+    }
+  }
+  return {
+    type,
+    confidence: hasExplicit ? 'high' : hasFrame ? 'medium' : 'low',
+    votes: best
+  };
+}

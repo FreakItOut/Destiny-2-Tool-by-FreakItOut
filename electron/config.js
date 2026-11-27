@@ -59,6 +59,10 @@ const DEFAULTS = {
     chipStyles: {},
     // Sichtbarkeit pro Chip: always | pve | pvp.
     chipRules: {},
+    // HUD-Zonen pro Chip: left | center | right (Standard rechts).
+    chipZones: {},
+    // Abstand pro Chip in Pixeln (0–32).
+    chipGaps: {},
     // Gespeichertes HUD-Profil automatisch nach Aktivität wählen.
     hudAutoProfile: false,
     // Gespeicherte Overlay-Layouts (Position/Größe/Chips …).
@@ -529,6 +533,35 @@ function clamp(value, min, max, fallback) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, n));
+}
+
+// HUD-Chips, Zonen und Abstände (müssen zu renderer/js/overlay-hud.js passen).
+const HUD_CHIP_KEYS = ['clock', 'weekly', 'stopwatch', 'session', 'activity', 'champion', 'battery', 'vault', 'minidash', 'focus'];
+const HUD_CHIP_ZONE_NAMES = new Set(['left', 'center', 'right']);
+const HUD_CHIP_MAP_LIMIT = 40;
+
+function normalizeChipZones(raw) {
+  const source = isPlainObject(raw) ? raw : {};
+  const zones = {};
+  // Alle bekannten Chips bekommen einen Eintrag. So bleibt beim
+  // Zusammenführen einzelner Änderungen (mergeKnown) nichts auf der
+  // Strecke, und der Standard ist überall "rechts".
+  const keys = HUD_CHIP_KEYS.slice(0, HUD_CHIP_MAP_LIMIT);
+  for (const key of keys) {
+    zones[key] = HUD_CHIP_ZONE_NAMES.has(source[key]) ? source[key] : 'right';
+  }
+  return zones;
+}
+
+function normalizeChipGaps(raw) {
+  const source = isPlainObject(raw) ? raw : {};
+  const gaps = {};
+  const keys = HUD_CHIP_KEYS.slice(0, HUD_CHIP_MAP_LIMIT);
+  for (const key of keys) {
+    const gap = Number(source[key]);
+    gaps[key] = Number.isFinite(gap) ? Math.round(clamp(gap, 0, 32, 8)) : 8;
+  }
+  return gaps;
 }
 
 function mergeKnown(base, patch) {
@@ -1295,6 +1328,8 @@ function normalize(raw) {
     chipRules[key] = ['always', 'pve', 'pvp'].includes(value) ? value : 'always';
   }
   merged.overlay.chipRules = chipRules;
+  merged.overlay.chipZones = normalizeChipZones(merged.overlay.chipZones);
+  merged.overlay.chipGaps = normalizeChipGaps(merged.overlay.chipGaps);
 
   // Sitzungs-Wiederherstellung: Kategorie-/Seiten-IDs, max. 8.
   if (!isPlainObject(merged.session)) merged.session = { siteIds: [] };
@@ -1738,6 +1773,8 @@ function normalize(raw) {
       hudScale: ['s', 'm', 'l', 'xl'].includes(entry.hudScale) ? entry.hudScale : 'm',
       chipStyles: isPlainObject(entry.chipStyles) ? entry.chipStyles : {},
       chipRules: isPlainObject(entry.chipRules) ? entry.chipRules : {},
+      chipZones: normalizeChipZones(entry.chipZones),
+      chipGaps: normalizeChipGaps(entry.chipGaps),
       display: /^\d+x\d+@[\d.]+$/.test(String(entry.display || '')) ? String(entry.display) : '',
       match: ['all', 'pvp', 'raid', 'dungeon'].includes(entry.match) ? entry.match : 'all'
     });

@@ -116,6 +116,11 @@
         <span class="overlay-battery-label">Akku</span>
         <strong id="overlayBatteryLevel">—</strong>
       </div>
+      <div class="overlay-chip-zones" id="overlayChipZones">
+        <div class="overlay-chip-zone" id="overlayZoneLeft" data-hud-zone="left"></div>
+        <div class="overlay-chip-zone" id="overlayZoneCenter" data-hud-zone="center"></div>
+        <div class="overlay-chip-zone" id="overlayZoneRight" data-hud-zone="right"></div>
+      </div>
     </div>
     <div id="overlayLoadoutPanel" class="overlay-lo-panel hidden" role="dialog" aria-label="Loadout-Schnellzugriff">
       <div class="overlay-lo-head">
@@ -446,7 +451,7 @@
             <strong>Champion-Prüfung</strong>
             <button id="championAuditClose" class="icon-btn" type="button" title="Schließen" aria-label="Schließen">✕</button>
           </div>
-          <p class="champion-audit-hint">Waffen ohne erkannten Brecher. Auswahl markieren und einen Typ zuweisen – die Korrektur gilt lokal und überschreibt die Automatik.</p>
+          <p class="champion-audit-hint">Waffen sind nach Waffentyp und Rahmen gruppiert. Einzeln markieren oder „Alle übernehmen“ für die ganze Gruppe – die Korrektur gilt lokal und lässt sich rückgängig machen.</p>
           <div class="champion-audit-toolbar">
             <label class="champion-audit-check"><input id="championAuditSelectAll" type="checkbox"> Alle</label>
             <select id="championAuditType" aria-label="Champion-Typ">

@@ -6,6 +6,33 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.16.0] – 2026-11-27
+
+### Hinzugefügt
+
+- **Champion-Vorschläge** – die Champion-Prüfung gruppiert Waffen nach
+  Waffentyp und Rahmen, zeigt einen Vorschlag samt Konfidenz (hoch, mittel,
+  niedrig) und setzt per „Alle übernehmen“ den Brecher für die ganze Gruppe.
+  Einzelzuweisung und Rückgängig bleiben erhalten.
+- **HUD frei platzieren** – Chips lassen sich den Zonen links, Mitte oder
+  rechts zuordnen; der Abstand pro Chip ist von 0 bis 32 px einstellbar und
+  wirkt sofort im Overlay. HUD-Profile speichern Zonen und Abstände mit.
+- **Konfiguration übertragen** – Export und Import der Einstellungen ohne
+  Tokens, Secrets, API-Keys, OAuth-/Session-Werte, Webhooks, PIN-Material oder
+  maschinenspezifische Pfade. Vor dem Anwenden erscheint eine Vorschau; vor
+  dem Import wird automatisch eine Sicherung angelegt.
+
+### Geändert
+
+- Der Fokus-Chip im Overlay aktualisiert sich sofort beim Overlay-Wechsel
+  statt erst beim nächsten Intervall.
+
+### Technik
+
+- E2E auf **539** Schritte erweitert; neuer Konfigurations-Transfer-Test mit
+  **95** Prüfungen. Neue Config-Schlüssel `overlay.chipZones` und
+  `overlay.chipGaps`; visuelle Referenzen aktualisiert.
+
 ## [1.15.0] – 2026-11-27
 
 ### Entfernt

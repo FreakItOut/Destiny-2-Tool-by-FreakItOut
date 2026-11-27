@@ -4,6 +4,7 @@
 import { createInventory } from '/renderer/js/inventory.js';
 import { createDashboard } from '/renderer/js/dashboard.js';
 import { createOverlayLoadouts } from '/renderer/js/overlay-loadouts.js';
+import { createOverlayHud } from '/renderer/js/overlay-hud.js';
 import { createOnboarding } from '/renderer/js/onboarding.js';
 import { qs, qsa, escapeHtml, deepMerge, toast, initNotificationCenter, isNotificationCenterOpen, closeNotificationCenter, positionFixedTip } from '/renderer/js/ui.js';
 
@@ -1056,11 +1057,18 @@ async function run() {
     document.querySelector('#inventorySearchCount')?.textContent);
   await setSearch('');
 
-  // Champion-Prüfung: Waffe ohne Brecher auswählen und Override setzen.
+  // Champion-Prüfung: Gruppen (Typ + Rahmen), Einzelwahl und „Alle übernehmen“.
   document.querySelector('#inventoryChampionAudit')?.click();
   await wait(150);
   const auditPanel = document.querySelector('#championAuditPanel');
   check('Champion-Prüfung öffnet', Boolean(auditPanel) && !auditPanel.classList.contains('hidden'));
+  const auditGroup = auditPanel?.querySelector('[data-champion-group]');
+  check('Champion-Gruppen sichtbar', Boolean(auditGroup),
+    auditPanel?.querySelectorAll('[data-champion-group]').length);
+  check('Champion-Gruppe nennt Anzahl und Konfidenz',
+    Boolean(auditGroup?.querySelector('.champion-audit-confidence')) &&
+    /\d+ Waffen?/.test(auditGroup?.querySelector('.champion-audit-group-head')?.textContent || ''),
+    auditGroup?.querySelector('.champion-audit-group-head')?.textContent);
   const auditInput = auditPanel?.querySelector('[data-champion-audit-key]');
   check('Champion-Prüfung listet Waffen ohne Brecher', Boolean(auditInput),
     auditPanel?.querySelector('#championAuditCount')?.textContent);
@@ -1073,10 +1081,61 @@ async function run() {
     try { overrides = JSON.parse(localStorage.getItem('d2tool.championOverrides') || '{}'); } catch (error) { overrides = {}; }
     check('Champion-Prüfung speichert Override', Object.keys(overrides).length >= 1, JSON.stringify(overrides));
     try { localStorage.removeItem('d2tool.championOverrides'); } catch (error) { /* egal */ }
-    document.querySelector('#championAuditClose')?.click();
-    window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
-    await wait(200);
   }
+  const groupButton = auditPanel?.querySelector('[data-champion-group-apply]:not([disabled])');
+  check('Champion-Gruppe hat Vorschlag', Boolean(groupButton),
+    auditPanel?.querySelector('.champion-audit-suggest')?.textContent);
+  if (groupButton) {
+    const groupSize = Number(groupButton.dataset.championGroupSize) || 0;
+    groupButton.click();
+    await wait(200);
+    let overrides = {};
+    try { overrides = JSON.parse(localStorage.getItem('d2tool.championOverrides') || '{}'); } catch (error) { overrides = {}; }
+    check('Alle übernehmen setzt Gruppen-Overrides', Object.keys(overrides).length >= Math.max(1, groupSize),
+      `${Object.keys(overrides).length} Overrides / Gruppe ${groupSize}`);
+  }
+  try { localStorage.removeItem('d2tool.championOverrides'); } catch (error) { /* egal */ }
+  document.querySelector('#championAuditClose')?.click();
+  window.dispatchEvent(new CustomEvent('d2-inventory-show', { detail: { tab: 'inventory' } }));
+  await wait(200);
+
+  // HUD-Editor: Zone und Abstand pro Chip werden gespeichert und live
+  // im DOM angewendet (Chips wandern in die Zonen-Container).
+  const hud = createOverlayHud({
+    getConfig: () => cfg,
+    setConfig,
+    getLiveActivityName: () => ''
+  });
+  document.querySelector('#overlayHudEditBtn')?.click();
+  await wait(120);
+  const hudPanel = document.querySelector('#hudEditorPanel');
+  check('HUD-Editor öffnet', Boolean(hudPanel) && !hudPanel.classList.contains('hidden'));
+  const zoneSelect = hudPanel?.querySelector('[data-hud-chip-zone="clock"]');
+  check('HUD-Editor bietet Zone pro Chip', Boolean(zoneSelect));
+  if (zoneSelect) {
+    zoneSelect.value = 'left';
+    zoneSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    await wait(120);
+    check('HUD-Zone wird gespeichert', Boolean(cfg.overlay.chipZones) && cfg.overlay.chipZones.clock === 'left',
+      JSON.stringify(cfg.overlay.chipZones || {}));
+    check('HUD-Zone im DOM angewendet', Boolean(document.querySelector('#overlayZoneLeft #overlayClock')),
+      document.querySelector('#overlayClock')?.parentElement?.id);
+  }
+  const gapInput = hudPanel?.querySelector('[data-hud-gap="session"]');
+  check('HUD-Editor bietet Abstand pro Chip', Boolean(gapInput));
+  if (gapInput) {
+    gapInput.value = '12';
+    gapInput.dispatchEvent(new Event('change', { bubbles: true }));
+    await wait(120);
+    check('HUD-Abstand wird gespeichert', Boolean(cfg.overlay.chipGaps) && cfg.overlay.chipGaps.session === 12,
+      JSON.stringify(cfg.overlay.chipGaps || {}));
+    check('HUD-Abstand als Margin im DOM', document.querySelector('#overlaySession')?.style.marginLeft === '12px',
+      document.querySelector('#overlaySession')?.style.marginLeft);
+  }
+  document.querySelector('#hudEditorClose')?.click();
+  await wait(120);
+  check('HUD-Editor schließt', Boolean(hudPanel) && hudPanel.classList.contains('hidden'));
+  hud.applyChipOrder();
 
   await setSearch('');
   if (viewsSelect) {

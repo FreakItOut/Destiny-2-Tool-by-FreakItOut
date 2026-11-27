@@ -8,6 +8,7 @@
 // Voraussetzung: keine zweite Instanz läuft. Aufruf: npm run test:settings
 
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -21,6 +22,31 @@ function check(label, condition, detail) {
   if (condition) { console.log('OK   ' + label); return; }
   failures += 1;
   console.error('FAIL ' + label + (detail === undefined ? '' : ' — ' + detail));
+}
+
+// Statische Vorprüfung ohne App-Start: Das Panel „Konfiguration
+// übertragen“ entsteht dynamisch in settings.js (kein index.html) und
+// ist über Preload/IPC verdrahtet.
+try {
+  const settingsSource = fs.readFileSync(path.join(ROOT, 'renderer', 'js', 'settings.js'), 'utf8');
+  const preloadSource = fs.readFileSync(path.join(ROOT, 'electron', 'preload.js'), 'utf8');
+  const mainSource = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
+  check('Transfer-Panel im Quelltext erzeugt',
+    settingsSource.includes('buildConfigTransferPanel')
+    && settingsSource.includes("id = 'configTransferPanel'")
+    && settingsSource.includes("id = 'configTransferExportBtn'")
+    && settingsSource.includes("id = 'configTransferImportBtn'")
+    && settingsSource.includes("id = 'configTransferConfirmBtn'"));
+  check('Transfer-IPC verdrahtet',
+    preloadSource.includes('configTransferPreview')
+    && preloadSource.includes('configTransferOpen')
+    && preloadSource.includes('configTransferApply')
+    && mainSource.includes("'config:transferExportPreview'")
+    && mainSource.includes("'config:transferOpen'")
+    && mainSource.includes("'config:transferApply'")
+    && mainSource.includes('configTransferPrepare'));
+} catch (error) {
+  check('Transfer-Panel statisch prüfbar', false, error.message || String(error));
 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -107,6 +133,30 @@ async function evaluate(ws, expression) {
     return ok;
   })()`);
   check('Jeder Tab öffnet sein Panel', switched === true);
+
+  const transferUi = await evaluate(ws, `(async () => {
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    document.querySelector('[data-settings-tab="diag"]')?.click();
+    await wait(150);
+    const panel = document.querySelector('[data-settings-panel="diag"]');
+    const group = document.querySelector('#configTransferGroup');
+    const host = document.querySelector('#configTransferPanel');
+    const preview = document.querySelector('#configTransferPreview');
+    return {
+      panel: Boolean(panel && panel.classList.contains('active')),
+      group: Boolean(group),
+      host: Boolean(host),
+      buttons: Boolean(document.querySelector('#configTransferExportBtn') && document.querySelector('#configTransferImportBtn')),
+      confirm: Boolean(document.querySelector('#configTransferConfirmBtn') && document.querySelector('#configTransferCancelBtn')),
+      preview: Boolean(preview),
+      previewHidden: Boolean(preview && preview.hidden),
+      visible: Boolean(group && host && group.open && panel && panel.classList.contains('active') && getComputedStyle(group).display !== 'none')
+    };
+  })()`);
+  check('Transfer-Panel im Diagnose-Bereich sichtbar', transferUi && transferUi.visible === true, JSON.stringify(transferUi));
+  check('Transfer-Panel bietet Export, Import und Vorschau',
+    transferUi && transferUi.buttons === true && transferUi.confirm === true && transferUi.preview === true && transferUi.previewHidden === true,
+    JSON.stringify(transferUi));
 
   const steamUi = await evaluate(ws, `(async () => {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -251,9 +301,16 @@ async function evaluate(ws, expression) {
   const overlayFocus = await evaluate(ws, `(async () => {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     const entered = await window.d2.enterOverlay();
-    await wait(900);
+    // Der Fokus-Chip wird asynchron aktualisiert (Intervall/Fokuswechsel).
+    // Kurz pollen, statt auf eine feste Intervallgrenze zu hoffen.
+    let chip = document.querySelector('#overlayFocus');
+    for (let i = 0; i < 30; i += 1) {
+      chip = document.querySelector('#overlayFocus');
+      if (chip && !chip.hidden) break;
+      await wait(100);
+    }
     const state = await window.d2.getFocusState();
-    const chip = document.querySelector('#overlayFocus');
+    chip = document.querySelector('#overlayFocus');
     const chipVisible = Boolean(chip && !chip.hidden);
     const chipText = chip ? String(chip.textContent || '').trim() : '';
     const focusResult = await window.d2.focusOverlay();

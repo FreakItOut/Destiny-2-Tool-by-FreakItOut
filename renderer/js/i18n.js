@@ -72,7 +72,10 @@
     [/^HUD-Profil „(.+)“ angewendet\.$/, 'HUD profile “$1” applied.'],
     [/^HUD-Profil „(.+)“ gespeichert\.$/, 'HUD profile “$1” saved.'],
     [/^(\d+) HUD-Profil\(e\) exportiert\.$/, '$1 HUD profile(s) exported.'],
-    [/^(\d+) HUD-Profil\(e\) importiert\.$/, '$1 HUD profile(s) imported.']
+    [/^(\d+) HUD-Profil\(e\) importiert\.$/, '$1 HUD profile(s) imported.'],
+    [/^(\d+) Waffen? übernommen\.$/, 'Applied to $1 weapon(s).'],
+    [/^(\d+) Waffe$/, '$1 weapon'],
+    [/^(\d+) ohne Brecher$/, '$1 without breaker']
   ];
   const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE', 'PRE']);
   const SKIP_SELECTOR = [

@@ -349,6 +349,26 @@ img[src*="/common/"], img[src^="d2icon:"] {
   flex: 1;
 }
 
+/* Drei HUD-Zonen: Chips werden per Konfiguration links/Mitte/rechts einsortiert. */
+.overlay-chip-zones {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.overlay-chip-zone {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.overlay-chip-zone[data-hud-zone="left"] { justify-content: flex-start; }
+.overlay-chip-zone[data-hud-zone="center"] { justify-content: center; }
+.overlay-chip-zone[data-hud-zone="right"] { justify-content: flex-end; }
+.overlay-chip-zone:empty { flex: 0 0 0; }
+
 .overlay-action {
   display: inline-flex;
   align-items: center;
@@ -908,7 +928,11 @@ body:not(.overlay-minimal) #overlayMoreBtn { display: none !important; }
 .hud-seg button:last-child { border-right: 0; }
 .hud-seg button.on { background: var(--brand); color: var(--accent-contrast); }
 .hud-chip-list { display: flex; flex-direction: column; gap: 4px; }
-.hud-chip-row { display: flex; align-items: center; gap: 5px; padding: 3px 5px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,0.03); font-size: 11px; }
+.hud-chip-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; padding: 3px 5px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,0.03); font-size: 11px; }
+.hud-chip-tools { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+.hud-chip-pos { display: flex; align-items: center; gap: 5px; flex: 1 1 100%; padding-top: 3px; border-top: 1px dashed var(--line); color: var(--muted); font-size: 10px; }
+.hud-chip-pos select { width: 72px; }
+.hud-chip-pos input[type="number"] { width: 52px; height: 22px; padding: 0 3px; border: 1px solid var(--line); border-radius: 5px; background: rgba(255,255,255,0.05); color: var(--text); font-size: 10px; }
 .hud-chip-row.hidden-chip { opacity: 0.5; }
 .hud-chip-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hud-chip-row button { width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 5px; background: rgba(255,255,255,0.05); color: var(--text); cursor: pointer; font-size: 11px; line-height: 1; }

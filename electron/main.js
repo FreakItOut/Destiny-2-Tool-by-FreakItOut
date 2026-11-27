@@ -12787,6 +12787,194 @@ function redactConfigForExport(snapshot) {
   return out;
 }
 
+// ------------------------------------------------------------
+// Konfigurations-Transfer (ohne Tokens)
+// ------------------------------------------------------------
+// Austauschbare Konfigurationsdatei: { format, formatVersion,
+// exportedAt, config }. Der Block ist absichtlich frei von Electron-
+// Abhängigkeiten, damit tools/config-transfer-test.js Sanitizer,
+// Merge und Formatprüfung direkt laden und prüfen kann.
+// >>> config-transfer-block
+const CONFIG_TRANSFER_FORMAT = 'd2tool-config-transfer';
+const CONFIG_TRANSFER_VERSION = 1;
+const CONFIG_TRANSFER_MAX_BYTES = 8 * 1024 * 1024;
+// Schlüssel, die auf Geheimnisse hindeuten, werden nie übertragen.
+const CONFIG_TRANSFER_SECRET_WORDS = [
+  'token', 'secret', 'password', 'apikey', 'refresh', 'access',
+  'authorization', 'cookie', 'session', 'webhook'
+];
+// Maschinenspezifische Werte: leicht neu einstellbar, kein Transfer.
+const CONFIG_TRANSFER_MACHINE_KEYS = ['bounds', 'notesFolder', 'alarmSoundPath'];
+// Nie aus einer Datei übernehmen (Prototyp-Ketten).
+const CONFIG_TRANSFER_BLOCKED_KEYS = ['__proto__', 'prototype', 'constructor'];
+
+function configTransferKeyIsSecret(key) {
+  const normalized = String(key == null ? '' : key).toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!normalized) return false;
+  return CONFIG_TRANSFER_SECRET_WORDS.some((word) => normalized.includes(word));
+}
+
+// Rekursiv alle Schlüssel mit Geheimnis-Hinweis entfernen (auch in
+// verschachtelten Profil-Snapshots und Arrays).
+function configTransferSanitize(value, depth = 0) {
+  if (depth > 16) return undefined;
+  if (Array.isArray(value)) {
+    const list = [];
+    for (const entry of value) {
+      const clean = configTransferSanitize(entry, depth + 1);
+      if (clean !== undefined) list.push(clean);
+    }
+    return list;
+  }
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const key of Object.keys(value)) {
+      if (CONFIG_TRANSFER_BLOCKED_KEYS.includes(key) || configTransferKeyIsSecret(key)) continue;
+      const clean = configTransferSanitize(value[key], depth + 1);
+      if (clean !== undefined) out[key] = clean;
+    }
+    return out;
+  }
+  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+  return undefined;
+}
+
+function configTransferStripSecrets(value) {
+  const clean = configTransferSanitize(value);
+  if (!clean || typeof clean !== 'object' || Array.isArray(clean)) return {};
+  // Explizit: Bungie-Zugangsdaten und OAuth-Tokens bleiben lokal.
+  if (clean.bungie && typeof clean.bungie === 'object' && !Array.isArray(clean.bungie)) {
+    for (const key of ['apiKey', 'apiKeyEnc', 'clientSecret', 'clientSecretEnc', 'oauthClientSecretEnc', 'oauth']) {
+      delete clean.bungie[key];
+    }
+  }
+  // Explizit: Webhook-URLs und lokale API-Tokens nie übernehmen.
+  if (clean.integrations && typeof clean.integrations === 'object' && !Array.isArray(clean.integrations)) {
+    delete clean.integrations.discordWebhook;
+    delete clean.integrations.webhook;
+  }
+  // Explizit: PIN-Hash/Salt bleiben auf dem Gerät (offline knackbar).
+  if (clean.security && typeof clean.security === 'object' && !Array.isArray(clean.security)) {
+    delete clean.security.pinHash;
+    delete clean.security.pinSalt;
+  }
+  return clean;
+}
+
+function configTransferStripMachineSpecific(value, depth = 0) {
+  if (depth > 16 || !value || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {
+    for (const entry of value) configTransferStripMachineSpecific(entry, depth + 1);
+    return value;
+  }
+  for (const key of Object.keys(value)) {
+    if (CONFIG_TRANSFER_MACHINE_KEYS.includes(key)) {
+      delete value[key];
+      continue;
+    }
+    configTransferStripMachineSpecific(value[key], depth + 1);
+  }
+  return value;
+}
+
+// Bereinigt einen Roh-Snapshot für Export und Import.
+function configTransferPrepare(rawConfig) {
+  const clean = configTransferStripMachineSpecific(configTransferStripSecrets(rawConfig));
+  if (clean.backups && typeof clean.backups === 'object' && !Array.isArray(clean.backups)) delete clean.backups.folder;
+  return clean;
+}
+
+// Anzahl Schlüssel je Bereich (inklusive Bereichsname selbst).
+function configTransferCountKeys(value) {
+  if (Array.isArray(value)) return 0;
+  if (!value || typeof value !== 'object') return 0;
+  let total = 0;
+  for (const key of Object.keys(value)) total += 1 + configTransferCountKeys(value[key]);
+  return total;
+}
+
+function configTransferSummary(config) {
+  const source = config && typeof config === 'object' && !Array.isArray(config) ? config : {};
+  const sections = Object.keys(source)
+    .map((key) => ({ section: key, keys: 1 + configTransferCountKeys(source[key]) }))
+    .sort((a, b) => b.keys - a.keys || a.section.localeCompare(b.section));
+  const total = sections.reduce((sum, entry) => sum + entry.keys, 0);
+  return { sections, sectionsCount: sections.length, total };
+}
+
+// Nur bekannte Strukturen aus DEFAULTS übernehmen (Typ muss passen).
+function configTransferPickKnown(defaults, incoming, depth = 0) {
+  if (depth > 16) return undefined;
+  if (Array.isArray(defaults)) return Array.isArray(incoming) ? incoming : undefined;
+  if (defaults === null) {
+    return incoming === null || (incoming && typeof incoming === 'object' && !Array.isArray(incoming)) ? incoming : undefined;
+  }
+  if (defaults && typeof defaults === 'object') {
+    if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) return undefined;
+    // Offene Sammlungen (z. B. Favs, Item-Notizen) übernehmen alles.
+    if (!Object.keys(defaults).length) return incoming;
+    const out = {};
+    for (const key of Object.keys(defaults)) {
+      if (!Object.prototype.hasOwnProperty.call(incoming, key)) continue;
+      const picked = configTransferPickKnown(defaults[key], incoming[key], depth + 1);
+      if (picked !== undefined) out[key] = picked;
+    }
+    // Leere Bereiche (nur entfernte Geheimnisse/Pfade) nicht melden.
+    return Object.keys(out).length ? out : undefined;
+  }
+  if (typeof incoming !== typeof defaults) return undefined;
+  return incoming;
+}
+
+// Merge: nur bekannte Bereiche/Schlüssel, ohne Geheimnisse und ohne
+// maschinenspezifische Pfade. Die lokalen Tokens bleiben unberührt,
+// weil sie im Patch gar nicht auftauchen.
+function configTransferMerge(incoming, defaults) {
+  const template = defaults && typeof defaults === 'object' ? defaults : {};
+  const safe = configTransferPrepare(incoming);
+  const patch = {};
+  const applied = [];
+  const skipped = [];
+  for (const key of Object.keys(template)) {
+    if (key === 'schemaVersion') continue;
+    if (!Object.prototype.hasOwnProperty.call(safe, key)) continue;
+    const picked = configTransferPickKnown(template[key], safe[key]);
+    if (picked === undefined) {
+      skipped.push(key);
+      continue;
+    }
+    patch[key] = picked;
+    applied.push(key);
+  }
+  return { patch, applied, skipped };
+}
+
+function configTransferBuildExport(rawConfig, exportedAt) {
+  return {
+    format: CONFIG_TRANSFER_FORMAT,
+    formatVersion: CONFIG_TRANSFER_VERSION,
+    exportedAt: typeof exportedAt === 'string' && exportedAt ? exportedAt.slice(0, 40) : new Date().toISOString(),
+    config: configTransferPrepare(rawConfig)
+  };
+}
+
+function configTransferExportFileText(rawConfig, exportedAt) {
+  return `${JSON.stringify(configTransferBuildExport(rawConfig, exportedAt), null, 2)}\n`;
+}
+
+function configTransferReadPayload(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { ok: false };
+  if (raw.format !== CONFIG_TRANSFER_FORMAT) return { ok: false };
+  if (Number(raw.formatVersion) !== CONFIG_TRANSFER_VERSION) return { ok: false };
+  if (!raw.config || typeof raw.config !== 'object' || Array.isArray(raw.config)) return { ok: false };
+  const exportedAt = typeof raw.exportedAt === 'string' ? raw.exportedAt.slice(0, 40) : '';
+  return { ok: true, config: raw.config, exportedAt };
+}
+// <<< config-transfer-block
+
+// Offener Import: erst nach der Bestätigung im Renderer anwenden.
+let configTransferPending = null;
+
 function registerIpc() {
   ipcMain.handle('app:info', () => ({
     version: app.getVersion(),
@@ -12998,6 +13186,101 @@ function registerIpc() {
     } catch (error) {
       logError('Konfigurationsimport fehlgeschlagen', { error: error.message });
       return { ok: false, error: error.message };
+    }
+  });
+
+  // Konfigurations-Transfer: Vorschau, Export und Import ohne Tokens.
+  // Der Import wird erst nach der Bestätigung im Renderer angewendet und
+  // legt vorher automatisch eine Sicherung über die Backup-Mechanik an.
+  ipcMain.handle('config:transferExportPreview', () => {
+    try {
+      const payload = configTransferBuildExport(config.get(), new Date().toISOString());
+      return { ok: true, summary: configTransferSummary(payload.config), exportedAt: payload.exportedAt };
+    } catch (error) {
+      logWarn('Konfigurations-Transfer-Vorschau fehlgeschlagen', { error: error.message || String(error) });
+      return { ok: false, error: 'Export fehlgeschlagen.' };
+    }
+  });
+
+  ipcMain.handle('config:transferExport', async () => {
+    if (!win || win.isDestroyed()) return { ok: false, error: 'Export fehlgeschlagen.' };
+    const result = await dialog.showSaveDialog(win, {
+      title: 'Konfiguration exportieren',
+      defaultPath: path.join(app.getPath('documents'), 'destiny2tool-konfiguration-transfer.json'),
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    });
+    if (result.canceled || !result.filePath) return { ok: false, canceled: true };
+    try {
+      const payload = configTransferBuildExport(config.get(), new Date().toISOString());
+      fs.writeFileSync(result.filePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+      const summary = configTransferSummary(payload.config);
+      logInfo('Konfigurations-Transfer exportiert', { sections: summary.sectionsCount, keys: summary.total });
+      return { ok: true, file: result.filePath, summary };
+    } catch (error) {
+      logWarn('Konfigurations-Transfer-Export fehlgeschlagen', { error: error.message || String(error) });
+      return { ok: false, error: 'Export fehlgeschlagen.' };
+    }
+  });
+
+  ipcMain.handle('config:transferOpen', async () => {
+    if (!win || win.isDestroyed()) return { ok: false, error: 'Import fehlgeschlagen.' };
+    const result = await dialog.showOpenDialog(win, {
+      title: 'Konfiguration importieren',
+      properties: ['openFile'],
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    });
+    if (result.canceled || !result.filePaths || !result.filePaths.length) return { ok: false, canceled: true };
+    try {
+      const file = result.filePaths[0];
+      let stat = null;
+      try { stat = fs.statSync(file); } catch (error) { stat = null; }
+      if (!stat || !stat.isFile() || stat.size > CONFIG_TRANSFER_MAX_BYTES) return { ok: false, error: 'Datei ist keine Konfiguration.' };
+      let raw = null;
+      try { raw = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (error) { raw = null; }
+      const parsed = configTransferReadPayload(raw);
+      if (!parsed.ok) return { ok: false, error: 'Datei ist keine Konfiguration.' };
+      const merged = configTransferMerge(parsed.config, config.DEFAULTS);
+      if (!merged.applied.length) return { ok: false, error: 'Datei ist keine Konfiguration.' };
+      configTransferPending = { id: crypto.randomUUID(), at: Date.now(), patch: merged.patch };
+      return {
+        ok: true,
+        transferId: configTransferPending.id,
+        file: path.basename(file),
+        exportedAt: parsed.exportedAt,
+        summary: configTransferSummary(merged.patch),
+        applied: merged.applied,
+        skipped: merged.skipped
+      };
+    } catch (error) {
+      logWarn('Konfigurations-Transfer-Import fehlgeschlagen', { error: error.message || String(error) });
+      return { ok: false, error: 'Import fehlgeschlagen.' };
+    }
+  });
+
+  ipcMain.handle('config:transferApply', (event, payload) => {
+    const pending = configTransferPending;
+    const transferId = ipcString(payload && payload.transferId, 80);
+    if (!pending || !transferId || pending.id !== transferId) return { ok: false, error: 'Import fehlgeschlagen.' };
+    configTransferPending = null;
+    const blocked = securityBlocked();
+    if (blocked) return blocked;
+    const backup = createConfigBackup();
+    if (!backup || !backup.ok) {
+      logWarn('Konfigurations-Transfer ohne Sicherung abgebrochen', { error: (backup && backup.error) || 'unbekannt' });
+      return { ok: false, error: 'Import fehlgeschlagen.' };
+    }
+    try {
+      // Sanitize/Merge erneut anwenden: auch ein manipulierter Stand
+      // aus dem Renderer darf keine Geheimnisse übernehmen.
+      const patch = configTransferMerge(pending.patch, config.DEFAULTS).patch;
+      config.set(patch);
+      applyConfigRuntime();
+      updateTray();
+      logInfo('Konfigurations-Transfer übernommen', { sections: Object.keys(patch).length, backup: path.basename(String(backup.file || '')) });
+      return { ok: true, needsRestart: true, backupFile: path.basename(String(backup.file || '')) };
+    } catch (error) {
+      logWarn('Konfigurations-Transfer-Übernahme fehlgeschlagen', { error: error.message || String(error) });
+      return { ok: false, error: 'Import fehlgeschlagen.' };
     }
   });
 
