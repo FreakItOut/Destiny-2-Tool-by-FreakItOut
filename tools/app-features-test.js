@@ -166,6 +166,26 @@ check('Scroll-Ziel überlebt Folge-Renders (Werkzeuge)', tools.includes('pending
 check('Scroll-Ziel überlebt Folge-Renders (Inventar)', inventory.includes('inventoryPendingScroll') && inventory.includes('drawerPendingScroll'));
 check('Offene Details überleben Render (kein Sprung)', tools.includes('captureOpenDetails') && tools.includes('restoreOpenDetails'));
 check('Controller scrollt auch die Werkzeuge', controller.includes('#inventoryView:not(.hidden) .inventory-tools-tab:not(.hidden)') && controller.includes('.inventory-tools-tab'));
+check('D-Pad-Tasten sind eindeutig beschriftet',
+  ['D↑', 'D↓', 'D←', 'D→'].every((label) => controller.includes(`label: '${label}', alt: '${label}'`)) &&
+  !controller.includes("label: 'D', alt: 'D'"));
+check('Controller-Belegung ohne tote Web-Aktionen',
+  !/\bsitePrev\s*:/.test(config) && !/\bsiteNext\s*:/.test(config) && !/\bunloadOthers\s*:/.test(config) &&
+  !/\bpip\s*:\s*-1/.test(config));
+check('Controller-Belegung filtert auf bekannte Aktionen',
+  config.includes("const BINDING_KEYS = ['click', 'back', 'reload', 'precision', 'categoryPrev', 'categoryNext', 'settings', 'hide', 'notes', 'hud'];"));
+check('Guide-Toggle hat reine Sicherheitsfunktion',
+  controller.includes('export function guideToggleAllowed') &&
+  controller.includes('GUIDE_MIN_HOLD_MS = 90') &&
+  controller.includes('snapshot.guideAvailable') &&
+  controller.includes('guideToggleAllowed({'));
+check('Controller scrollt neue Panels und Dashboard',
+  ['.inv-dw-sheet-body', '.inv-dw-body', '.champion-audit', '.loadout-queue-panel', '.inventory-outbox-panel', '.hud-editor', '#dashboardPanel']
+    .every((selector) => controller.includes(selector)));
+check('Trigger-Aktionen nur bei steigender Flanke',
+  controller.includes('triggerLeftHeld = updateTrigger(') &&
+  controller.includes('triggerRightHeld = updateTrigger(') &&
+  controller.includes('active && !wasHeld'));
 // content-visibility mit falscher Platzhalterhöhe ließ Karten beim
 // Scrollen/Rendern zwischen 120px und echter Höhe springen.
 const dashboardCss = read('renderer/dashboard.css');

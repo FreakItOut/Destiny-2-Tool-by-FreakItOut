@@ -206,6 +206,16 @@ function setButton(index, pressed, value) {
 
 function applyLine(parts) {
   const kind = parts[0];
+  if (kind === 'Guide-Quelle:') {
+    // "Guide-Quelle: XInputGetStateEx" bzw.
+    // "Guide-Quelle: Raw-Input (Fallback)" - im Log sichtbar machen.
+    log('INFO', 'Guide-Quelle', { quelle: parts.slice(1).join(' ') });
+    return;
+  }
+  if (kind === 'Raw-Guide' && parts[1] === 'deaktiviert') {
+    log('INFO', 'Raw-Guide deaktiviert', { grund: parts.slice(1).join(' ') });
+    return;
+  }
   if (kind === 'X') {
     // X 1 = XInputGetStateEx verfügbar (Guide-Knopf direkt über XInput)
     // X 0 = nur normale XInput-Abfrage (Guide nur über Raw Input)

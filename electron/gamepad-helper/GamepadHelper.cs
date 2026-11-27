@@ -454,6 +454,26 @@ public static class GamepadHelper
     private const uint GamepadGuide = 1u << 16;
 
     /// <summary>
+    /// Entscheidet, ob ein Raw-Input-Guide-Signal in die Maske gehört.
+    /// Reine, testbare Funktion.
+    ///
+    /// XInputGetStateEx liefert den Guide-Knopf bereits als Bit 0x0400.
+    /// Raw Input ist dann weder nötig noch sicher: Bei normalen Xbox-
+    /// HID-Reports lag die alte Heuristik auf einem Stick-/Datenbit und
+    /// löste bei jeder Stickbewegung den Guide aus.
+    /// </summary>
+    public static bool ShouldUseRawGuide(bool stateExAvailable, bool rawPressed, ushort xinputButtons)
+    {
+        // Bei verfügbarem XInputGetStateEx ist XInput die einzige Quelle.
+        if (stateExAvailable) return false;
+        if (!rawPressed) return false;
+        // GameSir-Dongles teilen sich im Rohreport das Bit für L3 und
+        // Guide; XInput meldet L3 sauber als eigenes Bit.
+        if ((xinputButtons & XInputL3) != 0) return false;
+        return true;
+    }
+
+    /// <summary>
     /// Wandelt eine XInput-Tastenmaske in die Gamepad-Maske um.
     /// </summary>
     public static uint TranslateButtons(ushort xinputButtons)
@@ -526,6 +546,31 @@ public static class GamepadHelper
         if (Axis(32767) < 0.999f || Axis(-32768) > -0.999f || Axis(0) != 0f)
         {
             Console.WriteLine("FEHLER: Achsen-Normalisierung ist falsch");
+            errors++;
+        }
+
+        // Guide-Quelle: Raw-Input darf bei verfügbarem XInputGetStateEx
+        // niemals zusätzlich Bit 16 setzen. Der Bugfall war eine
+        // Stickbewegung, die im Raw-Report ein falsches Guide-Bit
+        // erzeugte und das Overlay öffnete.
+        if (ShouldUseRawGuide(true, true, 0))
+        {
+            Console.WriteLine("FEHLER: Raw-Guide bei XInputGetStateEx aktiv");
+            errors++;
+        }
+        if (!ShouldUseRawGuide(false, true, 0))
+        {
+            Console.WriteLine("FEHLER: Raw-Guide-Fallback fehlt");
+            errors++;
+        }
+        if (ShouldUseRawGuide(false, true, XInputL3))
+        {
+            Console.WriteLine("FEHLER: L3-Schutz für Raw-Guide fehlt");
+            errors++;
+        }
+        if (ShouldUseRawGuide(false, false, 0))
+        {
+            Console.WriteLine("FEHLER: Raw-Guide ohne Raw-Signal aktiv");
             errors++;
         }
 
@@ -607,16 +652,32 @@ public static class GamepadHelper
         Console.WriteLine("X " + (StateExAvailable ? "1" : "0"));
         Console.Out.Flush();
 
-        // Raw Input für den Guide-/Xbox-Knopf starten (XInput kennt
-        // ihn nicht). Fehler sind nicht schlimm - dann fehlt nur der
-        // Guide-Knopf.
-        try
+        // Guide-Quelle protokollieren (eine Zeile, damit das Log des
+        // Overlays die Ursache eindeutig zeigt).
+        Console.WriteLine("Guide-Quelle: " + (StateExAvailable ? "XInputGetStateEx" : "Raw-Input (Fallback)"));
+        if (StateExAvailable)
         {
-            RawInputGuide.Start();
+            Console.WriteLine("Raw-Guide deaktiviert (XInputGetStateEx verfügbar)");
+            // Guide ist über XInput lesbar - dieselbe Statuszeile wie
+            // beim Raw-Input-Weg, damit die Oberfläche ihn anbietet.
+            Console.WriteLine("G 1");
         }
-        catch (Exception error)
+        Console.Out.Flush();
+
+        // Raw Input nur als Rückfallebene, wenn XInput den Guide nicht
+        // liefern kann. Sonst kämen bei normalen Xbox-HID-Reports
+        // Stick-Bits als Guide an (Overlay öffnete sich bei jeder
+        // Stickbewegung).
+        if (!StateExAvailable)
         {
-            Console.Error.WriteLine("Raw Input nicht verfügbar: " + error.Message);
+            try
+            {
+                RawInputGuide.Start();
+            }
+            catch (Exception error)
+            {
+                Console.Error.WriteLine("Raw Input nicht verfügbar: " + error.Message);
+            }
         }
 
         // Vibration aus der Standardausgabe lesen (Blockierend, aber
@@ -690,27 +751,26 @@ public static class GamepadHelper
                 //   A 0x1000  B 0x2000  X 0x4000  Y 0x8000
                 uint mask = TranslateButtons(state.Gamepad.Buttons);
 
-                // Der Guide-/Xbox-Knopf kommt aus Raw Input, da XInput
-                // ihn nicht meldet (wButtons ist nur 16 Bit breit).
-                //
-                // ABER: Der GameSir-Nova-Lite-Dongle (und vermutlich
-                // andere Dongles auch) legt im Rohreport L3 und den
-                // Guide-Knopf auf denselben Bit-Platz (Byte 12 Bit 0).
-                // Ohne Schutz erscheint beim Drücken von L3 im Test
-                // auch die Guide-Taste. Da XInput L3 sauber als
-                // eigenes Bit meldet, wird der Raw-Input-Guide
-                // unterdrückt, solange L3 gedrückt ist.
-                try
+                // Guide nur aus Raw Input, wenn XInputGetStateEx fehlt.
+                // Bei verfügbarem StateEx liefert XInput den Guide
+                // bereits als Bit 0x0400 über TranslateButtons. Raw
+                // Input ist dann deaktiviert, damit Stick-/Datenbits
+                // nicht als Guide gelten.
+                if (!StateExAvailable)
                 {
-                    if (RawInputGuide.IsGuidePressed()
-                        && (state.Gamepad.Buttons & XInputL3) == 0)
+                    bool rawPressed = false;
+                    try
+                    {
+                        rawPressed = RawInputGuide.IsGuidePressed();
+                    }
+                    catch (Exception)
+                    {
+                        // ignorieren
+                    }
+                    if (ShouldUseRawGuide(StateExAvailable, rawPressed, state.Gamepad.Buttons))
                     {
                         mask |= 1u << 16;
                     }
-                }
-                catch (Exception)
-                {
-                    // ignorieren
                 }
 
                 float lt = state.Gamepad.LeftTrigger / 255f;
@@ -767,25 +827,6 @@ public static class GamepadHelper
                 pad.LY = ly;
                 pad.RX = rx;
                 pad.RY = ry;
-
-                // Der Guide-/Xbox-Knopf kommt aus Raw Input, da XInput
-                // ihn nicht meldet. Er wird als Bit 16 in die Maske
-                // eingefügt. L3-Schutz siehe oben (Dongle legt L3 und
-                // Guide im Rohreport auf denselben Bit-Platz).
-                uint guideMask = 0;
-                try
-                {
-                    if (RawInputGuide.IsGuidePressed()
-                        && (state.Gamepad.Buttons & XInputL3) == 0)
-                    {
-                        guideMask = 1u << 16;
-                    }
-                }
-                catch (Exception)
-                {
-                    // ignorieren
-                }
-                mask |= guideMask;
 
                 Console.WriteLine("S " + index + " 1 " + Describe(mask, lt, rt, lx, ly, rx, ry)
                     + " " + F(rawLx) + " " + F(rawLy) + " " + F(rawRx) + " " + F(rawRy));

@@ -31,7 +31,7 @@ function check(label, condition, detail) {
   for (const file of ['renderer/js/controller.js', 'renderer/js/ui.js']) {
     fs.copyFileSync(path.join(ROOT, file), path.join(temp, path.basename(file)));
   }
-  const { pickDirectionalTarget, normalizeXInputAxes } = await import(pathToFileURL(path.join(temp, 'controller.js')).href);
+  const { pickDirectionalTarget, normalizeXInputAxes, guideToggleAllowed } = await import(pathToFileURL(path.join(temp, 'controller.js')).href);
 
   const A = { name: 'A', x: 0, y: 0 };
   const B = { name: 'B', x: 100, y: 0 };
@@ -78,6 +78,80 @@ function check(label, condition, detail) {
   check('XInput: fehlende Achsen werden 0', empty.length === 4 && empty.every((value) => value === 0), JSON.stringify(empty));
   const broken = normalizeXInputAxes([NaN, undefined, '0.5', Infinity]);
   check('XInput: kaputte Werte werden 0 bzw. Zahl', broken[0] === 0 && broken[1] === 0 && broken[2] === 0.5 && broken[3] === 0, JSON.stringify(broken));
+
+  // ------------------------------------------------------------
+  // Guide-/Overlay-Taste: Fehlauslöser beim Stickbewegen filtern
+  // ------------------------------------------------------------
+  const guideBase = {
+    guideAvailable: true,
+    boundIndexes: [0, 1, 2, 3, 4, 5, 8, 9],
+    combo: [10, 11],
+    index: 16,
+    heldMs: 200,
+    stickMagnitude: 0
+  };
+  check('Guide: gültiger Kurzdruck schaltet',
+    guideToggleAllowed(guideBase) === true);
+  check('Guide: genau 90 ms ist noch ein Kurzdruck',
+    guideToggleAllowed({ ...guideBase, heldMs: 90 }) === true);
+  check('Guide: <90 ms ist ein Fehlauslöser',
+    guideToggleAllowed({ ...guideBase, heldMs: 60 }) === false);
+  check('Guide: 0 ms ist ein Fehlauslöser',
+    guideToggleAllowed({ ...guideBase, heldMs: 0 }) === false);
+  check('Guide: Langdruck (600 ms) überlässt Settings dem Renderer',
+    guideToggleAllowed({ ...guideBase, heldMs: 600 }) === false);
+  check('Guide: langer Druck (900 ms) schaltet nicht',
+    guideToggleAllowed({ ...guideBase, heldMs: 900 }) === false);
+
+  // StateEx (guideAvailable=true) meldet den Guide zuverlässig. Der
+  // automatische View-Fallback bleibt trotzdem ein Fehlauslöser-Kandidat.
+  check('StateEx verfügbar + Stickbewegung am View-Fallback → kein Toggle',
+    guideToggleAllowed({
+      ...guideBase,
+      index: 8,
+      fallback: true,
+      stickMagnitude: 0.8
+    }) === false);
+  check('Guide nur aus Raw-Fallback + Stickbewegung → kein Toggle',
+    guideToggleAllowed({
+      ...guideBase,
+      guideAvailable: false,
+      stickMagnitude: 0.6
+    }) === false);
+  check('Guide nur aus Raw-Fallback, Stick ruhig → Toggle',
+    guideToggleAllowed({
+      ...guideBase,
+      guideAvailable: false,
+      stickMagnitude: 0.2
+    }) === true);
+  check('View belegt → kein Fallback-Toggle',
+    guideToggleAllowed({
+      ...guideBase,
+      index: 8,
+      fallback: true
+    }) === false);
+  check('View in der Kombination → kein Fallback-Toggle',
+    guideToggleAllowed({
+      ...guideBase,
+      combo: [8, 11],
+      index: 8,
+      fallback: true
+    }) === false);
+  check('View nicht belegt → Fallback erlaubt',
+    guideToggleAllowed({
+      ...guideBase,
+      boundIndexes: [0, 1, 2, 3, 4, 5, 9],
+      index: 8,
+      fallback: true
+    }) === true);
+  check('Explizit gewählte View-Taste bleibt trotz Belegung möglich',
+    guideToggleAllowed({
+      ...guideBase,
+      index: 8,
+      fallback: false
+    }) === true);
+  check('Guide: fehlende Optionen schalten nicht',
+    guideToggleAllowed() === false && guideToggleAllowed(null) === false);
 
   fs.rmSync(temp, { recursive: true, force: true });
   if (process.exitCode) {

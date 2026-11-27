@@ -43,6 +43,45 @@ export const BUTTONS = [
 
 const AXIS_DEADZONE = 0.18;
 
+// Mindest-Haltezeit der Overlay-Taste. Kürzere Presses entstehen fast
+// immer durch versehentlichen Kontakt beim Bewegen des Sticks.
+export const GUIDE_MIN_HOLD_MS = 90;
+// Ab dieser Haltezeit übernimmt der Langdruck (Einstellungen).
+export const GUIDE_LONG_HOLD_MS = 600;
+// Ab dieser Stick-Auslenkung gilt ein Guide-Signal als Fehlauslöser.
+export const GUIDE_STICK_LIMIT = 0.35;
+
+// Reine Entscheidung, ob ein Tastendruck das Overlay umschalten darf.
+// Getrennt vom Controller, damit die Fälle ohne DOM prüfbar sind.
+//
+// - Kurze Fehlauslöser (< 90 ms) und Langdruck (>= 600 ms) schalten nie.
+// - Der automatische View-Fallback (Index 8) ist gesperrt, sobald View
+//   selbst belegt ist oder in der Kombination vorkommt. Dann löst View
+//   nur noch seine eigene Aktion aus (z. B. Einstellungen).
+// - Kommt der Guide nur aus dem Raw-Fallback (guideAvailable !== true)
+//   oder über die Fallback-Taste, wird ein Druck bei ausgelenktem Stick
+//   ignoriert: Genau so öffnete sich das Overlay beim Stickbewegen.
+export function guideToggleAllowed(options) {
+  const {
+    guideAvailable,
+    boundIndexes,
+    combo,
+    index,
+    heldMs,
+    stickMagnitude,
+    fallback
+  } = options || {};
+  const held = Number(heldMs);
+  if (!Number.isFinite(held) || held < GUIDE_MIN_HOLD_MS || held >= GUIDE_LONG_HOLD_MS) return false;
+  const bound = (Array.isArray(boundIndexes) ? boundIndexes : []).map(Number);
+  const comboKeys = (Array.isArray(combo) ? combo : []).map(Number);
+  const isFallback = fallback === undefined ? Number(index) === 8 : Boolean(fallback);
+  if (isFallback && (bound.includes(8) || comboKeys.includes(8))) return false;
+  const stick = Math.abs(Number(stickMagnitude) || 0);
+  if (stick > GUIDE_STICK_LIMIT && (guideAvailable !== true || isFallback)) return false;
+  return true;
+}
+
 function padName(id) {
   return String(id || 'Controller')
     .replace(/\s*\(.*?\)\s*/g, ' ')
@@ -182,6 +221,7 @@ export function createController(options) {
       }
     }
     xinputSeen = true;
+    if (typeof snapshot.guideAvailable === 'boolean') guideAvailable = snapshot.guideAvailable;
     if (typeof snapshot.triggersMirrorStick === 'boolean' && snapshot.triggersMirrorStick !== triggersMirrorStick) {
       triggersMirrorStick = snapshot.triggersMirrorStick;
       console.log('[d2] Trigger spiegeln Stick:', triggersMirrorStick);
@@ -237,11 +277,19 @@ export function createController(options) {
   let comboHeld = false;
   let lastComboAt = 0;
   let lastGuideAt = 0;
+  // Meldet der XInput-Treiber den Guide-Knopf zuverlässig
+  // (XInputGetStateEx)? null = noch unbekannt.
+  let guideAvailable = null;
   // Zweifunktion der Overlay-Einzeltaste (z. B. Guide): kurzer Druck
   // schaltet das Overlay, Halten ab 600 ms öffnet die Einstellungen.
   let toggleHeld = false;
   let toggleDownAt = 0;
   let toggleLongFired = false;
+  let toggleActiveIndex = -1;
+  let toggleStickMagnitude = 0;
+  // LT/RT: Aktionsbelegungen nur bei steigender Flanke auslösen.
+  let triggerLeftHeld = false;
+  let triggerRightHeld = false;
   let lastPoll = performance.now();
   let capturing = false;
   let captured = [];
@@ -287,6 +335,17 @@ let lastDpadDownAt = 0;
     cursorElement.classList.toggle('hidden', !visible);
     cursorElement.classList.toggle('precision', precision);
     document.body.classList.toggle('pad-active', visible);
+  }
+
+  // Größte Stick-Auslenkung (0..1) im Moment des Tastendrucks. Der
+  // Guide-Schutz nutzt sie, um Fehlauslöser beim Spielen zu erkennen.
+  function stickMagnitudeNow() {
+    const rawAxes = (pad && pad.rawAxes && pad.rawAxes.length === 4)
+      ? pad.rawAxes
+      : (pad && Array.isArray(pad.axes) ? pad.axes : []);
+    const left = Math.hypot(Number(rawAxes[0] || 0), Number(rawAxes[1] || 0));
+    const right = Math.hypot(Number(rawAxes[2] || 0), Number(rawAxes[3] || 0));
+    return Math.max(left, right);
   }
 
   function positionCursor() {
@@ -430,13 +489,119 @@ let lastDpadDownAt = 0;
     return document.elementFromPoint(x, y);
   }
 
+  // Bekannte scrollbare Bereiche im Tool. `closest` findet den nächsten
+  // Treffer; reicht dessen Höhe nicht, sucht findScrollableAncestor den
+  // nächsten echten Scroll-Vorfahren (overflow-y auto/scroll).
+  const SCROLLABLE_SELECTOR = [
+    '.inv-popup',
+    '.inv-dw-sheet-body',
+    '.inv-dw-sheet',
+    '.inv-dw-body',
+    '.inv-dw-backdrop',
+    '.champion-audit',
+    '.loadout-queue-panel',
+    '.inventory-outbox-panel',
+    '.hud-editor',
+    '.notes-textarea',
+    '.notes-panel',
+    '.dashboard',
+    '#dashboardPanel',
+    '.dash-card',
+    '.inventory-tools-tab',
+    '.inventory-editor-tab',
+    '.inventory-body',
+    '#inventoryBody',
+    '.settings-panels',
+    '.modal-card'
+  ].join(', ');
+
+  // Scroll-Ziele in Vorrangreihenfolge für den zweiten Stick. Offene
+  // Dialoge/Panels stehen vor dem Hintergrund, damit der Stick nicht
+  // das verdeckte Inventar bewegt.
+  const SCROLL_PRIORITY = [
+    '.inv-popup-backdrop.open .inv-popup',
+    '.inv-dw-backdrop:not(.hidden) .inv-dw-sheet:not(.hidden) .inv-dw-sheet-body',
+    '.inv-dw-backdrop:not(.hidden) .inv-dw-body',
+    '#championAuditPanel:not(.hidden)',
+    '#loadoutQueuePanel:not(.hidden)',
+    '#inventoryOutboxPanel:not(.hidden)',
+    '#hudEditorPanel:not(.hidden)',
+    '#notesPanel:not(.hidden) .notes-textarea',
+    '.modal:not(.hidden) .settings-panels',
+    '.modal:not(.hidden) .modal-card',
+    '#inventoryView:not(.hidden) .inventory-editor-tab:not(.hidden)',
+    '#inventoryView:not(.hidden) .inventory-tools-tab:not(.hidden)',
+    '#dashboardPanel:not(.hidden)',
+    '#inventoryView:not(.hidden) .inventory-body'
+  ];
+
+  function isScrollableOverflow(element) {
+    let style;
+    try { style = getComputedStyle(element); } catch (error) { return false; }
+    const overflowY = style ? String(style.overflowY || '') : '';
+    return overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+  }
+
+  // Kann dieses Element vertikal scrollen? Textareas scrollen auch ohne
+  // explizites overflow-y in der eigenen CSS-Regel.
+  function canScrollVertically(element) {
+    if (!element || element.nodeType !== 1) return false;
+    if (element.scrollHeight <= element.clientHeight + 1) return false;
+    if (element.tagName === 'TEXTAREA') return true;
+    return isScrollableOverflow(element);
+  }
+
+  function findScrollableAncestor(element) {
+    let node = element;
+    while (node && node !== document.body && node !== document.documentElement) {
+      if (canScrollVertically(node)) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  // Wenn der Cursor auf dem Rand/Backdrop eines Panels liegt, gibt es
+  // keinen scrollbaren Vorfahren. Dann den eigentlichen Inhalt nehmen.
+  function panelScrollFallback(element) {
+    if (!element || !element.closest) return null;
+    const sheet = element.closest('.inv-dw-sheet:not(.hidden)');
+    if (sheet) {
+      const body = sheet.querySelector('.inv-dw-sheet-body');
+      if (body && canScrollVertically(body)) return body;
+    }
+    const backdrop = element.closest('.inv-dw-backdrop:not(.hidden)');
+    if (backdrop) {
+      const body = backdrop.querySelector('.inv-dw-body') || backdrop.querySelector('.inv-dw-sheet-body');
+      if (body && canScrollVertically(body)) return body;
+    }
+    const card = element.closest('.modal:not(.hidden) .modal-card');
+    if (card) {
+      const panels = card.querySelector('.settings-panels');
+      if (panels && canScrollVertically(panels)) return panels;
+    }
+    const notes = element.closest('#notesPanel:not(.hidden)');
+    if (notes) {
+      const text = notes.querySelector('.notes-textarea');
+      if (text && canScrollVertically(text)) return text;
+    }
+    return null;
+  }
+
+  function scrollContainerFor(element) {
+    if (!element) return null;
+    let known = null;
+    try { known = element.closest(SCROLLABLE_SELECTOR); } catch (error) { known = null; }
+    if (known && canScrollVertically(known)) return known;
+    return findScrollableAncestor(element) || panelScrollFallback(element);
+  }
+
   function scrollAtCursor(direction) {
     const now = performance.now();
     if (now - lastScrollAt < 85) return;
     lastScrollAt = now;
 
     const element = topElementAt(cursorX, cursorY);
-    const scrollable = element && element.closest('.settings-panels, .modal-card, #inventoryBody, .inventory-body, .inventory-tools-tab, .inventory-editor-tab');
+    const scrollable = scrollContainerFor(element);
     if (scrollable) scrollable.scrollBy({ top: direction * 140, behavior: 'smooth' });
   }
 
@@ -446,49 +611,19 @@ let lastDpadDownAt = 0;
     const speed = clamp(Number(cfgNow.gamepad.scrollSpeed) || 980, 150, 3000);
     const amount = axisY * speed * dt;
     if (Math.abs(amount) < 0.5) return;
-    // Inventar-Popup zuerst (hat einen eigenen Scrollbereich).
-    const popup = document.querySelector('.inv-popup-backdrop.open .inv-popup');
-    if (popup) {
-      popup.scrollTop += amount;
-      return;
-    }
-    const inventoryBody = document.querySelector('#inventoryView:not(.hidden) .inventory-body');
-    const editorTabBody = document.querySelector('#inventoryView:not(.hidden) .inventory-editor-tab:not(.hidden)');
-    const toolsTab = document.querySelector('#inventoryView:not(.hidden) .inventory-tools-tab:not(.hidden)');
-    if (editorTabBody) {
-      editorTabBody.scrollTop += amount;
-      return;
-    }
-    if (toolsTab) {
-      toolsTab.scrollTop += amount;
-      return;
-    }
-    if (inventoryBody && !inventoryBody.classList.contains('hidden')) {
-      inventoryBody.scrollTop += amount;
-      return;
-    }
-    const settingsPanels = document.querySelector('.modal:not(.hidden) .settings-panels');
-    if (settingsPanels) {
-      settingsPanels.scrollTop += amount;
-      return;
-    }
-    const modalCard = document.querySelector('.modal:not(.hidden) .modal-card');
-    if (modalCard) {
-      modalCard.scrollTop += amount;
-      return;
-    }
-    const notesText = document.querySelector('#notesPanel:not(.hidden) .notes-textarea');
-    if (notesText) {
-      notesText.scrollTop += amount;
-      return;
-    }
-    const dashboardPanel = document.querySelector('#dashboardPanel:not(.hidden)');
-    if (dashboardPanel) {
-      dashboardPanel.scrollTop += amount;
+    // Offene Panels zuerst (sie haben einen eigenen Scrollbereich).
+    // Das erste sichtbare Panel verbraucht den Stick, damit nicht das
+    // dahinterliegende Inventar mitwandert.
+    for (const selector of SCROLL_PRIORITY) {
+      let element = null;
+      try { element = document.querySelector(selector); } catch (error) { element = null; }
+      if (!element) continue;
+      const target = canScrollVertically(element) ? element : panelScrollFallback(element);
+      if (target) target.scrollTop += amount;
       return;
     }
     const element = topElementAt(cursorX, cursorY);
-    const scrollable = element && element.closest('.settings-panels, .modal-card, #inventoryBody, .inventory-body, .inventory-tools-tab, .inventory-editor-tab');
+    const scrollable = scrollContainerFor(element);
     if (scrollable) scrollable.scrollTop += amount;
   }
 
@@ -931,15 +1066,23 @@ let lastDpadDownAt = 0;
     // gamepad.toggleLongPressSettings).
     const toggleButton = Number(cfg.gamepad.toggleButton) || 0;
     const toggleIndex = toggleButton > 0 ? toggleButton : (cfg.gamepad.guideToggle !== false ? 16 : 0);
+    // Belegte Tasten (ohne -1). Der View-Fallback ist nur erlaubt, wenn
+    // View nicht selbst eine Aktion hat und nicht in der Kombination
+    // vorkommt - sonst würde View gleichzeitig Einstellungen öffnen
+    // und das Overlay umschalten.
+    const boundIndexes = Object.values(cfg.gamepad.bindings || {})
+      .map((value) => Number(value))
+      .filter((value) => Number.isInteger(value) && value >= 0 && value <= 16);
     // Guide-Fallback (Xbox-360): View-Taste übernimmt, wenn der
     // Treiber den Guide-Knopf gar nicht meldet.
-    const guideFallback =
-      toggleIndex === 16 && !guideEverSeen && knownLabels && !knownLabels.split('+').includes('Guide');
+    const guideReported = guideAvailable === true || guideEverSeen;
+    const guideFallback = toggleIndex === 16 && !guideReported &&
+      !boundIndexes.includes(8) && !combo.includes(8);
 
     let activeToggle = -1;
     if (!capturing && toggleIndex > 0 && pressed[toggleIndex] && !combo.includes(toggleIndex)) {
       activeToggle = toggleIndex;
-    } else if (!capturing && guideFallback && pressed[8] && !combo.includes(8)) {
+    } else if (!capturing && guideFallback && pressed[8]) {
       activeToggle = 8;
     }
 
@@ -948,6 +1091,8 @@ let lastDpadDownAt = 0;
         toggleHeld = true;
         toggleDownAt = now;
         toggleLongFired = false;
+        toggleActiveIndex = activeToggle;
+        toggleStickMagnitude = stickMagnitudeNow();
       }
       if (cfg.gamepad.toggleLongPressSettings !== false && !toggleLongFired && now - toggleDownAt >= 600) {
         toggleLongFired = true;
@@ -957,7 +1102,16 @@ let lastDpadDownAt = 0;
     } else if (toggleHeld) {
       toggleHeld = false;
       const heldMs = now - toggleDownAt;
-      if (!toggleLongFired && heldMs < 600 && now - lastGuideAt > 800) {
+      const allowed = !toggleLongFired && guideToggleAllowed({
+        guideAvailable,
+        boundIndexes,
+        combo,
+        index: toggleActiveIndex,
+        heldMs,
+        stickMagnitude: toggleStickMagnitude,
+        fallback: toggleActiveIndex === 8 && toggleIndex === 16
+      });
+      if (allowed && now - lastGuideAt > 800) {
         lastGuideAt = now;
         rumble(0.6);
         if (onToggleOverlay) onToggleOverlay();
@@ -1207,16 +1361,21 @@ let lastDpadDownAt = 0;
     // Belegungen (z. B. 'notes', 'click'). Nicht belegte
     // Trigger scrollen weiter.
     const triggerActions = { left: cfg.gamepad.triggerLeft || 'scroll', right: cfg.gamepad.triggerRight || 'scroll' };
-    const fireTrigger = (side, direction) => {
+    const updateTrigger = (side, direction, value, wasHeld) => {
+      const active = value > triggerThreshold;
       const binding = triggerActions[side];
       if (!binding || binding === 'scroll') {
-        scrollAtCursor(direction);
-        return;
+        // Scrollen bleibt kontinuierlich, solange der Trigger gedrückt ist.
+        if (active) scrollAtCursor(direction);
+      } else if (active && !wasHeld) {
+        // Aktionen nur bei steigender Flanke - sonst feuert z. B.
+        // "Notizen" bei jedem Frame und öffnet dutzende Fenster.
+        if (onAction) onAction(binding);
       }
-      if (onAction) onAction(binding);
+      return active;
     };
-    if (leftTrigger > triggerThreshold) fireTrigger('left', -1);
-    if (rightTrigger > triggerThreshold) fireTrigger('right', 1);
+    triggerLeftHeld = updateTrigger('left', -1, leftTrigger, triggerLeftHeld);
+    triggerRightHeld = updateTrigger('right', 1, rightTrigger, triggerRightHeld);
 
     previous = pressed;
   }

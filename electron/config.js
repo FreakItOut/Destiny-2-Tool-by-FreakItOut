@@ -166,14 +166,10 @@ const DEFAULTS = {
       precision: 3,
       categoryPrev: 4,
       categoryNext: 5,
-      sitePrev: 14,
-      siteNext: 15,
       settings: 8,
       hide: 9,
-      // Neue Aktionen: standardmäßig nicht belegt (-1).
+      // Standardmäßig nicht belegt (-1).
       notes: -1,
-      pip: -1,
-      unloadOthers: -1,
       hud: -1
     },
     // Feinsteuerung pro Webseite: siteId -> Deadzone (0.05-0.6).
@@ -237,7 +233,7 @@ const DEFAULTS = {
     // Globale Seiten-Kürzel (Strg+Alt+1..8): öffnen Kategorien systemweit.
     globalSiteHotkeys: false,
     // LT/RT-Verhalten: 'scroll' = Standard (schnell scrollen), oder
-    // ein Action-Key aus den Belegungen (z. B. 'pip', 'notes').
+    // ein Action-Key aus den Belegungen (z. B. 'notes').
     triggerLeft: 'scroll',
     triggerRight: 'scroll',
     // Kurze Vibration bei Kategorie-/Seitenwechsel.
@@ -769,9 +765,11 @@ function normalize(raw) {
   // Tastenbelegung: Aktion -> Button-Index. -1 = nicht belegt.
   // Achtung: 0 ist eine gueltige Taste (A)! "Nicht belegt" muss -1
   // sein, sonst laesst sich die A-Taste nicht zuweisen.
-  const BINDING_KEYS = ['click', 'back', 'reload', 'precision', 'categoryPrev', 'categoryNext', 'sitePrev', 'siteNext', 'settings', 'hide', 'notes', 'pip', 'unloadOthers', 'hud'];
+  const BINDING_KEYS = ['click', 'back', 'reload', 'precision', 'categoryPrev', 'categoryNext', 'settings', 'hide', 'notes', 'hud'];
   const bindings = merged.gamepad.bindings && typeof merged.gamepad.bindings === 'object' ? merged.gamepad.bindings : {};
   const nextBindings = {};
+  // Nur bekannte Aktionen übernehmen. Alte/tote Keys (Web-Aktionen wie
+  // sitePrev/siteNext/pip/unloadOthers) werden verworfen.
   for (const key of BINDING_KEYS) {
     const value = Number(bindings[key]);
     // Alter Stand: 0 bedeutete "nicht belegt" - dabei ist 0 die

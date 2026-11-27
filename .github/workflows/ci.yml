@@ -47,6 +47,9 @@ jobs:
       - name: App-Features
         run: npm run test:app-features
 
+      - name: Gamepad-Helfer-Selbsttest
+        run: node tools/gamepad-helper-test.js
+
       - name: Champion-Rahmen
         run: node tools/champion-frames-test.js
 

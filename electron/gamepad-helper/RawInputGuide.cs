@@ -162,6 +162,16 @@ public static class RawInputGuide
     public static void Start()
     {
         if (Running) return;
+        // Sicherheitsnetz: Bei XInputGetStateEx ist Raw Input unnötig
+        // und kann Fehlauslösungen erzeugen.
+        try
+        {
+            if (GamepadHelper.StateExAvailable) return;
+        }
+        catch (Exception)
+        {
+            // Wenn die Prüfung nicht möglich ist, bleibt der Fallback.
+        }
         Running = true;
         Worker = new Thread(Run);
         Worker.IsBackground = true;
@@ -454,9 +464,12 @@ public static class RawInputGuide
     /// Nova Lite linker-Stick-Datum und löste bei jeder Stickbewegung
     /// falsch aus.)
     ///
-    /// Für andere Hersteller gilt weiterhin die klassische Xbox-360-
-    /// Annahme: Report-ID in Byte 0, dann das Knopf-Bitfeld, Guide ist
-    /// die 9. Taste (Bit 8 = 0x01 im zweiten Knopfbyte).
+    /// Für unbekannte Hersteller wird bewusst nichts geraten: Die
+    /// frühere "Byte 1 Bit 0"-Heuristik traf bei normalen Xbox-HID-
+    /// Reports ein Stick-/Datenbit und meldete bei jeder Stickbewegung
+    /// den Guide. Ohne XInputGetStateEx gibt es dann keinen Guide über
+    /// Raw Input; Nutzer wählen eine andere Toggle-Taste. Lieber kein
+    /// Guide als Fehlauslösungen.
     /// </summary>
     private static bool DetectGuide(byte[] data, uint vendorId)
     {
@@ -468,12 +481,6 @@ public static class RawInputGuide
             return (data[12] & 0x01) != 0;
         }
 
-        // Standard-Layout: Report-ID in Byte 0 (0x01/0x02), danach
-        // Knopfbytes. Guide = 9. Knopf = Bit 8 = 0x01 im zweiten
-        // Knopfbyte.
-        int offset = data[0] == 0x01 || data[0] == 0x02 ? 1 : 0;
-        int buttonByte = offset + 1;
-        if (buttonByte >= data.Length) return false;
-        return (data[buttonByte] & 0x01) != 0;
+        return false;
     }
 }

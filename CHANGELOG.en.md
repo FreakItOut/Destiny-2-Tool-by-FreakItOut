@@ -6,6 +6,32 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.18.1] – 2026-11-27
+
+### Fixed
+
+- **Overlay opened when moving the analog stick** – the guide button arrived
+  twice: `XInputGetStateEx` already reports it, but the raw-input guide was
+  evaluated as well. Its generic HID heuristic interpreted a stick bit as the
+  guide on Xbox controllers. Raw input is now only a fallback when
+  `XInputGetStateEx` is unavailable; the unsafe heuristic is removed.
+- **Guide toggle hardened** – toggling requires at least 90 ms hold time; the
+  automatic View fallback only applies when View is not bound to an action or
+  part of the combo; with the raw fallback, a press with a deflected stick is
+  ignored.
+- **Trigger actions** – LT/RT actions now fire on the rising edge only, not
+  every frame (no more repeated firing). Scrolling remains continuous.
+- **Bindings** – dead web actions (`sitePrev`, `siteNext`, `pip`,
+  `unloadOthers`) removed; D-pad buttons are now clearly labelled D↑, D↓, D←,
+  D→.
+- **Scrolling** – the loadout sheet, champion audit, queue, offline outbox,
+  HUD editor, notes and dashboard are now reachable with stick/trigger.
+
+### Technical
+
+- New gamepad helper self-test (prebuilt, `--selftest`) in CI and release;
+  controller navigation expanded to **31**, app features to **116** checks.
+
 ## [1.18.0] – 2026-11-27
 
 ### Added

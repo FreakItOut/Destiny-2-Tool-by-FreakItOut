@@ -6,6 +6,32 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.18.1] – 2026-11-27
+
+### Behoben
+
+- **Overlay öffnete sich beim Bewegen des Analogsticks** – der Guide-Knopf
+  kam doppelt: `XInputGetStateEx` liefert ihn bereits, zusätzlich wurde der
+  Raw-Input-Guide ausgewertet. Dessen generische HID-Heuristik deutete bei
+  Xbox-Controllern ein Stick-Bit als Guide. Raw-Input ist jetzt nur noch
+  Fallback, wenn `XInputGetStateEx` fehlt; die unsichere Heuristik ist
+  entfernt.
+- **Guide-Toggle abgesichert** – Umschalten erst ab 90 ms Haltezeit; der
+  automatische View-Fallback greift nur, wenn View nicht selbst belegt ist
+  oder in der Kombination vorkommt; bei Raw-Fallback wird ein Druck mit
+  ausgelenktem Stick ignoriert.
+- **Trigger-Aktionen** – LT/RT-Aktionen lösen nur noch bei steigender Flanke
+  aus, nicht jeden Frame (kein Dauerfeuer mehr). Scrollen bleibt kontinuierlich.
+- **Belegung** – tote Web-Aktionen (`sitePrev`, `siteNext`, `pip`,
+  `unloadOthers`) entfernt; D-Pad-Tasten heißen jetzt eindeutig D↑, D↓, D←, D→.
+- **Scrollen** – Loadout-Sheet, Champion-Prüfung, Queue, Offline-Ausgang,
+  HUD-Editor, Notizen und Dashboard werden jetzt mit Stick/Trigger erreicht.
+
+### Technik
+
+- Neuer Gamepad-Helfer-Selbsttest (Prebuilt, `--selftest`) in CI und Release;
+  Controller-Navigation auf **31**, App-Features auf **116** Prüfungen.
+
 ## [1.18.0] – 2026-11-27
 
 ### Hinzugefügt

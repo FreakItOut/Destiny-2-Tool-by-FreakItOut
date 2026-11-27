@@ -39,6 +39,7 @@ const ALL = [
   { script: 'test:app-features', label: 'App-Features', timeout: 120000 },
   { script: 'test:manifest-frame', node: 'tools/manifest-frame-test.js', label: 'Manifest-Rahmen', timeout: 120000 },
   { script: 'test:gamepad-ui', label: 'Controller-Auswahl', timeout: 120000 },
+  { script: 'test:gamepad-helper', node: 'tools/gamepad-helper-test.js', label: 'Gamepad-Helfer-Selbsttest', timeout: 120000 },
   { script: 'test:api-e2e', label: 'Stream-Deck-API (Laufzeit)', timeout: 300000 },
   { script: 'test:plugin', label: 'Stream-Deck-Plugin', timeout: 120000 },
   { script: 'test:plugin-package', label: 'Stream-Deck-Plugin-Paket', timeout: 180000 },
