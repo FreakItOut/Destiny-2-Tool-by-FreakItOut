@@ -72,6 +72,11 @@ check('Einstellungen lazy geladen', app.includes("import('./settings.js')") && s
 check('Offline-Ausgang Detailpanel', inventory.includes('renderOutboxPanel') && index.includes('inventoryOutboxPanel'));
 check('Loadout-Warteschlange Panel', inventory.includes('renderLoadoutQueuePanel') && index.includes('loadoutQueuePanel'));
 check('Champion-Prüfung', inventory.includes('openChampionAudit') && index.includes('championAuditPanel'));
+check('Artefakt-Perks über die API',
+  inventory.includes('Artefakt-Perks werden beim Anwenden über den Artefakt-Socket gesteckt.') &&
+  inventory.includes('Artefakt-Perk(s) angewendet') &&
+  inventory.includes('ist nicht ausgerüstet') &&
+  !inventory.includes('Artefakt-Perks (nur dokumentiert)'));
 check('Titelleiste: Chips und Fensterknöpfe verdrahtet',
   app.includes('initClock({') &&
   app.includes("qsa('[data-win]')") &&

@@ -6,6 +6,35 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.0] – 2026-11-27
+
+### Added
+
+- **Artifact perks in loadouts** – loadouts remember the real artifact socket
+  of each perk and apply all perks through the Bungie API
+  (`InsertSocketPlugFree`) when applied. The result lists applied and skipped
+  perks (not unlocked/tier).
+- **Seasonal artifact check** – if a loadout references a different artifact
+  than the equipped one, its perks are skipped cleanly; the rest of the
+  loadout still applies. The artifact itself remains an in-game choice.
+- **Offline queue** – stores the artifact reference and socket indices and
+  applies them when the queue is retried.
+
+### Changed
+
+- The editor hint and apply preview no longer say "documented only":
+  artifact perks are explicitly treated as an API application.
+
+### Fixed
+
+- The undo button in the result dialog is no longer attached to the wrong
+  element; real loadout applications no longer throw an `insertBefore` error.
+
+### Technical
+
+- E2E expanded to **546** steps, app features to **108** checks; dialog
+  baselines updated.
+
 ## [1.16.1] – 2026-11-27
 
 ### Fixed

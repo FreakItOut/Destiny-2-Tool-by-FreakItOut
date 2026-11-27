@@ -107,7 +107,9 @@ const equipped = {
     item({ hash: 4001, instanceId: 'i-ghost', name: 'Testgeist', bucket: B.GHOST }),
     item({ hash: 4002, instanceId: 'i-emblem', name: 'Testemblem', bucket: B.EMBLEM }),
     item({ hash: 4003, instanceId: 'i-ship', name: 'Testschiff', bucket: B.SHIP }),
-    item({ hash: 4004, instanceId: 'i-sparrow', name: 'Testsparrow', bucket: B.SPARROW })
+    item({ hash: 4004, instanceId: 'i-sparrow', name: 'Testsparrow', bucket: B.SPARROW }),
+    // Artefakt ist angelegt (für den API-Apply-Pfad).
+    item({ hash: 3306, instanceId: 'i-art', name: 'Test-Artefakt', bucket: 1506418338, typeName: 'Artefakt' })
   ]
 };
 // Intrinsische Champion-Fähigkeiten an den ausgerüsteten Waffen.
@@ -189,9 +191,7 @@ const backpack = {
     item({ hash: 3303, instanceId: 'i-engram', name: 'Test-Engramm', bucket: 375726501, typeName: 'Engramm' }),
     item({ hash: 3304, instanceId: 'i-currency', name: 'Test-Währung', bucket: 3703306570, typeName: 'Währung' }),
     // Accessoires sind ein echtes Inventar-Bucket (DIM: Inventory).
-    item({ hash: 3305, instanceId: 'i-acc', name: 'Test-Accessoire', bucket: 687325600, typeName: 'Accessoires' }),
-    // Artefakt (darf nur einmal erscheinen, nicht zusätzlich als Extra-Zeile).
-    item({ hash: 3306, instanceId: 'i-art', name: 'Test-Artefakt', bucket: 1506418338, typeName: 'Artefakt' })
+    item({ hash: 3305, instanceId: 'i-acc', name: 'Test-Accessoire', bucket: 687325600, typeName: 'Accessoires' })
   ]
 };
 
@@ -301,6 +301,8 @@ let inventoryCalls = 0;
 let xurOverlayOpened = 0;
 let statsHudPayload = null;
 let insertPlugCalls = 0;
+const insertPlugPayloads = [];
+let insertPlugFailForHash = 0;
 const api = {
   bungieInventory: async () => { inventoryCalls += 1; return JSON.parse(JSON.stringify(payload)); },
   bungieInventoryCached: async () => JSON.parse(JSON.stringify(payload)),
@@ -458,7 +460,14 @@ const api = {
   bungieFarming: async () => { farmCalls += 1; return { ok: true, items: [...payload.backpack.c1, ...(farmExtra ? [farmExtra] : [])] }; },
   bungieTransfer: async () => transferResponse || { ok: true },
   bungieEquip: async () => ({ ok: true }),
-  bungieInsertPlug: async () => { insertPlugCalls += 1; return { ok: true }; },
+  bungieInsertPlug: async (request) => {
+    insertPlugCalls += 1;
+    if (request && typeof request === 'object') insertPlugPayloads.push({ ...request });
+    if (insertPlugFailForHash && Number(request && request.plugItemHash) === Number(insertPlugFailForHash)) {
+      return { ok: false, error: 'Perk nicht freigeschaltet (Tier 2)' };
+    }
+    return { ok: true };
+  },
   bungieLock: async () => ({ ok: true }),
   bungieWishlistRefresh: async () => ({ ok: true }),
   bungieItemInfo: async (hashes) => ({ ok: true, items: { '3001': { n: 'Testgewehr', t: 'Kinetik', i: '/common/destiny2_content/icons/test.png', r: 5, b: 1498876634, c: 3, p: '', d: 'Ein Testgewehr mit Beschreibung.', f: 'Flavor-Text', s: [{ h: 155624089, v: 80 }] }, '2101': { n: 'Gesundheits-Helm', t: 'Helm', i: '', b: 3448274439, c: 0, p: '' }, '5001': { n: 'Waffen-Mod', t: 'Mod', i: '/mod.png', b: 0, c: 3, p: 'enhancements.armor', s: [{ h: 2996146975, v: 10 }] }, '1001': { n: 'Prismatische Titanin', t: 'Unterklasse', i: '', b: 3284755031, c: 3, p: '' }, '7001': { n: 'Hammer des Zorns', t: 'Super', i: '/hammer.png', b: 0, c: 3, p: 'supers' }, '9001': { n: 'Test-Artefakt', t: 'Artefakt', i: '/art.png', b: 1506418338, c: 3, p: '' }, '7002': { n: 'Artefakt-Perk', t: 'Perk', i: '/perk.png', b: 0, c: 3, p: 'artifact_perks', d: 'Perk' } } }),
@@ -1394,6 +1403,75 @@ async function run() {
   await wait(120);
   check('Vorschau abbrechbar', !document.querySelector('.inv-confirm-backdrop.open'));
   document.querySelector('[data-tab="inventory"]').click();
+
+  // --- Artefakt-Perks über die API anwenden ---------------------------
+  const artifactLoadout = {
+    id: 'l-art-api',
+    name: 'Artefakt-API-Test',
+    classType: 3,
+    characterId: 'c1',
+    items: [{ instanceId: 'i-helm', hash: 2001, name: 'Testhelm', bucket: 3448274439 }],
+    mods: [],
+    artifactPerks: [{ h: 8001, n: 'Artefakt-Mod: Überladung', idx: 0 }],
+    subclassPlugs: [],
+    artifact: { hash: 3306, name: 'Test-Artefakt' }
+  };
+  const foreignArtifactLoadout = {
+    id: 'l-art-mismatch',
+    name: 'Artefakt-Fremd-Test',
+    classType: 3,
+    characterId: 'c1',
+    items: [{ instanceId: 'i-helm', hash: 2001, name: 'Testhelm', bucket: 3448274439 }],
+    mods: [],
+    artifactPerks: [{ h: 8001, n: 'Artefakt-Mod: Überladung', idx: 0 }],
+    subclassPlugs: [],
+    artifact: { hash: 9999, name: 'Fremd-Artefakt' }
+  };
+  setConfig({ bungie: { loadouts: [artifactLoadout, foreignArtifactLoadout] } });
+  // Die Loadout-Seite neu aufbauen (der Tab-Wechsel rendert die Karten).
+  document.querySelector('[data-tab="inventory"]')?.click();
+  await wait(150);
+  document.querySelector('[data-tab="loadouts"]')?.click();
+  await wait(300);
+  const artCard = [...document.querySelectorAll('.inv-dw-card')].find((card) => /Artefakt-API-Test/.test(card.textContent || ''));
+  check('Artefakt-Loadout in der Bibliothek', Boolean(artCard));
+  const artifactInsertsBefore = insertPlugPayloads.length;
+  artCard?.querySelector('[data-loadout-apply]')?.click();
+  const artPreview = await until(() => document.querySelector('.inv-confirm-backdrop.open'), 3000);
+  const artPreviewText = (artPreview && artPreview.textContent) || '';
+  check('Vorschau nennt Artefakt-Perks über API',
+    /Artefakt-Perks: 1 \(über API\)/.test(artPreviewText) && !/nur dokumentiert/.test(artPreviewText),
+    artPreviewText.slice(0, 220));
+  document.querySelector('[data-confirm-ok]')?.click();
+  await wait(1400);
+  const artPayloads = insertPlugPayloads.slice(artifactInsertsBefore)
+    .filter((payload) => Number(payload.plugItemHash) === 8001);
+  check('Artefakt-Perk geht an das ausgerüstete Artefakt',
+    artPayloads.length === 1 && artPayloads[0].itemId === 'i-art' && Number(artPayloads[0].socketIndex) === 0,
+    JSON.stringify(artPayloads));
+  const artResultText = (document.querySelector('#inventoryResult') || {}).textContent || '';
+  check('Ergebnis bilanziert Artefakt-Perks',
+    /1 Artefakt-Perk\(s\) angewendet, 0 übersprungen/.test(artResultText),
+    artResultText.slice(0, 220));
+
+  // Fall: Loadout verweist auf ein nicht ausgerüstetes Artefakt.
+  const foreignInsertsBefore = insertPlugPayloads.length;
+  const foreignCard = [...document.querySelectorAll('.inv-dw-card')].find((card) => /Artefakt-Fremd-Test/.test(card.textContent || ''));
+  check('Fremd-Artefakt-Loadout in der Bibliothek', Boolean(foreignCard));
+  foreignCard?.querySelector('[data-loadout-apply]')?.click();
+  await until(() => document.querySelector('.inv-confirm-backdrop.open'), 3000);
+  document.querySelector('[data-confirm-ok]')?.click();
+  await wait(900);
+  const foreignPayloads = insertPlugPayloads.slice(foreignInsertsBefore)
+    .filter((payload) => Number(payload.plugItemHash) === 8001);
+  check('Nicht ausgerüstetes Artefakt: keine Perk-Inserts', foreignPayloads.length === 0, JSON.stringify(foreignPayloads));
+  const foreignResultText = (document.querySelector('#inventoryResult') || {}).textContent || '';
+  check('Nicht ausgerüstetes Artefakt wird gemeldet',
+    /nicht ausgerüstet/.test(foreignResultText) && /1 Perk\(s\) übersprungen/.test(foreignResultText),
+    foreignResultText.slice(0, 220));
+
+  document.querySelector('[data-tab="inventory"]')?.click();
+  await wait(200);
 
   // --- Werkzeuge: Power, Materialien, Wochen, Crafting, Xûr, Duplikate, Session ---
   // Der Build-Assistent startet den Picker, bevor die Werkzeuge jemals

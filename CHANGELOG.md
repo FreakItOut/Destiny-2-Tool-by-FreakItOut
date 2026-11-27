@@ -6,6 +6,36 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.17.0] – 2026-11-27
+
+### Hinzugefügt
+
+- **Artefakt-Perks in Loadouts** – Loadouts merken sich den echten
+  Artefakt-Socket jedes Perks und setzen beim Anwenden alle Perks über die
+  Bungie-API (`InsertSocketPlugFree`). Das Ergebnis nennt angewendete und
+  übersprungene Perks (nicht freigeschaltet/Tier).
+- **Saison-Artefakt-Prüfung** – verweist ein Loadout auf ein anderes Artefakt
+  als das ausgerüstete, werden die Perks klar übersprungen; der Rest des
+  Loadouts läuft normal weiter. Das Artefakt selbst bleibt eine
+  In-Game-Entscheidung.
+- **Offline-Warteschlange** – merkt sich Artefakt-Referenz und Socket-Indizes
+  und wendet sie beim späteren Nachholen mit an.
+
+### Geändert
+
+- Editor-Hinweis und Anlege-Vorschau sprechen nicht mehr von „nur
+  dokumentiert“: Artefakt-Perks gelten jetzt ausdrücklich als API-Anwendung.
+
+### Behoben
+
+- Der Undo-Knopf im Ergebnisdialog hängt nicht mehr am falschen Element; echte
+  Loadout-Anwendungen werfen keinen `insertBefore`-Fehler mehr.
+
+### Technik
+
+- E2E auf **546** Schritte, App-Features auf **108** Prüfungen erweitert;
+  Dialog-Baselines aktualisiert.
+
 ## [1.16.1] – 2026-11-27
 
 ### Behoben

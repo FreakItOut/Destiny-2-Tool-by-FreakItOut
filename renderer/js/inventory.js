@@ -5435,7 +5435,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
 
   let editorSlots = new Map();
   let editorMods = [];          // Rüstungs-Mods (DIM parameters.mods)
-  let editorPerks = [];         // Artefakt-Perks (dokumentiert)
+  let editorPerks = [];         // Artefakt-Perks (mit Socket-Index für die API)
   let editorSubPlugs = [];      // Fokus-Überschreibungen (DIM socketOverrides)
   let editorFashion = {};       // Kosmetik je Rüstungs-Bucket
   let editorLoadoutId = '';
@@ -5989,7 +5989,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       '<button type="button" class="btn ghost small" data-dw-artifact-take>Vom Artefakt übernehmen</button>';
     return dwSection('Artefakt', actions,
       '<div class="inv-dw-row">' + tile + perkTiles + add + '</div>' +
-      '<p class="inv-dw-hint">Artefakt-Perks werden dokumentiert (' + editorPerks.length + '/8) — die Freischaltung passiert im Spiel.</p>');
+      '<p class="inv-dw-hint">Artefakt-Perks werden beim Anwenden über den Artefakt-Socket gesteckt. Nicht freigeschaltete Perks lehnt Bungie ab und werden im Ergebnis genannt.</p>');
   }
 
   let drawerScrollRestoreId = 0;
@@ -6694,7 +6694,11 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
           bucket: Number(item.bucket) || 0
         })),
         mods: (loadout.mods || []).map((mod) => ({ h: Number(mod.h) || 0, n: String(mod.n || ''), p: String(mod.p || ''), e: Number(mod.e) || 0 })),
-        artifactPerks: (loadout.artifactPerks || []).map((perk) => ({ h: Number(perk.h || perk.hash) || 0, n: String(perk.n || '') }))
+        artifactPerks: (loadout.artifactPerks || []).map((perk) => ({
+          h: Number(perk.h || perk.hash) || 0,
+          n: String(perk.n || ''),
+          idx: perk.idx == null ? undefined : Number(perk.idx)
+        }))
       };
       const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
         .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -6904,7 +6908,10 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
           editorMods.push({ h: Number(m.h), n: m.n, i: m.i, p: m.p, d: m.d, s: m.s || [], sb: m.sb, si: m.si });
         }
         for (const p of (lo.artifactPerks || [])) {
-          if (Number(p.h) > 0) editorPerks.push({ h: Number(p.h), n: p.n, i: p.i, p: p.p, d: p.d, s: p.s || [] });
+          if (Number(p.h) > 0) editorPerks.push({
+            h: Number(p.h), n: p.n, i: p.i, p: p.p, d: p.d, s: p.s || [],
+            idx: p.idx == null ? undefined : Number(p.idx)
+          });
         }
         for (const sp of (lo.subclassPlugs || [])) {
           if (Number(sp.hash) > 0) editorSubPlugs.push({ idx: Number(sp.idx), hash: Number(sp.hash), n: sp.n, i: sp.i, p: sp.p, d: sp.d });
@@ -7648,7 +7655,10 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     }
     const items = editorItemsForSave();
     const mods = editorMods.map((m) => ({ h: m.h, n: m.n, i: m.i, p: m.p, d: m.d, s: m.s || [], sb: m.sb, si: m.si }));
-    const artifactPerks = editorPerks.map((p) => ({ h: p.h, n: p.n, i: p.i, p: p.p, d: p.d, s: p.s || [] }));
+    const artifactPerks = editorPerks.map((p) => ({
+      h: p.h, n: p.n, i: p.i, p: p.p, d: p.d, s: p.s || [],
+      idx: p.idx == null ? undefined : Number(p.idx)
+    }));
     const subclassPlugs = editorSubPlugs.map((sp) => ({ idx: sp.idx, hash: sp.hash, n: sp.n, i: sp.i, p: sp.p || '', d: sp.d || '' }));
     if (!items.length && !mods.length && !artifactPerks.length && !subclassPlugs.length) {
       toast('Keine Items oder Mods gewählt.', 'warning', 2000);
@@ -7705,9 +7715,13 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       return;
     }
     const mods = editorMods.map((m) => ({ h: m.h, n: m.n, i: m.i, p: m.p, d: m.d, s: m.s || [], sb: m.sb, si: m.si }));
-    const perks = editorPerks.map((p) => ({ h: p.h, n: p.n, i: p.i, p: p.p, d: p.d, s: p.s || [] }));
+    const perks = editorPerks.map((p) => ({
+      h: p.h, n: p.n, i: p.i, p: p.p, d: p.d, s: p.s || [],
+      idx: p.idx == null ? undefined : Number(p.idx)
+    }));
+    const artifactRef = editorArtifact ? { hash: editorArtifact.hash, name: editorArtifact.name } : null;
     closeEditor();
-    await applyItems(editorName, editorCharId, items, mods, perks, editorSubPlugs);
+    await applyItems(editorName, editorCharId, items, mods, perks, editorSubPlugs, artifactRef);
   }
 
   async function deleteEditorLoadout() {
@@ -7943,13 +7957,20 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       if (existing >= 0) {
         editorPerks.splice(existing, 1);
       } else if (editorPerks.length < 8) {
+        // Echten Artefakt-Socket merken: der Apply-Pfad steckt den Perk
+        // über genau diesen Index (InsertSocketPlugFree).
+        const artifact = currentArtifactItem();
+        const artifactSockets = artifact ? socketPlugsFor(artifact) : [];
+        const socket = artifactSockets.find((sock) =>
+          (sock.plugs || []).some((plug) => Number(plug.h) === hash));
         editorPerks.push({
           h: hash,
           n: pickPerk.dataset.dwName || 'Perk',
           i: pickPerk.dataset.dwIcon || '',
           p: pickPerk.dataset.dwCat || '',
           d: pickPerk.dataset.dwDesc || '',
-          s: []
+          s: [],
+          idx: socket ? Number(socket.idx) : undefined
         });
       }
       renderSheet();
@@ -8118,8 +8139,9 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
           });
         }
       }
-      // Artefakt: die Socket-Overrides sind die gewählten Artefakt-Perks
-      // (nur dokumentiert, im Spiel freischalten).
+      // Artefakt: die Socket-Overrides sind die gewählten Artefakt-Perks.
+      // Der Socket-Index (Override-Key) wird beim Anwenden über die API
+      // gesetzt; die Freischaltung prüft Bungie beim Stecken.
       if (bucket === DIM.B.ARTIFACT) {
         artifactItem = {
           hash,
@@ -8135,7 +8157,8 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
               i: plugInfo.i || '',
               p: plugInfo.p || '',
               d: plugInfo.d || '',
-              s: Array.isArray(plugInfo.s) ? plugInfo.s : []
+              s: Array.isArray(plugInfo.s) ? plugInfo.s : [],
+              idx: Number(idx)
             });
           }
         }
@@ -9162,7 +9185,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       `Items: ${items.length} (${already} bereits angelegt${missing.length ? `, ${missing.length} nicht gefunden` : ''})`,
       mods ? `Mods: ${mods}${missingMods.length ? ` · ${missingMods.length} ohne Daten` : ''}` : '',
       subs ? `Subklassen-Plugs: ${subs}` : '',
-      perks ? `Artefakt-Perks (nur dokumentiert): ${perks}` : '',
+      perks ? `Artefakt-Perks: ${perks} (über API)` : '',
       energy.length ? `Energie: ${energy.join(' · ')}` : '',
       '',
       'Vorschau pro Item:'
@@ -9211,7 +9234,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       armorPlugs: captureArmorPlugs(characterId)
     };
     pushUndo(snapshot);
-    await applyItems(loadout.name, characterId, items, loadout.mods || [], loadout.artifactPerks || [], loadout.subclassPlugs || []);
+    await applyItems(loadout.name, characterId, items, loadout.mods || [], loadout.artifactPerks || [], loadout.subclassPlugs || [], loadout.artifact || null);
     const stats = Object.assign({}, (getCfg().bungie && getCfg().bungie.loadoutStats) || {});
     const prevStat = stats[loadout.id] || {};
     stats[loadout.id] = { applies: (Number(prevStat.applies) || 0) + 1, lastUsedAt: Date.now() };
@@ -9244,8 +9267,11 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       holder.style.display = 'flex';
       holder.style.gap = '6px';
       const close = header.querySelector('[data-inv-result-close]');
-      if (close) header.insertBefore(holder, close);
-      else header.appendChild(holder);
+      // Der Schließen-Knopf sitzt in der Aktionsgruppe des Headers,
+      // nicht direkt im Header. Dorthin gehört auch der Undo-Knopf.
+      const group = (close && close.parentElement) || header;
+      if (close) group.insertBefore(holder, close);
+      else group.appendChild(holder);
     }
     const button = document.createElement('button');
     button.type = 'button';
@@ -9570,7 +9596,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     setTimeout(() => { try { run.host.remove(); } catch (error) { /* egal */ } }, 260);
   }
 
-  async function applyItems(loadoutName, characterId, items, mods, artifactPerks, subclassPlugs) {
+  async function applyItems(loadoutName, characterId, items, mods, artifactPerks, subclassPlugs, artifactRef) {
     if (!data || !characterId) return;
     const membershipType = data.membershipType;
     const entries = [];
@@ -9580,6 +9606,13 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const subList = subclassPlugs || [];
     const totalCount = items.length + modList.length + perkList.length + subList.length;
     const run = beginApplyProgress(totalCount);
+    // Ausgerüstetes Artefakt des Charakters: Referenz aus dem Loadout
+    // muss dazu passen, sonst würden Perks in einen fremden Socket gehen.
+    const equippedArtifact = (((data.equipped || {})[characterId] || [])
+      .find((item) => Number(item.bucket) === DIM.B.ARTIFACT)) || null;
+    const expectedArtifactHash = Number(artifactRef && artifactRef.hash) || 0;
+    const equippedArtifactHash = Number(equippedArtifact && equippedArtifact.hash) || 0;
+    const artifactMismatch = expectedArtifactHash > 0 && expectedArtifactHash !== equippedArtifactHash;
     const locallyEquipped = [];
     // 1. Die Items anlegen (Transfer-/Equip-Kette, DIM-Verhalten).
     for (const item of items) {
@@ -9702,28 +9735,48 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     // 4. Die Artefakt-Perks: über den Artefakt-Socket einstecken
     // (InsertSocketPlugFree). Freischaltung prüft Bungie selbst.
     if (perkList.length) {
-      const artifactItem = (((data.equipped || {})[characterId] || [])
-        .find((item) => Number(item.bucket) === DIM.B.ARTIFACT)) || null;
-      if (!artifactItem || !artifactItem.instanceId) {
+      const perkCount = perkList.filter((perk) => Number(perk.h || perk.hash || 0) > 0).length;
+      if (artifactMismatch) {
+        const label = (artifactRef && (artifactRef.name || artifactRef.hash)) || expectedArtifactHash;
+        entries.push({
+          ok: false,
+          text: `Artefakt ${label} ist nicht ausgerüstet – ${perkCount} Perk(s) übersprungen.`
+        });
+      } else if (!equippedArtifact || !equippedArtifact.instanceId) {
         entries.push({ ok: false, text: 'Artefakt: kein angelegtes Artefakt gefunden' });
       } else {
-        const artifactSockets = ((data.sockDefs || {})[String(artifactItem.hash)] || []);
+        const artifactSockets = ((data.sockDefs || {})[String(equippedArtifact.hash)] || []);
+        let appliedPerks = 0;
         for (const perk of perkList) {
           if (run.cancelled) break;
           const perkHash = Number(perk.h || perk.hash || 0);
           if (!perkHash) continue;
-          const socket = artifactSockets.find((entry) => (entry.plugs || []).some((plug) => Number(plug.h) === perkHash));
+          const savedIdx = perk.idx == null ? null : Number(perk.idx);
+          const hasPlug = (socket) => Boolean(socket)
+            && (socket.plugs || []).some((plug) => Number(plug.h) === perkHash);
+          // Gespeicherter Index hat Vorrang, aber nur wenn dort auch der
+          // Perk sitzt. Sonst den Socket nehmen, der den Hash enthält.
+          const savedSocket = savedIdx != null && Number.isFinite(savedIdx)
+            ? artifactSockets.find((entry) => Number(entry.idx) === savedIdx)
+            : null;
+          const socket = hasPlug(savedSocket) ? savedSocket : artifactSockets.find(hasPlug);
+          // Ohne Socket-Treffer den gespeicherten Index als Hinweis senden;
+          // der Hauptprozess scannt die Sockets ohnehin empirisch.
+          const socketIndex = socket
+            ? Number(socket.idx)
+            : (savedIdx != null && Number.isFinite(savedIdx) ? savedIdx : 0);
           try {
             const result = await api.bungieInsertPlug({
-              itemId: artifactItem.instanceId,
+              itemId: equippedArtifact.instanceId,
               characterId,
-              socketIndex: socket ? Number(socket.idx) : 0,
+              socketIndex,
               plugItemHash: perkHash,
               membershipType
             });
             if (result && result.ok) {
               entries.push({ ok: true, text: `${perk.n || 'Artefakt-Perk'} → Artefakt` });
               run.tick(`${perk.n || 'Artefakt-Perk'} → Artefakt`);
+              appliedPerks += 1;
               done += 1;
             } else {
               entries.push({ ok: false, text: `${perk.n || 'Artefakt-Perk'}: ${(result && result.error) || 'nicht freigeschaltet oder abgelehnt'}` });
@@ -9733,6 +9786,11 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
             entries.push({ ok: false, text: `${perk.n || 'Artefakt-Perk'}: ${error.message || error}` });
           }
         }
+        const skippedPerks = Math.max(0, perkCount - appliedPerks);
+        entries.push({
+          ok: skippedPerks === 0,
+          text: `${appliedPerks} Artefakt-Perk(s) angewendet, ${skippedPerks} übersprungen (nicht freigeschaltet/Tier)`
+        });
       }
     }
     if (run.cancelled) entries.push({ ok: false, text: 'Abgebrochen – bereits angelegter Teil bleibt bestehen.' });
@@ -9740,11 +9798,11 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     const failedEntries = entries.filter((entry) => !entry.ok).length;
     const offlineFailure = entries.some((entry) => !entry.ok && /nicht angemeldet|offline|abgelaufen|nicht erreichbar|429|netzwerk/i.test(entry.text));
     if (offlineFailure) {
-      queueOfflineLoadout(loadoutName, characterId, items, modList, perkList, subList);
+      queueOfflineLoadout(loadoutName, characterId, items, modList, perkList, subList, artifactRef);
       entries.push({ ok: false, text: 'Offline: Aktion in die Warteschlange gelegt (Diagnose → Offline-Warteschlange).' });
     }
     const retryActions = failedEntries
-      ? [{ label: 'Fehlgeschlagene erneut versuchen', run: () => applyItems(loadoutName, characterId, items, modList, perkList, subList) }]
+      ? [{ label: 'Fehlgeschlagene erneut versuchen', run: () => applyItems(loadoutName, characterId, items, modList, perkList, subList, artifactRef) }]
       : [];
     showResult(`Loadout „${loadoutName}" — ${done}/${totalCount}`, entries, retryActions);
     // Anzeige sofort lokal aktualisieren; kein voller Bungie-Reload
@@ -10045,7 +10103,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     try { window.localStorage.setItem('d2tool.actionQueue', JSON.stringify(list.slice(-10))); } catch (error) { /* egal */ }
   }
 
-  function queueOfflineLoadout(loadoutName, characterId, items, mods, perks, subs) {
+  function queueOfflineLoadout(loadoutName, characterId, items, mods, perks, subs, artifactRef) {
     const queue = readQueue();
     queue.push({
       loadoutName,
@@ -10054,6 +10112,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
       mods: mods || [],
       perks: perks || [],
       subs: subs || [],
+      artifact: artifactRef || null,
       at: Date.now()
     });
     writeQueue(queue);
@@ -10064,7 +10123,7 @@ function itemMatches(item, tokens, dupeSet, where, statDupeSet = new Set(), stat
     if (!queue.length) return;
     writeQueue([]);
     for (const job of queue) {
-      await applyItems(job.loadoutName, job.characterId, job.items, job.mods, job.perks, job.subs);
+      await applyItems(job.loadoutName, job.characterId, job.items, job.mods, job.perks, job.subs, job.artifact || null);
     }
   });
 

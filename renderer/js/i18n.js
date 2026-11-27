@@ -75,7 +75,11 @@
     [/^(\d+) HUD-Profil\(e\) importiert\.$/, '$1 HUD profile(s) imported.'],
     [/^(\d+) Waffen? übernommen\.$/, 'Applied to $1 weapon(s).'],
     [/^(\d+) Waffe$/, '$1 weapon'],
-    [/^(\d+) ohne Brecher$/, '$1 without breaker']
+    [/^(\d+) ohne Brecher$/, '$1 without breaker'],
+    // Artefakt-Perks über die API
+    [/^Artefakt-Perks: (\d+) \(über API\)$/, 'Artifact perks: $1 (via API)'],
+    [/^Artefakt (.+) ist nicht ausgerüstet – (\d+) Perk\(s\) übersprungen\.$/, 'Artifact $1 is not equipped – $2 perk(s) skipped.'],
+    [/^(\d+) Artefakt-Perk\(s\) angewendet, (\d+) übersprungen \(nicht freigeschaltet\/Tier\)$/, '$1 artifact perk(s) applied, $2 skipped (not unlocked/tier)']
   ];
   const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE', 'PRE']);
   const SKIP_SELECTOR = [

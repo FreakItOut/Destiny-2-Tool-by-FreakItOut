@@ -13,9 +13,9 @@ than Electron itself.
 
 The ready-to-run Windows builds are available under **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.16.1.exe`** – portable version, no
+- **`Destiny.2.Tool.by.FreakItOut.1.17.0.exe`** – portable version, no
   installation required.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.16.1.exe`** – installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.17.0.exe`** – installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optional Stream Deck plugin.
 - **`streamdeck-profile.json`** – matching Stream Deck profile.
 - **`SHA256SUMS.txt`** – checksums for all files.
@@ -179,8 +179,11 @@ Up to 8 profiles.
 - **Duplicates → vault:** moves duplicate items from the backpack, keeps the
   strongest copy on the character; failures can be retried.
 - **Create loadout** first shows an in-app modal (missing items, mods,
-  subclass plugs), saves the previous state including **armor mods** and
-  offers **Undo** afterwards (result box and toast, up to 3 steps).
+  subclass plugs, artifact perks), saves the previous state including **armor
+  mods** and offers **Undo** afterwards (result box and toast, up to 3 steps).
+  **Artifact perks** are set through their artifact socket directly via the
+  Bungie API; if the loadout references a different seasonal artifact, they
+  are skipped cleanly and listed in the result.
 - **Loadout exchange:** **Export** copies all loadouts as JSON to the
   clipboard; **Import file…** reads a JSON file; **DIM link…** imports
   `dim.gg/…` links or loadout URLs with `?loadout=…` (DIM, d2armorpicker,

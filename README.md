@@ -13,9 +13,9 @@ Laufzeit-Abhängigkeiten außer Electron selbst.
 
 Die fertigen Windows-Builds liegen unter **Releases**:
 
-- **`Destiny.2.Tool.by.FreakItOut.1.16.1.exe`** – portable Version, keine
+- **`Destiny.2.Tool.by.FreakItOut.1.17.0.exe`** – portable Version, keine
   Installation nötig.
-- **`Destiny.2.Tool.by.FreakItOut.Setup.1.16.1.exe`** – Installer.
+- **`Destiny.2.Tool.by.FreakItOut.Setup.1.17.0.exe`** – Installer.
 - **`com.freakitout.d2tool.streamDeckPlugin`** – optionales Stream-Deck-Plugin.
 - **`streamdeck-profile.json`** – passende Stream-Deck-Belegung.
 - **`SHA256SUMS.txt`** – Prüfsummen aller Dateien.
@@ -189,8 +189,12 @@ Leisten-Elemente lassen sich als **Layout-Profil** speichern (Einstellungen
 - **Duplikate → Tresor:** verschiebt doppelte Items aus den Beutetaschen,
   die stärkste Kopie bleibt am Charakter; Fehlschläge lassen sich wiederholen.
 - **Loadout anlegen** zeigt vorher ein In-App-Modal (fehlende Items, Mods,
-  Subklassen-Plugs), sichert den vorherigen Stand inklusive **Rüstungs-Mods**
-  und bietet danach **Rückgängig** (Ergebnisbox und Toast, bis zu 3 Schritte).
+  Subklassen-Plugs, Artefakt-Perks), sichert den vorherigen Stand inklusive
+  **Rüstungs-Mods** und bietet danach **Rückgängig** (Ergebnisbox und Toast,
+  bis zu 3 Schritte). **Artefakt-Perks** werden über den jeweiligen
+  Artefakt-Socket direkt über die Bungie-API gesetzt; verweist das Loadout auf
+  ein anderes Saison-Artefakt, werden sie sauber übersprungen und im Ergebnis
+  genannt.
 - **Loadout-Austausch:** **Exportieren** kopiert alle Loadouts als JSON in die
   Zwischenablage; **Datei importieren…** liest eine JSON-Datei;
   **DIM-Link…** importiert `dim.gg/…`-Links oder Loadout-URLs mit
