@@ -6,6 +6,30 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.17.3] – 2026-11-27
+
+### Behoben
+
+- **Champion-Erkennung vollständig** – Bungie liefert den Anti-Champion-Effekt
+  im Namen des Sandbox-Perks am Rahmen-Plug, nicht als `breakerType`:
+  `[Störung] Überladung`, `[Schildbrechend] Barriere`,
+  `[Taumeln] Unaufhaltsam` (englisch `[Disruption] Overload`,
+  `[Shield-Piercing] Barrier`, `[Stagger] Unstoppable`). Diese Tags werden
+  jetzt ausgelesen.
+- **Waffen-Erkennung korrigiert** – aktuelle Manifeste führen bei Waffen keine
+  Kategorie 41 mehr; erkannt wird jetzt über die Socket-Kategorien
+  `WeaponPerks`/`WeaponMods`. Damit werden auch Waffen mit nur einer
+  Typ-Kategorie (z. B. SMG `3954685534`) erfasst.
+- **Manifest-Cache v7** – einmaliger Neuaufbau, damit die neuen Werte sicher
+  ankommen.
+
+### Technik
+
+- Manifest-Rahmen-Test auf **53** Prüfungen erweitert.
+- Gegenprüfung mit dem echten deutschen 9.7.0.6-Manifest: **3.347 von 3.347**
+  echten Waffendefinitionen mit Intrinsic-Rahmen erhalten einen Champion
+  (3.687 Waffendefinitionen gesamt, inklusive Crafting-Blueprints ohne Rahmen).
+
 ## [1.17.2] – 2026-11-27
 
 ### Behoben

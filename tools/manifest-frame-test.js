@@ -33,39 +33,75 @@ if (start < 0 || end < 0 || end < start) {
   process.exit(1);
 }
 const block = MAIN.slice(start, end + END.length);
-const sandbox = { module: { exports: {} }, exports: {} };
+const vmSandbox = { module: { exports: {} }, exports: {} };
 vm.runInNewContext(
-  `${block}\nmodule.exports = { manifestFrameInfo, manifestPerkBreaker };`,
-  sandbox,
+  `${block}\nmodule.exports = { manifestFrameInfo, manifestPerkBreaker, manifestBreakerFromText };`,
+  vmSandbox,
   { filename: 'electron/main.js#manifest-frame' }
 );
-const { manifestFrameInfo, manifestPerkBreaker } = sandbox.module.exports;
+const { manifestFrameInfo, manifestPerkBreaker, manifestBreakerFromText } = vmSandbox.module.exports;
 check('Block exportiert manifestFrameInfo', typeof manifestFrameInfo === 'function');
 check('Block exportiert manifestPerkBreaker', typeof manifestPerkBreaker === 'function');
+check('Block exportiert manifestBreakerFromText', typeof manifestBreakerFromText === 'function');
 
 const INTRINSIC = 3956125808;
-const plug = (name, breakerType) => ({ displayProperties: { name }, breakerType });
-const withCategory = (entries, indexes = [0]) => ({
-  itemCategoryHashes: [41],
+const WEAPON_PERKS = 4241085061;
+const WEAPON_MODS = 2685412949;
+const SMG = 3954685534;
+const plug = (name, breakerType, perks = []) => ({ displayProperties: { name }, breakerType, perks });
+const weaponWithIntrinsic = (entries, indexes = [0]) => ({
+  // Echte Waffen tragen oft nur ihre Typ-Kategorie (z. B. SMG), nicht 41.
+  itemCategoryHashes: [SMG],
   sockets: {
-    socketCategories: [{ socketCategoryHash: INTRINSIC, socketIndexes: indexes }],
+    socketCategories: [
+      { socketCategoryHash: WEAPON_PERKS, socketIndexes: [] },
+      { socketCategoryHash: INTRINSIC, socketIndexes: indexes }
+    ],
+    socketEntries: entries
+  }
+});
+const weaponWithoutIntrinsic = (entries) => ({
+  itemCategoryHashes: [SMG],
+  sockets: {
+    socketCategories: [{ socketCategoryHash: WEAPON_PERKS, socketIndexes: [] }],
     socketEntries: entries
   }
 });
 
 // ------------------------------------------------------------
-// Intrinsic-Kategorie
+// Waffen-Erkennung und Intrinsic-Kategorie
 // ------------------------------------------------------------
 {
-  const result = manifestFrameInfo(withCategory([{ singleInitialItemHash: 101 }]), {
+  const result = manifestFrameInfo(weaponWithIntrinsic([{ singleInitialItemHash: 101 }]), {
     101: plug('Adaptive Frame', 2)
   });
   check('Intrinsic-Kategorie liefert Rahmen und Breaker',
     result.name === 'Adaptive Frame' && result.breaker === 2, JSON.stringify(result));
 }
 {
+  // SMG-Kategorie + WeaponPerks: wird als Waffe erkannt, obwohl 41 fehlt.
+  const result = manifestFrameInfo(weaponWithIntrinsic([{ singleInitialItemHash: 116 }]), {
+    116: plug('Lightweight Frame', 0)
+  });
+  check('SMG-Kategorie + WeaponPerks gilt als Waffe',
+    result.name === 'Lightweight Frame' && result.breaker === 0, JSON.stringify(result));
+}
+{
+  // WeaponMods allein reicht ebenfalls als Waffen-Marker.
+  const def = {
+    itemCategoryHashes: [SMG],
+    sockets: {
+      socketCategories: [{ socketCategoryHash: WEAPON_MODS, socketIndexes: [] }],
+      socketEntries: [{ singleInitialItemHash: 117 }]
+    }
+  };
+  const result = manifestFrameInfo(def, { 117: plug('Precision Frame', 1) });
+  check('WeaponMods allein gilt als Waffe',
+    result.name === 'Precision Frame' && result.breaker === 1, JSON.stringify(result));
+}
+{
   // socketIndexes müssen auf den richtigen socketEntry zeigen.
-  const result = manifestFrameInfo(withCategory([
+  const result = manifestFrameInfo(weaponWithIntrinsic([
     { singleInitialItemHash: 999 },
     { singleInitialItemHash: 102 }
   ], [1]), {
@@ -77,7 +113,7 @@ const withCategory = (entries, indexes = [0]) => ({
 }
 {
   // singleInitialItemHash hat Vorrang vor reusablePlugItems.
-  const result = manifestFrameInfo(withCategory([{
+  const result = manifestFrameInfo(weaponWithIntrinsic([{
     singleInitialItemHash: 103,
     reusablePlugItems: [{ plugItemHash: 104 }]
   }]), {
@@ -89,7 +125,7 @@ const withCategory = (entries, indexes = [0]) => ({
 }
 {
   // Ohne singleInitialItemHash zählt der erste Reusable-Plug.
-  const result = manifestFrameInfo(withCategory([{
+  const result = manifestFrameInfo(weaponWithIntrinsic([{
     singleInitialItemHash: 0,
     reusablePlugItems: [{ plugItemHash: 0 }, { plugItemHash: 105 }, { plugItemHash: 106 }]
   }]), {
@@ -101,12 +137,11 @@ const withCategory = (entries, indexes = [0]) => ({
 }
 
 // ------------------------------------------------------------
-// Breaker aus Perks (Rahmen-Plug bzw. Item-Perk)
+// Breaker aus Perks (Inventory-Definition)
 // ------------------------------------------------------------
 {
-  // light.gg-Beispiel: „Leichtes Gehäuse“ hat den Breaker als Perk
-  // am Plug, nicht als plugDef.breakerType.
-  const result = manifestFrameInfo(withCategory([{ singleInitialItemHash: 113 }]), {
+  // light.gg-Beispiel: Breaker hängt als Perk am Plug.
+  const result = manifestFrameInfo(weaponWithIntrinsic([{ singleInitialItemHash: 113 }]), {
     113: {
       displayProperties: { name: 'Lightweight Frame' },
       breakerType: 0,
@@ -120,13 +155,9 @@ const withCategory = (entries, indexes = [0]) => ({
 {
   // Item-Perk (z. B. Exot) hat Vorrang vor dem Rahmen-Plug.
   const result = manifestFrameInfo({
-    itemCategoryHashes: [41],
+    ...weaponWithIntrinsic([{ singleInitialItemHash: 114 }]),
     breakerType: 0,
-    perks: [{ perkHash: 9002 }],
-    sockets: {
-      socketCategories: [{ socketCategoryHash: INTRINSIC, socketIndexes: [0] }],
-      socketEntries: [{ singleInitialItemHash: 114 }]
-    }
+    perks: [{ perkHash: 9002 }]
   }, {
     114: plug('Adaptive Frame', 1),
     9002: { breakerType: 3 }
@@ -137,13 +168,9 @@ const withCategory = (entries, indexes = [0]) => ({
 {
   // Eigener breakerType der Item-Definition hat Vorrang vor Item-Perks.
   const result = manifestFrameInfo({
-    itemCategoryHashes: [41],
+    ...weaponWithIntrinsic([{ singleInitialItemHash: 115 }]),
     breakerType: 1,
-    perks: [{ perkHash: 9002 }],
-    sockets: {
-      socketCategories: [{ socketCategoryHash: INTRINSIC, socketIndexes: [0] }],
-      socketEntries: [{ singleInitialItemHash: 115 }]
-    }
+    perks: [{ perkHash: 9002 }]
   }, {
     115: plug('Adaptive Frame', 2),
     9002: { breakerType: 3 }
@@ -154,10 +181,9 @@ const withCategory = (entries, indexes = [0]) => ({
 {
   // Auch ohne erkannten Rahmen zählt ein Item-Perk für den Breaker.
   const result = manifestFrameInfo({
-    itemCategoryHashes: [41],
+    ...weaponWithoutIntrinsic([{ singleInitialItemHash: 999 }]),
     breakerType: 0,
-    perks: [{ perkHash: 9009 }],
-    sockets: { socketEntries: [{ singleInitialItemHash: 999 }] }
+    perks: [{ perkHash: 9009 }]
   }, {
     999: plug('Rampage', 0),
     9009: { breakerType: 3 }
@@ -177,20 +203,73 @@ check('manifestPerkBreaker: plugItemHash/hash werden gelesen',
   && manifestPerkBreaker({ breakerType: 0, perks: [{ hash: 9007 }] }, { 9007: { breakerType: 3 } }) === 3);
 
 // ------------------------------------------------------------
+// Breaker aus SandboxPerk-Namen
+// ------------------------------------------------------------
+check('Sandbox-Text: [Störung] Überladung → 2', manifestBreakerFromText('[Störung] Überladung') === 2);
+check('Sandbox-Text: [Schildbrechend] Barriere → 1', manifestBreakerFromText('[Schildbrechend] Barriere') === 1);
+check('Sandbox-Text: [Taumeln] Unaufhaltsam → 3', manifestBreakerFromText('[Taumeln] Unaufhaltsam') === 3);
+check('Sandbox-Text: englische Varianten',
+  manifestBreakerFromText('[Disruption] Overload') === 2
+  && manifestBreakerFromText('[Shield-Piercing] Barrier') === 1
+  && manifestBreakerFromText('[Stagger] Unstoppable') === 3);
+check('Sandbox-Text: Ueberladung (ASCII) → 2', manifestBreakerFromText('Ueberladung') === 2);
+check('Sandbox-Text: harmloser Name → 0', manifestBreakerFromText('Rampage') === 0);
+
+{
+  // Rahmen-Plug ohne breakerType, SandboxPerk liefert den Breaker.
+  const result = manifestFrameInfo(weaponWithIntrinsic([{ singleInitialItemHash: 118 }]), {
+    118: plug('Lightweight Frame', 0, [{ perkHash: 9101 }])
+  }, {
+    9101: { displayProperties: { name: '[Störung] Überladung' } }
+  });
+  check('SandboxPerk am Rahmen-Plug liefert den Breaker',
+    result.name === 'Lightweight Frame' && result.breaker === 2, JSON.stringify(result));
+}
+{
+  // Item-Perk in der Sandbox (Exot) hat Vorrang vor dem Rahmen.
+  const result = manifestFrameInfo({
+    ...weaponWithIntrinsic([{ singleInitialItemHash: 119 }]),
+    breakerType: 0,
+    perks: [{ perkHash: 9102 }]
+  }, {
+    119: plug('Adaptive Frame', 1)
+  }, {
+    9102: { displayProperties: { name: '[Taumeln] Unaufhaltsam' } }
+  });
+  check('SandboxPerk am Item hat Vorrang vor dem Rahmen',
+    result.name === 'Adaptive Frame' && result.breaker === 3, JSON.stringify(result));
+}
+{
+  // Inventory-Perk-Definition hat Vorrang vor dem Sandbox-Namen.
+  const result = manifestFrameInfo(weaponWithIntrinsic([{ singleInitialItemHash: 120 }]), {
+    120: plug('Precision Frame', 0, [{ perkHash: 9103 }]),
+    9103: { breakerType: 1 }
+  }, {
+    9103: { displayProperties: { name: '[Störung] Überladung' } }
+  });
+  check('Inventory-Breaker vor Sandbox-Name',
+    result.name === 'Precision Frame' && result.breaker === 1, JSON.stringify(result));
+}
+check('manifestPerkBreaker: Sandbox-Name als Fallback',
+  manifestPerkBreaker({ breakerType: 0, perks: [{ perkHash: 9104 }] }, {}, {
+    9104: { displayProperties: { name: '[Disruption] Overload' } }
+  }) === 2);
+
+// ------------------------------------------------------------
 // Fallback ohne Intrinsic-Kategorie
 // ------------------------------------------------------------
 {
-  const result = manifestFrameInfo({ itemCategoryHashes: [41], sockets: { socketEntries: [{ singleInitialItemHash: 107 }] } }, {
+  const result = manifestFrameInfo(weaponWithoutIntrinsic([{ singleInitialItemHash: 107 }]), {
     107: plug('Wave Frame', 3)
   });
   check('Fallback erkennt Rahmen über den Plug-Namen',
     result.name === 'Wave Frame' && result.breaker === 3, JSON.stringify(result));
 }
 {
-  const result = manifestFrameInfo({ itemCategoryHashes: [41], sockets: { socketEntries: [
+  const result = manifestFrameInfo(weaponWithoutIntrinsic([
     { singleInitialItemHash: 999 },
     { singleInitialItemHash: 0, reusablePlugItems: [{ plugItemHash: 108 }] }
-  ] } }, {
+  ]), {
     999: plug('Rampage', 0),
     108: plug('Support Frame', 0)
   });
@@ -200,14 +279,14 @@ check('manifestPerkBreaker: plugItemHash/hash werden gelesen',
 {
   // Auch ein Plug mit Breaker, aber ohne Rahmen-Namen, darf im Fallback
   // nicht als Rahmen gelten.
-  const result = manifestFrameInfo({ itemCategoryHashes: [41], sockets: { socketEntries: [{ singleInitialItemHash: 999 }] } }, {
+  const result = manifestFrameInfo(weaponWithoutIntrinsic([{ singleInitialItemHash: 999 }]), {
     999: plug('Rampage', 2)
   });
   check('Nicht-Rahmen-Plug wird nicht fehlklassifiziert',
     result.name === '' && result.breaker === 0, JSON.stringify(result));
 }
 {
-  const result = manifestFrameInfo({ itemCategoryHashes: [41], sockets: { socketEntries: [{ singleInitialItemHash: 400 }] } }, {
+  const result = manifestFrameInfo(weaponWithoutIntrinsic([{ singleInitialItemHash: 400 }]), {
     400: plug('Präzisionsrahmen', 1)
   });
   check('Deutscher Rahmen-Name wird erkannt',
@@ -218,7 +297,7 @@ check('manifestPerkBreaker: plugItemHash/hash werden gelesen',
 // Grenzen und Sonderfälle
 // ------------------------------------------------------------
 {
-  const result = manifestFrameInfo(withCategory([{ singleInitialItemHash: 109 }]), {
+  const result = manifestFrameInfo(weaponWithIntrinsic([{ singleInitialItemHash: 109 }]), {
     109: plug('Adaptive Frame', 4)
   });
   check('Ungültiger Frame-Breaker wird zu 0',
@@ -226,7 +305,7 @@ check('manifestPerkBreaker: plugItemHash/hash werden gelesen',
 }
 {
   const longName = `Adaptive Frame ${'x'.repeat(80)}`;
-  const result = manifestFrameInfo(withCategory([{ singleInitialItemHash: 110 }]), {
+  const result = manifestFrameInfo(weaponWithIntrinsic([{ singleInitialItemHash: 110 }]), {
     110: plug(longName, 2)
   });
   check('Rahmen-Name wird auf 60 Zeichen begrenzt', result.name.length === 60, String(result.name.length));
@@ -235,20 +314,18 @@ check('manifestPerkBreaker: plugItemHash/hash werden gelesen',
   check('Fehlende Definition ergibt leer',
     manifestFrameInfo(null, {}).name === '' && manifestFrameInfo(null, {}).breaker === 0);
   check('Fehlende defs ergibt leer',
-    manifestFrameInfo({ itemCategoryHashes: [41], sockets: { socketEntries: [] } }, null).name === ''
-      && manifestFrameInfo({ itemCategoryHashes: [41], sockets: { socketEntries: [] } }, null).breaker === 0);
+    manifestFrameInfo(weaponWithIntrinsic([]), null).name === ''
+      && manifestFrameInfo(weaponWithIntrinsic([]), null).breaker === 0);
 }
 {
-  const result = manifestFrameInfo({ itemCategoryHashes: [41], sockets: { socketEntries: [
-    { singleInitialItemHash: 111 }
-  ], socketCategories: [{ socketCategoryHash: 123, socketIndexes: [0] }] } }, {
-    111: plug('Precision Frame', 1)
-  });
+  const def = weaponWithoutIntrinsic([{ singleInitialItemHash: 111 }]);
+  def.sockets.socketCategories.push({ socketCategoryHash: 123, socketIndexes: [0] });
+  const result = manifestFrameInfo(def, { 111: plug('Precision Frame', 1) });
   check('Fremde Kategorie nutzt den Namens-Fallback',
     result.name === 'Precision Frame' && result.breaker === 1, JSON.stringify(result));
 }
 {
-  // Rüstung hat zwar Intrinsic-Sockets, aber keinen Waffen-Rahmen.
+  // Rüstung hat zwar Intrinsic-Sockets/Perks, aber keine WeaponPerks.
   const armorDef = {
     itemCategoryHashes: [20],
     breakerType: 0,
@@ -265,6 +342,18 @@ check('manifestPerkBreaker: plugItemHash/hash werden gelesen',
   check('Rüstung erhält keinen Rahmen',
     result.name === '' && result.breaker === 0, JSON.stringify(result));
 }
+{
+  const result = manifestFrameInfo({
+    ...weaponWithIntrinsic([{ singleInitialItemHash: 121 }]),
+    breakerType: 1,
+    perks: [{ perkHash: 1210 }]
+  }, {
+    121: plug('Adaptive Frame', 2),
+    1210: { breakerType: 3 }
+  });
+  check('Item-Breaker bleibt vorrangig (Prioritätslogik)',
+    result.name === 'Adaptive Frame' && result.breaker === 1, JSON.stringify(result));
+}
 
 // ------------------------------------------------------------
 // Item-Breaker hat Vorrang (wie in ensureCompactItemNames)
@@ -277,23 +366,33 @@ check('Fehlender Item-Breaker greift auf den Rahmen zurück', compactBreaker(und
 // ------------------------------------------------------------
 // Verdrahtung im Cache/Snapshot (statisch)
 // ------------------------------------------------------------
-check('Cache wurde auf v6 gehoben (Writer und Reader)',
-  (MAIN.match(/item-names-v6-/g) || []).length >= 2 && !/item-names-v[1-5]-/.test(MAIN));
+check('Cache wurde auf v7 gehoben (Writer und Reader)',
+  (MAIN.match(/item-names-v7-/g) || []).length >= 2 && !/item-names-v[1-6]-/.test(MAIN));
+check('Sandbox-Perk-Tabelle wird geladen und gecacht',
+  MAIN.includes('async function loadRawSandboxPerks(version)')
+  && MAIN.includes('sandbox-perks-${version}.json')
+  && MAIN.includes('DestinySandboxPerkDefinition'));
+check('ensureCompactItemNames lädt Sandbox-Perks',
+  MAIN.includes('loadRawSandboxPerks(version)') && MAIN.includes('const frame = manifestFrameInfo(def, defs, sandbox);'));
 check('Ungültig-Prüfung enthält fr', MAIN.includes('entry.fr === undefined'));
 check('Cache-Eintrag speichert fr', /fr:\s*frame\.name/.test(MAIN));
 check('Cache-Eintrag priorisiert den Item-Breaker',
   /bt:\s*Math\.round\(Number\(def\.breakerType\) \|\| 0\) \|\| frame\.breaker/.test(MAIN));
 check('compactRawDefs übernimmt den Rahmen', (MAIN.match(/frame: info\.fr \|\| ''/g) || []).length >= 2);
 check('ensureCompactItemNames nutzt manifestFrameInfo',
-  MAIN.includes('? manifestFrameInfo(def, defs)'));
-check('Rahmen nur für Waffen (Kategorie 41)',
-  MAIN.includes('const frame = Array.isArray(def.itemCategoryHashes) && def.itemCategoryHashes.includes(41)')
-  && MAIN.includes('if (!itemCategories.includes(41)) return empty;'));
-check('Perk-Breaker ist am Rahmen-Plug und Item verdrahtet',
-  MAIN.includes('function manifestPerkBreaker(def, defs)')
-  && MAIN.includes('manifestPerkBreaker(plugDef, defs)')
-  && MAIN.includes('const itemBreaker = manifestPerkBreaker(def, defs);'));
+  MAIN.includes('const frame = manifestFrameInfo(def, defs, sandbox);'));
+check('Waffe wird über WeaponPerks/WeaponMods erkannt',
+  MAIN.includes('const MANIFEST_WEAPON_SOCKET_CATEGORIES = [4241085061, 2685412949];')
+  && MAIN.includes('function manifestIsWeapon(def)'));
+check('Keine Waffen-Erkennung mehr über Kategorie 41',
+  !MAIN.includes('.itemCategoryHashes.includes(41)'));
+check('Perk-Breaker nutzt Inventory-Definition und Sandbox-Name',
+  MAIN.includes('function manifestPerkBreaker(def, defs, sandbox)')
+  && MAIN.includes('manifestPerkBreaker(plugDef, defs, sandbox)')
+  && MAIN.includes('const itemBreaker = manifestPerkBreaker(def, defs, sandbox);')
+  && MAIN.includes('sandbox[String(hash)]'));
 check('localApiItemList gibt frame aus', /frame: item\.frame \|\| ''/.test(MAIN));
+check('Inventar-Snapshot gibt frame aus', /frame: info\.fr \|\| ''/.test(MAIN));
 
 if (failed) {
   console.error(`\nMANIFEST-RAHMEN-TEST FEHLGESCHLAGEN: ${failed} von ${checks}.`);

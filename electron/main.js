@@ -5009,6 +5009,8 @@ async function getManifestCached(apiKey) {
 
 let inventoryItemDefs = null;
 let inventoryItemDefsPromise = null;
+let sandboxPerkDefs = null;
+let sandboxPerkDefsPromise = null;
 let statDefsCache = { version: '', path: '', map: null };
 let statGroupDefsCache = { version: '', map: null };
 let compactItemNames = null;
@@ -5229,10 +5231,24 @@ function bungieCachePath(name) {
 // Bevorzugt den Intrinsic-Traits-Socket (DIM-Enum 3956125808); sonst
 // werden die ersten Socket-Einträge nach einem Rahmen-Namen durchsucht.
 const MANIFEST_INTRINSIC_TRAITS = 3956125808;
+// Waffen erkennt man an den Socket-Kategorien (WeaponPerks/WeaponMods),
+// nicht an itemCategoryHashes: viele Waffen tragen dort nur ihre
+// Waffentyp-Kategorie (z. B. SMG 3954685534 statt 41).
+const MANIFEST_WEAPON_SOCKET_CATEGORIES = [4241085061, 2685412949];
 const MANIFEST_FRAME_NAME = /(?:frame|rahmen|intrinsic|adaptive|adaptiv|precision|präzision|lightweight|leichtgewicht|rapid|schnellfeuer|aggressive|aggressiv|high\s*impact|hochenergie|wave|welle|support|unterstützung|caster|vortex|disruption|störung|burst|salve|heat|hitze|missile|raketen|double\s*fire|doppelfeuer|rocket|spread|streuschuss|area\s*denial|flächenschaden|legacy\s*pr-?55)/iu;
 
 function manifestFrameName(name) {
   return MANIFEST_FRAME_NAME.test(String(name || ''));
+}
+
+function manifestIsWeapon(def) {
+  const categories = def && def.sockets && Array.isArray(def.sockets.socketCategories)
+    ? def.sockets.socketCategories
+    : [];
+  return categories.some((category) => {
+    const hash = Math.round(Number(category && category.socketCategoryHash) || 0);
+    return MANIFEST_WEAPON_SOCKET_CATEGORIES.includes(hash);
+  });
 }
 
 function manifestFrameBreaker(plugDef) {
@@ -5240,14 +5256,23 @@ function manifestFrameBreaker(plugDef) {
   return breaker >= 1 && breaker <= 3 ? breaker : 0;
 }
 
-// Anti-Champion kann bei Rahmen auch als Perk am Plug hängen
-// (z. B. „[Disruption] Overload“). Reihenfolge: eigener breakerType,
-// dann Perks; der erste gültige Treffer gewinnt.
-function manifestPerkBreaker(def, defs) {
+// Anti-Champion steht bei Rahmen oft nur im SandboxPerk-Namen, z. B.
+// „[Störung] Überladung“ / „[Disruption] Overload“.
+function manifestBreakerFromText(text) {
+  const value = String(text || '').toLowerCase();
+  if (/barriere|barrier/.test(value)) return 1;
+  if (/überladung|ueberladung|overload/.test(value)) return 2;
+  if (/unaufhaltsam|unstoppable/.test(value)) return 3;
+  return 0;
+}
+
+// Anti-Champion kann bei Rahmen auch als Perk am Plug hängen.
+// Reihenfolge: eigener breakerType, dann Perk-Definition (Inventory),
+// dann SandboxPerk-Name; der erste gültige Treffer gewinnt.
+function manifestPerkBreaker(def, defs, sandbox) {
   if (!def) return 0;
   const own = manifestFrameBreaker(def);
   if (own) return own;
-  if (!defs || typeof defs !== 'object') return 0;
   const perks = Array.isArray(def.perks) ? def.perks : [];
   for (const perk of perks) {
     const rawHash = perk && typeof perk === 'object'
@@ -5255,8 +5280,12 @@ function manifestPerkBreaker(def, defs) {
       : perk;
     const hash = Math.round(Number(rawHash) || 0);
     if (!hash) continue;
-    const breaker = manifestFrameBreaker(defs[String(hash)]);
-    if (breaker) return breaker;
+    const perkDef = defs && typeof defs === 'object' ? defs[String(hash)] : null;
+    const direct = manifestFrameBreaker(perkDef);
+    if (direct) return direct;
+    const sandboxDef = sandbox && typeof sandbox === 'object' ? sandbox[String(hash)] : null;
+    const fromText = manifestBreakerFromText(sandboxDef && sandboxDef.displayProperties && sandboxDef.displayProperties.name);
+    if (fromText) return fromText;
   }
   return 0;
 }
@@ -5274,16 +5303,14 @@ function manifestPlugHash(entry) {
   return 0;
 }
 
-function manifestFrameInfo(def, defs) {
+function manifestFrameInfo(def, defs, sandbox) {
   const empty = { name: '', breaker: 0 };
   if (!def || !defs || typeof defs !== 'object') return empty;
-  // Nur Waffen (DestinyItemCategoryDefinition 41) haben einen Rahmen.
-  // Rüstung, Geist, Mods usw. dürfen keinen Intrinsic-Namen als „Rahmen“
-  // anzeigen.
-  const itemCategories = Array.isArray(def.itemCategoryHashes) ? def.itemCategoryHashes : [];
-  if (!itemCategories.includes(41)) return empty;
+  // Nur Waffen (WeaponPerks/WeaponMods) haben einen Rahmen. Rüstung,
+  // Geist, Mods usw. dürfen keinen Intrinsic-Namen als „Rahmen“ anzeigen.
+  if (!manifestIsWeapon(def)) return empty;
   // Item-Breaker bzw. Item-Perks haben Vorrang vor dem Rahmen.
-  const itemBreaker = manifestPerkBreaker(def, defs);
+  const itemBreaker = manifestPerkBreaker(def, defs, sandbox);
   const sockets = def.sockets || {};
   const entries = Array.isArray(sockets.socketEntries) ? sockets.socketEntries : [];
   if (!entries.length) return { name: '', breaker: itemBreaker };
@@ -5301,7 +5328,7 @@ function manifestFrameInfo(def, defs) {
       const plugDef = resolve(manifestPlugHash(entry));
       if (!plugDef) continue;
       const name = String((plugDef.displayProperties && plugDef.displayProperties.name) || '').trim();
-      const plugBreaker = manifestPerkBreaker(plugDef, defs);
+      const plugBreaker = manifestPerkBreaker(plugDef, defs, sandbox);
       if (name) return { name: name.slice(0, 60), breaker: itemBreaker || plugBreaker || namelessBreaker };
       namelessBreaker = namelessBreaker || plugBreaker;
     }
@@ -5325,7 +5352,7 @@ function manifestFrameInfo(def, defs) {
       const plugDef = resolve(hash);
       const name = String((plugDef && plugDef.displayProperties && plugDef.displayProperties.name) || '').trim();
       if (name && manifestFrameName(name)) {
-        return { name: name.slice(0, 60), breaker: itemBreaker || manifestPerkBreaker(plugDef, defs) };
+        return { name: name.slice(0, 60), breaker: itemBreaker || manifestPerkBreaker(plugDef, defs, sandbox) };
       }
     }
   }
@@ -5334,7 +5361,7 @@ function manifestFrameInfo(def, defs) {
 // <<< manifest-frame-block
 
 async function ensureCompactItemNames(version, hashes) {
-  const compactPath = bungieCachePath(`item-names-v6-${version}-${contentLanguage()}.json`);
+  const compactPath = bungieCachePath(`item-names-v7-${version}-${contentLanguage()}.json`);
   if (!compactItemNames || compactItemNames.version !== version) {
     compactItemNames = { version, path: compactPath, map: null };
     try {
@@ -5351,7 +5378,13 @@ async function ensureCompactItemNames(version, hashes) {
       || entry.fr === undefined;
   });
   if (!missing.length) return compactItemNames.map;
-  const defs = await loadRawItemDefinitions(version);
+  const [defs, sandbox] = await Promise.all([
+    loadRawItemDefinitions(version),
+    loadRawSandboxPerks(version).catch((error) => {
+      logWarn('Sandbox-Perk-Definitionen nicht verfügbar', { error: error && error.message ? error.message : String(error) });
+      return {};
+    })
+  ]);
   for (const hash of missing) {
     const def = defs[String(hash)];
     if (!def) {
@@ -5361,9 +5394,7 @@ async function ensureCompactItemNames(version, hashes) {
       compactItemNames.map[String(hash)] = { x: 1, n: '', t: '', i: '', r: 0, f: '', b: 0, c: 3, p: '', d: '', s: [], bt: 0, sg: 0, cat: [], se: [], e: 0, fr: '' };
       continue;
     }
-    const frame = Array.isArray(def.itemCategoryHashes) && def.itemCategoryHashes.includes(41)
-      ? manifestFrameInfo(def, defs)
-      : { name: '', breaker: 0 };
+    const frame = manifestFrameInfo(def, defs, sandbox);
     compactItemNames.map[String(hash)] = {
       n: String((def.displayProperties && def.displayProperties.name) || '').slice(0, 80),
       t: String(def.itemTypeDisplayName || '').slice(0, 40),
@@ -5552,6 +5583,82 @@ async function loadRawItemDefinitions(version) {
     return await loadPromise;
   } finally {
     if (inventoryItemDefsPromise && inventoryItemDefsPromise.promise === loadPromise) inventoryItemDefsPromise = null;
+  }
+}
+
+// Sandbox-Perks (DestinySandboxPerkDefinition): klein (~5.000 Einträge).
+// Die Anti-Champion-Perks der Rahmen stehen hier, nicht in der
+// DestinyInventoryItemDefinition. JSON-/V8-Cache wie bei den Items.
+async function loadRawSandboxPerks(version) {
+  const rawPath = bungieCachePath(`sandbox-perks-${version}.json`);
+  const v8Path = rawPath.replace(/\.json$/i, '.v8');
+  if (sandboxPerkDefs && sandboxPerkDefs.version === version && sandboxPerkDefs.data) {
+    return sandboxPerkDefs.data;
+  }
+  if (fs.existsSync(rawPath)) {
+    try {
+      if (fs.existsSync(v8Path)) {
+        try {
+          const rawStat = fs.statSync(rawPath);
+          const v8Stat = fs.statSync(v8Path);
+          if (v8Stat.mtimeMs >= rawStat.mtimeMs) {
+            const cached = v8.deserialize(fs.readFileSync(v8Path));
+            if (cached && typeof cached === 'object') {
+              sandboxPerkDefs = { version, path: rawPath, data: cached };
+              return cached;
+            }
+          }
+        } catch (error) {
+          // V8-Cache unbrauchbar → JSON versuchen.
+        }
+      }
+      const data = parseBungieJson(fs.readFileSync(rawPath, 'utf8'));
+      sandboxPerkDefs = { version, path: rawPath, data };
+      setTimeout(() => {
+        try { fs.writeFileSync(v8Path, v8.serialize(data)); } catch (error) { /* egal */ }
+      }, 4000);
+      return data;
+    } catch (error) {
+      // Cache beschädigt → neu laden.
+    }
+  }
+  if (sandboxPerkDefsPromise && sandboxPerkDefsPromise.version === version) {
+    return sandboxPerkDefsPromise.promise;
+  }
+  const loadPromise = (async () => {
+    const apiKey = bungieApiKey().trim();
+    const manifest = await getManifestCached(apiKey);
+    const paths = manifest && manifest.Response && manifest.Response.jsonWorldComponentContentPaths && manifest.Response.jsonWorldComponentContentPaths[contentLanguage()];
+    const relPath = paths && paths.DestinySandboxPerkDefinition;
+    if (!relPath) throw new Error('Manifest: Sandbox-Perk-Definitionen nicht gefunden.');
+    const response = await fetch(`https://www.bungie.net${relPath}`, {
+      headers: { 'User-Agent': BUNGIE_HEADERS.userAgent, accept: 'application/json' }
+    });
+    if (!response.ok) throw new Error(`Sandbox-Perk-Download fehlgeschlagen (HTTP ${response.status}).`);
+    const text = await response.text();
+    let data;
+    try {
+      data = parseBungieJson(text);
+    } catch (error) {
+      throw new Error('Sandbox-Perk-Datei unlesbar.');
+    }
+    sandboxPerkDefs = { version, path: rawPath, data };
+    try {
+      fs.mkdirSync(path.dirname(rawPath), { recursive: true });
+      fs.writeFileSync(rawPath, text, 'utf8');
+    } catch (error) {
+      // egal
+    }
+    setTimeout(() => {
+      try { fs.writeFileSync(v8Path, v8.serialize(data)); } catch (error) { /* egal */ }
+    }, 4000);
+    return data;
+  })();
+  sandboxPerkDefsPromise = { version, promise: loadPromise };
+  try {
+    return await loadPromise;
+  } finally {
+    if (sandboxPerkDefsPromise && sandboxPerkDefsPromise.promise === loadPromise) sandboxPerkDefsPromise = null;
   }
 }
 
@@ -6461,7 +6568,7 @@ let compactNameFileCache = { key: '', map: null };
 function loadExistingItemNames(version) {
   const key = `${version}-${contentLanguage()}`;
   if (compactNameFileCache.map && compactNameFileCache.key === key) return compactNameFileCache.map;
-  const cachePath = bungieCachePath(`item-names-v6-${key}.json`);
+  const cachePath = bungieCachePath(`item-names-v7-${key}.json`);
   try {
     compactNameFileCache = { key, map: parseBungieJson(fs.readFileSync(cachePath, 'utf8')) };
   } catch (error) {

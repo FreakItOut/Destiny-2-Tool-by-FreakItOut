@@ -6,6 +6,29 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.17.3] – 2026-11-27
+
+### Fixed
+
+- **Champion detection complete** – Bungie provides the anti-champion effect
+  in the name of the sandbox perk on the frame plug, not as `breakerType`:
+  `[Störung] Überladung`, `[Schildbrechend] Barriere`,
+  `[Taumeln] Unaufhaltsam` (English `[Disruption] Overload`,
+  `[Shield-Piercing] Barrier`, `[Stagger] Unstoppable`). These tags are now
+  read.
+- **Weapon detection corrected** – current manifests no longer include
+  category 41 on weapons; detection now uses the `WeaponPerks`/`WeaponMods`
+  socket categories. This covers weapons with only a type category (e.g. SMG
+  `3954685534`).
+- **Manifest cache v7** – one-time rebuild so the new values arrive reliably.
+
+### Technical
+
+- Manifest frame test expanded to **53** checks.
+- Cross-check against the real German 9.7.0.6 manifest: **3,347 of 3,347**
+  real weapon definitions with an intrinsic frame get a champion (3,687
+  weapon definitions total, including crafting blueprints without a frame).
+
 ## [1.17.2] – 2026-11-27
 
 ### Fixed
