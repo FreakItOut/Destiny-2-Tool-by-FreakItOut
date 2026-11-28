@@ -51,6 +51,11 @@ export const GUIDE_LONG_HOLD_MS = 600;
 // Ab dieser Stick-Auslenkung gilt ein Guide-Signal als Fehlauslöser.
 export const GUIDE_STICK_LIMIT = 0.35;
 
+// Sicherheits-Timeout der Combo-Aufnahme: Bleibt die UI aus (z. B.
+// geschlossene Einstellungen), gibt der Controller die Tasten wieder
+// frei, statt alle Eingaben zu schlucken.
+export const CAPTURE_TIMEOUT_MS = 6000;
+
 // Reine Entscheidung, ob ein Tastendruck das Overlay umschalten darf.
 // Getrennt vom Controller, damit die Fälle ohne DOM prüfbar sind.
 //
@@ -170,6 +175,43 @@ export function pickDirectionalTarget(candidates, current, direction) {
   return best;
 }
 
+// ------------------------------------------------------------
+// Klick-Ziel (A-Taste)
+// ------------------------------------------------------------
+// Die Zielauflösung ist in zwei reine Funktionen ausgelagert, damit
+// sie ohne DOM geprüft werden kann. Ein Ziel wird als einfache
+// Beschreibung übergeben: Tag, Rolle, tabindex, Größe und disabled.
+export const CLICKABLE_SELECTOR = 'button, a[href], input, select, textarea, label, [role="button"], [tabindex]:not([tabindex="-1"])';
+
+const CLICKABLE_TAGS = ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA', 'LABEL'];
+
+// Sichtbar = Fläche vorhanden und nicht disabled. Elemente ohne
+// tabindex haben im Browser tabIndex = -1.
+export function isClickableTarget(target) {
+  if (!target) return false;
+  const tag = String(target.tag || target.tagName || '').toUpperCase();
+  if (tag === 'A' && target.href === false) return false;
+  const clickableTag = CLICKABLE_TAGS.includes(tag);
+  const clickableRole = String(target.role || '').toLowerCase() === 'button';
+  const tabValue = target.tabIndex;
+  const clickableTab = tabValue !== undefined && tabValue !== null &&
+    Number.isFinite(Number(tabValue)) && Number(tabValue) !== -1;
+  if (!clickableTag && !clickableRole && !clickableTab) return false;
+  if (target.disabled === true) return false;
+  if (target.visible === false) return false;
+  return Number(target.width) > 0 && Number(target.height) > 0;
+}
+
+// Reihenfolge: Element unter dem Cursor, dann das fokussierte Element
+// (Tastatur-/D-Pad-Fokus), zuletzt das nächste Snap-Ziel.
+export function pickClickableTarget(candidates) {
+  if (!candidates || typeof candidates !== 'object') return null;
+  for (const candidate of [candidates.point, candidates.focused, candidates.snap]) {
+    if (candidate && isClickableTarget(candidate)) return candidate;
+  }
+  return null;
+}
+
 export function createController(options) {
   const {
     api,
@@ -182,6 +224,7 @@ export function createController(options) {
     onStatus,
     onButtons,
     onCaptureChanged,
+    onCaptureEnded,
     onXInput,
     onAxes
   } = options;
@@ -293,6 +336,7 @@ export function createController(options) {
   let lastPoll = performance.now();
   let capturing = false;
   let captured = [];
+  let captureTimer = null;
   let precision = false;
   let lastStatusAt = 0;
   let lastButtonsAt = 0;
@@ -371,7 +415,7 @@ let lastDpadDownAt = 0;
         const rect = node.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) continue;
         if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) continue;
-        list.push({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+        list.push({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, element: node });
       }
       snapCandidates = list;
     } catch (error) {
@@ -627,35 +671,133 @@ let lastDpadDownAt = 0;
     if (scrollable) scrollable.scrollTop += amount;
   }
 
+  // Zielbeschreibung für isClickableTarget/pickClickableTarget.
+  function elementRect(element) {
+    try { return element.getBoundingClientRect(); } catch (error) { return null; }
+  }
+
+  function isElementVisible(element, rect) {
+    if (!element || element.nodeType !== 1) return false;
+    const box = rect || elementRect(element);
+    if (!box || box.width <= 0 || box.height <= 0) return false;
+    try {
+      const style = getComputedStyle(element);
+      if (style) {
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        if (Number(style.opacity) === 0) return false;
+      }
+    } catch (error) {
+      // egal
+    }
+    return true;
+  }
+
+  function describeElement(element) {
+    if (!element || element.nodeType !== 1) return null;
+    const rect = elementRect(element);
+    if (!rect) return null;
+    const attr = (name) => (typeof element.getAttribute === 'function' ? element.getAttribute(name) : null);
+    const tag = String(element.tagName || '').toUpperCase();
+    const tabAttr = attr('tabindex');
+    let tabIndex = Number(element.tabIndex);
+    if (tabAttr !== null && tabAttr !== '' && Number.isFinite(Number(tabAttr))) tabIndex = Number(tabAttr);
+    return {
+      element,
+      tag,
+      role: attr('role') || '',
+      href: tag === 'A' ? (typeof element.hasAttribute === 'function' ? element.hasAttribute('href') : Boolean(element.href)) : true,
+      tabIndex: Number.isFinite(tabIndex) ? tabIndex : -1,
+      disabled: Boolean(element.disabled) || attr('aria-disabled') === 'true',
+      width: rect.width,
+      height: rect.height,
+      visible: isElementVisible(element, rect)
+    };
+  }
+
+  // Nächster klickbarer Vorfahre (auch das Element selbst).
+  function clickableAncestor(element) {
+    let node = element;
+    while (node && node.nodeType === 1) {
+      if (node === document.body || node === document.documentElement) return null;
+      const descriptor = describeElement(node);
+      if (descriptor && isClickableTarget(descriptor)) return descriptor;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  // 1) Cursorposition, 2) fokussiertes Element, 3) Snap-Ziel.
+  function resolveClickTarget() {
+    const pointElement = topElementAt(cursorX, cursorY);
+    const point = clickableAncestor(pointElement);
+
+    let focused = null;
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== document.documentElement) {
+      const descriptor = describeElement(active);
+      if (descriptor && isClickableTarget(descriptor)) focused = descriptor;
+    }
+
+    let snap = null;
+    const candidate = nearestSnapTarget(cursorX, cursorY);
+    if (candidate) {
+      const snapElement = candidate.element && candidate.element.isConnected
+        ? candidate.element
+        : topElementAt(candidate.x, candidate.y);
+      snap = clickableAncestor(snapElement);
+    }
+    return { pointElement, point, focused, snap };
+  }
+
+  function reportClick(target) {
+    if (typeof onAction !== 'function') return;
+    try { onAction('click', { target }); } catch (error) { /* egal */ }
+  }
+
   function clickAtCursor() {
-    const element = topElementAt(cursorX, cursorY);
-    if (!element) return;
+    const { pointElement, point, focused, snap } = resolveClickTarget();
+    const chosen = pickClickableTarget({ point, focused, snap });
+    const target = chosen ? chosen.element : null;
+
+    if (!target) {
+      // Diagnose für das App-Log: A kam an, aber es gab kein Ziel.
+      const info = {
+        x: Math.round(cursorX),
+        y: Math.round(cursorY),
+        tag: pointElement ? String(pointElement.tagName || '').toUpperCase() : '',
+        cls: pointElement && typeof pointElement.className === 'string' ? pointElement.className.trim() : ''
+      };
+      console.warn(`[d2] Klick ohne Ziel @${info.x},${info.y}`, info);
+      reportClick(null);
+      return;
+    }
 
     // Ein natives <select> lässt sich per Controller so nicht
     // bedienen. Deshalb schaltet A dort einfach zur nächsten Option.
-    if (element.tagName === 'SELECT') {
-      const index = element.selectedIndex;
-      const next = (index + 1) % Math.max(1, element.options.length);
-      element.selectedIndex = next;
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      element.dispatchEvent(new Event('change', { bubbles: true }));
+    if (target.tagName === 'SELECT') {
+      const index = target.selectedIndex;
+      const next = (index + 1) % Math.max(1, target.options.length);
+      target.selectedIndex = next;
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      target.dispatchEvent(new Event('change', { bubbles: true }));
       showCursor();
+      reportClick(target);
       return;
     }
 
-    if (element.tagName === 'INPUT' && element.type === 'range') {
-      const rect = element.getBoundingClientRect();
-      const min = Number(element.min || 0);
-      const max = Number(element.max || 100);
+    if (target.tagName === 'INPUT' && target.type === 'range') {
+      const rect = target.getBoundingClientRect();
+      const min = Number(target.min || 0);
+      const max = Number(target.max || 100);
       const ratio = clamp((cursorX - rect.left) / Math.max(1, rect.width), 0, 1);
-      element.value = String(min + ratio * (max - min));
-      element.dispatchEvent(new Event('input', { bubbles: true }));
-      element.dispatchEvent(new Event('change', { bubbles: true }));
+      target.value = String(min + ratio * (max - min));
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      target.dispatchEvent(new Event('change', { bubbles: true }));
       showCursor();
+      reportClick(target);
       return;
     }
 
-    const target = element.closest('button, a, select, input, textarea, label, [role="button"], [tabindex]') || element;
     try {
       target.focus({ preventScroll: true });
     } catch (error) {
@@ -675,6 +817,7 @@ let lastDpadDownAt = 0;
       // egal
     }
     showCursor();
+    reportClick(target);
   }
 
   // Hover in der App-Oberfläche: der Controller-Cursor ist nur ein
@@ -1024,6 +1167,26 @@ let lastDpadDownAt = 0;
     // Tasten-/Achsen-Anzeigen laufen weiter (auch die hinter dem
     // Test-Fenster, damit beide Raster aktuell bleiben).
     if (isInputBlocked && isInputBlocked()) {
+      // Das Test-Fenster schluckt alle Aktionen - A und B müssen es aber
+      // schließen können, sonst wirkt es, als würde keine Taste mehr
+      // funktionieren (die Maus wäre der einzige Ausweg).
+      const blockedBind = cfg.gamepad.bindings || {};
+      const closeClick = Number.isInteger(Number(blockedBind.click)) ? Number(blockedBind.click) : 0;
+      const closeBack = Number.isInteger(Number(blockedBind.back)) ? Number(blockedBind.back) : 1;
+      const blockedJust = pressed.map((value, index) => value && !previous[index]);
+      const closePressed = (closeClick >= 0 && blockedJust[closeClick]) ||
+        (closeBack >= 0 && blockedJust[closeBack]);
+      if (closePressed && typeof onAction === 'function') {
+        // closeTopModal() blendet das Test-Fenster aus und stoppt die
+        // Aufnahme; danach ist die Eingabe sofort wieder frei.
+        onAction('close-modal');
+        emitButtons(pressed);
+        // Der gedrückte Zustand wird übernommen, damit derselbe Druck
+        // kein zweites Schließen (und keinen Folgeklick) auslöst.
+        previous = pressed;
+        hideCursor();
+        return;
+      }
       emitButtons(pressed);
       // Combo-Zustand weiterführen, damit direkt nach dem Schließen
       // des Test-Fensters kein noch gehaltener Combo-Befehl auslöst.
@@ -1454,18 +1617,41 @@ let lastDpadDownAt = 0;
     // Das passiert im nächsten Poll-Durchlauf.
   });
 
+  // Aufnahme beenden und die Schnittstelle darüber informieren, damit
+  // die Einstellungen den Aufnahme-Knopf zurücksetzen können.
+  function endCapture(reason) {
+    if (captureTimer) {
+      clearTimeout(captureTimer);
+      captureTimer = null;
+    }
+    const wasCapturing = capturing;
+    capturing = false;
+    // Nach dem Aufnehmen sind die Tasten oft noch gedrückt. Ohne
+    // diese Sperre würde die neue Kombination sofort auslösen.
+    comboHeld = true;
+    lastComboAt = performance.now();
+    if (wasCapturing && typeof onCaptureEnded === 'function') {
+      try { onCaptureEnded(reason || 'stop', captured.slice()); } catch (error) { /* egal */ }
+    }
+  }
+
   return {
     startCapture() {
+      if (captureTimer) clearTimeout(captureTimer);
       capturing = true;
       captured = [];
       if (onCaptureChanged) onCaptureChanged([], []);
+      // Wenn die UI die Aufnahme nicht beendet (geschlossene
+      // Einstellungen, abgebrochener Dialog), automatisch freigeben.
+      captureTimer = setTimeout(() => {
+        captureTimer = null;
+        if (!capturing) return;
+        console.warn('[d2] Combo-Aufnahme automatisch beendet (Sicherheits-Timeout)');
+        endCapture('timeout');
+      }, CAPTURE_TIMEOUT_MS);
     },
-    stopCapture() {
-      capturing = false;
-      // Nach dem Aufnehmen sind die Tasten oft noch gedrückt. Ohne
-      // diese Sperre würde die neue Kombination sofort auslösen.
-      comboHeld = true;
-      lastComboAt = performance.now();
+    stopCapture(reason) {
+      endCapture(reason || 'stop');
     },
     getCaptured() {
       return captured.slice();
@@ -1490,6 +1676,10 @@ let lastDpadDownAt = 0;
     destroy() {
       destroyed = true;
       if (tickTimer) clearTimeout(tickTimer);
+      if (captureTimer) {
+        clearTimeout(captureTimer);
+        captureTimer = null;
+      }
     }
   };
 }

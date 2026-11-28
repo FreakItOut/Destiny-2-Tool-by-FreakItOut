@@ -186,6 +186,11 @@ check('Trigger-Aktionen nur bei steigender Flanke',
   controller.includes('triggerLeftHeld = updateTrigger(') &&
   controller.includes('triggerRightHeld = updateTrigger(') &&
   controller.includes('active && !wasHeld'));
+check('Smoke-Combo läuft über die XInput-Bridge',
+  main.includes('smokeGamepadMuted') &&
+  main.includes('window.__smokeSend') &&
+  main.includes('send([10, 11])') &&
+  !main.includes('navigator.getGamepads'));
 // content-visibility mit falscher Platzhalterhöhe ließ Karten beim
 // Scrollen/Rendern zwischen 120px und echter Höhe springen.
 const dashboardCss = read('renderer/dashboard.css');
@@ -208,6 +213,48 @@ check('Loadout-Warteschlange und Konflikte',
   inventory.includes('queueLoadout') && inventory.includes('loadoutConflicts') && inventory.includes('data-loadout-queue'));
 check('Controller erreicht Titelleiste und Toolbar im Inventar',
   controller.includes('Inventar und Dashboard bewusst NICHT') && !controller.includes("'#inventoryView:not(.hidden)'"));
+// Controller-Klick: Eingabesperre nur bei sichtbarem Test-Fenster,
+// Capture-Cleanup beim Schließen und Zielauflösung mit Fallbacks.
+check('Controller-Test blockiert nur sichtbar',
+  app.includes('#controllerTestModal') &&
+  app.includes('getBoundingClientRect') &&
+  app.includes('offsetParent === null') &&
+  app.includes("qs('#settingsModal')"));
+// A/B müssen das sichtbare Test-Fenster wieder schließen können, sonst
+// schluckt die Eingabesperre jede Taste. Die Tastenindizes kommen aus
+// der Belegung (Standard: Klick 0, Zurück 1).
+const blockedBranchStart = controller.indexOf('if (isInputBlocked && isInputBlocked()) {');
+const blockedBranchEnd = controller.indexOf('const just = pressed.map', blockedBranchStart);
+const blockedBranch = blockedBranchStart >= 0 && blockedBranchEnd > blockedBranchStart
+  ? controller.slice(blockedBranchStart, blockedBranchEnd)
+  : '';
+check('Controller-Test lässt sich mit A/B schließen',
+  blockedBranch.includes('cfg.gamepad.bindings') &&
+  blockedBranch.includes('blockedJust') &&
+  blockedBranch.includes('closeClick') &&
+  blockedBranch.includes('closeBack') &&
+  blockedBranch.includes("onAction('close-modal')") &&
+  blockedBranch.includes('previous = pressed') &&
+  blockedBranch.includes('hideCursor()'));
+check('Einstellungen schließen Test-Modal und Aufnahme',
+  settings.includes('function hideControllerTest') &&
+  settings.includes('hideControllerTest()') &&
+  settings.includes('controller.stopCapture') &&
+  settings.includes('recordingCombo = false'));
+check('Combo-Aufnahme hat Sicherheits-Timeout',
+  controller.includes('CAPTURE_TIMEOUT_MS = 6000') &&
+  controller.includes('endCapture(\'timeout\')') &&
+  controller.includes('Sicherheits-Timeout'));
+check('Klick-Zielauflösung mit Fokus- und Snap-Fallback',
+  controller.includes('export function pickClickableTarget') &&
+  controller.includes('export function isClickableTarget') &&
+  controller.includes('document.activeElement') &&
+  controller.includes('nearestSnapTarget(cursorX, cursorY)') &&
+  controller.includes("[d2] Klick ohne Ziel") &&
+  controller.includes("onAction('click', { target })"));
+check('Klick meldet Ziel an „Letzte Aktion“',
+  app.includes('payload.target') &&
+  app.includes("action === 'click'"));
 check('SBOM-Werkzeug vorhanden', fs.existsSync(path.join(ROOT, 'tools', 'make-sbom.js')));
 check('Destiny-2-Beenden vollständig entfernt', !/quitGame|game:quit|overlayQuitGameBtn/.test(app + index + main + preload + config + settings));
 check('Händler-Verfügbarkeit erklärt', tools.includes('dim-vendors-hint') && tools.includes('Xûr erscheint Freitag bis Dienstag'));

@@ -415,10 +415,26 @@ const controller = createController({
     // sichtbar ist, bleibt der Controller aktiv.
     return !document.hidden;
   },
-  // Controller-Test-Fenster: nur Anzeige, keine Bedienung.
+  // Controller-Test-Fenster: nur Anzeige, keine Bedienung. Es blockiert
+  // aber nur, wenn es wirklich sichtbar ist und die Einstellungen noch
+  // offen sind - ein ausgeblendetes Modal darf A nicht schlucken.
   isInputBlocked: () => {
     const test = qs('#controllerTestModal');
-    return Boolean(test && !test.classList.contains('hidden'));
+    if (!test || test.hidden || test.classList.contains('hidden')) return false;
+    // Das Test-Fenster liegt im DOM neben den Einstellungen, gehört aber
+    // zu ihnen: Ist der Dialog zu, blockiert es keine Eingaben mehr.
+    const settingsModal = qs('#settingsModal');
+    if (settingsModal && (settingsModal.hidden || settingsModal.classList.contains('hidden'))) return false;
+    const rect = test.getBoundingClientRect();
+    if (!(rect.width > 0 && rect.height > 0)) return false;
+    if (test.offsetParent === null) {
+      // .modal ist position: fixed - dort ist offsetParent immer null.
+      // Nur in diesem Fall gilt das sichtbare Rect als Nachweis.
+      let position = '';
+      try { position = getComputedStyle(test).position; } catch (error) { position = ''; }
+      if (position !== 'fixed') return false;
+    }
+    return true;
   },
   onToggleOverlay: () => {
     api.toggleOverlay().catch(() => {});
@@ -441,6 +457,9 @@ const controller = createController({
   },
   onCaptureChanged: (ids, labels) => {
     if (settings) settings.onCaptureChanged(ids, labels);
+  },
+  onCaptureEnded: (reason) => {
+    if (settings && typeof settings.onCaptureEnded === 'function') settings.onCaptureEnded(reason);
   },
   onXInput: (handler) => {
     xinputHandler = handler;
@@ -497,6 +516,7 @@ settings = {
     return Boolean(settingsInstance && settingsInstance.isOpen());
   },
   onCaptureChanged(...args) { settingsInstance?.onCaptureChanged?.(...args); },
+  onCaptureEnded(...args) { settingsInstance?.onCaptureEnded?.(...args); },
   updateAxes(...args) { settingsInstance?.updateAxes?.(...args); },
   updateGameStatus(...args) { settingsInstance?.updateGameStatus?.(...args); },
   updatePadAction(...args) { settingsInstance?.updatePadAction?.(...args); },
@@ -1569,6 +1589,9 @@ function closeTopModal() {
   const test = qs('#controllerTestModal');
   if (test && !test.classList.contains('hidden')) {
     modalClose(test);
+    // Beim Schließen des Test-Fensters die Combo-Aufnahme freigeben,
+    // sonst bleiben Tasten dauerhaft geschluckt.
+    controller.stopCapture('close');
     return true;
   }
   const help = qs('#helpModal');
@@ -1639,6 +1662,18 @@ const PAD_ACTION_LABELS = {
 function padActionLabel(action, payload) {
   const base = PAD_ACTION_LABELS[action] || action;
   if (typeof payload === 'boolean') return `${base} (${payload ? 'an' : 'aus'})`;
+  // Klick-Diagnose: Ziel mit anzeigen, damit sichtbar ist, ob A den
+  // Klickpfad erreicht hat (Tag/Klasse, kein neuer UI-Text).
+  if (action === 'click' && payload && typeof payload === 'object') {
+    const target = payload.target;
+    if (!target) return base;
+    if (typeof target === 'string') return `${base} (${target})`.slice(0, 80);
+    const tag = target.tagName ? String(target.tagName).toLowerCase() : '';
+    const className = typeof target.className === 'string' ? target.className.trim() : '';
+    const cls = className ? `.${className.split(/\s+/).filter(Boolean).slice(0, 2).join('.')}` : '';
+    if (!tag && !cls) return base;
+    return `${base} (${tag}${cls})`.slice(0, 80);
+  }
   return base;
 }
 

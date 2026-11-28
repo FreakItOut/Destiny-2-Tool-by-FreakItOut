@@ -6,6 +6,30 @@ Alle wichtigen Änderungen an diesem Projekt. Das Format orientiert sich an
 [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung an
 [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.18.2] – 2026-11-28
+
+### Behoben
+
+- **A löste keinen Klick aus, solange das Controller-Testfenster offen war** –
+  das Testmodal blockiert absichtlich alle Eingaben, war aber nicht als
+  Ursache erkennbar. Jetzt schließen **A und B das Testfenster**, und beim
+  Schließen der Einstellungen wird es automatisch ausgeblendet.
+  `isInputBlocked` prüft dafür echte Sichtbarkeit und das Elternmodal.
+- **Combo-Aufnahme konnte Tasten dauerhaft schlucken** – neuer
+  Sicherheits-Timeout (6 s) und vollständiges Aufräumen beim Schließen der
+  Einstellungen; `capturing` bleibt nie hängen.
+- **Klick-Zielauflösung** – A nimmt jetzt zuerst das Element unter dem Cursor,
+  dann das fokussierte Element (D-Pad) und zuletzt das nächste Snap-Ziel.
+  „Klick ohne Ziel“ wird im Log vermerkt; die letzte Aktion zeigt das Ziel an.
+- **Smoke-Test** – der Combo-Test läuft über die XInput-Injektion statt über
+  einen Browser-Gamepad-Fake und ist damit auch mit angeschlossenem Controller
+  stabil.
+
+### Technik
+
+- Controller-Navigation auf **48**, App-Features auf **123** Prüfungen
+  erweitert; E2E **564**, Vollverify **55** Schritte in STD und LE.
+
 ## [1.18.1] – 2026-11-27
 
 ### Behoben

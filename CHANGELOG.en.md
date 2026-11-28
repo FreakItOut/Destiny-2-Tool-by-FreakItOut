@@ -6,6 +6,29 @@ All notable changes to this project. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the versioning
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.18.2] – 2026-11-28
+
+### Fixed
+
+- **A did not click while the controller test window was open** – the test
+  modal intentionally blocks all input, but was not recognizable as the cause.
+  Now **A and B close the test window**, and closing Settings hides it
+  automatically. `isInputBlocked` checks actual visibility and the parent
+  modal.
+- **Combo recording could swallow keys permanently** – new safety timeout
+  (6 s) and full cleanup when Settings closes; `capturing` can never get
+  stuck.
+- **Click target resolution** – A now uses the element under the cursor, then
+  the focused element (D-pad), then the nearest snap target. "Click without
+  target" is logged; the last action shows the target.
+- **Smoke test** – the combo test uses XInput injection instead of a browser
+  gamepad fake and is stable with a connected controller.
+
+### Technical
+
+- Controller navigation expanded to **48**, app features to **123** checks;
+  E2E **564**, full verify **55** steps in STD and LE.
+
 ## [1.18.1] – 2026-11-27
 
 ### Fixed

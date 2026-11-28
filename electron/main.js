@@ -614,6 +614,11 @@ function send(channel, payload) {
 // Browser-Gamepad-API bleibt als Rückfallebene erhalten.
 
 let gamepadBridge = null;
+// Nur für den Smoke-Test: Solange gesetzt, werden echte Bridge-
+// Snapshots nicht in den Renderer geschickt. So kann der Kombinations-
+// Test einen simulierten Controller-Zustand halten, ohne dass ein
+// angeschlossener Controller ihn überschreibt.
+let smokeGamepadMuted = false;
 
 // Drag-Daten je Webview: Sobald eine Seite einen Drag beginnt
 // (Input.dragIntercepted), wird die Datenstruktur hier gespeichert
@@ -656,7 +661,7 @@ function startGamepadBridge() {
   }
   let lastConnection = null;
   gamepadBridge.onState((snapshot) => {
-    send('gamepad:state', snapshot);
+    if (!smokeGamepadMuted) send('gamepad:state', snapshot);
     // Verbindungsprotokoll: Verbunden/Getrennt loggen und melden -
     // wichtig zur Diagnose bei Dongles (z. B. GameSir Nova Lite).
     const connected = Boolean(snapshot && snapshot.connected);
@@ -15678,50 +15683,68 @@ async function runSmoke() {
         left.visible === false
     );
 
-    // Controller-Kombination mit einem simulierten Gamepad testen.
-    const pad = await win.webContents.executeJavaScript(`(async () => {
-      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-      const button = () => ({ pressed: false, touched: false, value: 0 });
-      const fake = {
-        connected: true,
-        id: 'Smoke Pad (STANDARD GAMEPAD)',
-        index: 0,
-        mapping: 'standard',
-        axes: [0, 0, 0, 0],
-        buttons: Array.from({ length: 17 }, button)
-      };
-      Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => [fake] });
-      const press = (ids) => {
-        for (let i = 0; i < fake.buttons.length; i += 1) {
-          const on = ids.includes(i);
-          fake.buttons[i].pressed = on;
-          fake.buttons[i].value = on ? 1 : 0;
-        }
-      };
-      await wait(150);
-      const before = await window.d2.getOverlayState();
-      press([10, 11]);
-      await wait(200);
-      const on = await window.d2.getOverlayState();
-      press([]);
-      await wait(150);
-      await wait(900);
-      press([10, 11]);
-      await wait(200);
-      const off = await window.d2.getOverlayState();
-      press([]);
-      await wait(150);
-      await wait(900);
-      press([10, 11]);
-      await wait(200);
-      const again = await window.d2.getOverlayState();
-      press([]);
-      await wait(120);
-      try { delete navigator.getGamepads; } catch (error) { /* egal */ }
-      return { before, on, off, again };
-    })()`);
+    // Controller-Kombination (L3+R3) über die XInput-Bridge testen.
+    // Im Renderer hat XInput Vorrang vor der Browser-Gamepad-API; ein
+    // Browser-Fake würde daher nicht auslösen. Die Bridge wird für die
+    // Dauer des Tests stummgeschaltet, damit echte Snapshots eines
+    // angeschlossenen Controllers den simulierten Zustand nicht
+    // überschreiben.
+    let pad = null;
+    smokeGamepadMuted = true;
+    try {
+      pad = await win.webContents.executeJavaScript(`(async () => {
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        const snapshot = (pressed) => ({
+          connected: true,
+          id: 'Smoke XInput Pad',
+          index: 0,
+          mapping: 'standard',
+          buttons: Array.from({ length: 17 }, (_, i) => ({
+            pressed: pressed.includes(i),
+            value: pressed.includes(i) ? 1 : 0
+          })),
+          axes: [0, 0, 0, 0],
+          rawAxes: [0, 0, 0, 0]
+        });
+        // Der Renderer übernimmt bei „Automatisch“ nur den zuerst
+        // verbundenen Index. Die Kombination für alle gängigen Indizes
+        // senden; jeder andere Index wird dort verworfen.
+        const send = (pressed) => {
+          for (let index = 0; index < 4; index += 1) {
+            window.__smokeSend({ ...snapshot(pressed), index });
+          }
+        };
+        const combo = () => send([10, 11]);
+        const release = () => send([]);
+        // Ruhezustand übernehmen und eine eventuell noch aktive
+        // Kombination (echter Controller) samt 800-ms-Sperre abklingen
+        // lassen, damit der erste simulierte Druck sicher auslöst.
+        release();
+        await wait(900);
+        const before = await window.d2.getOverlayState();
+        combo();
+        await wait(250);
+        const on = await window.d2.getOverlayState();
+        release();
+        await wait(900);
+        combo();
+        await wait(250);
+        const off = await window.d2.getOverlayState();
+        release();
+        await wait(900);
+        combo();
+        await wait(250);
+        const again = await window.d2.getOverlayState();
+        release();
+        await wait(250);
+        return { before, on, off, again };
+      })()`);
+    } finally {
+      smokeGamepadMuted = false;
+    }
     const padOk = Boolean(
-      pad.before.mode === 'window' &&
+      pad &&
+        pad.before.mode === 'window' &&
         pad.on.mode === 'overlay' &&
         pad.on.visible === true &&
         pad.off.visible === false &&

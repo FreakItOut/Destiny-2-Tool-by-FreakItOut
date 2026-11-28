@@ -31,7 +31,7 @@ function check(label, condition, detail) {
   for (const file of ['renderer/js/controller.js', 'renderer/js/ui.js']) {
     fs.copyFileSync(path.join(ROOT, file), path.join(temp, path.basename(file)));
   }
-  const { pickDirectionalTarget, normalizeXInputAxes, guideToggleAllowed } = await import(pathToFileURL(path.join(temp, 'controller.js')).href);
+  const { pickDirectionalTarget, normalizeXInputAxes, guideToggleAllowed, pickClickableTarget, isClickableTarget } = await import(pathToFileURL(path.join(temp, 'controller.js')).href);
 
   const A = { name: 'A', x: 0, y: 0 };
   const B = { name: 'B', x: 100, y: 0 };
@@ -152,6 +152,86 @@ function check(label, condition, detail) {
     }) === true);
   check('Guide: fehlende Optionen schalten nicht',
     guideToggleAllowed() === false && guideToggleAllowed(null) === false);
+
+  // ------------------------------------------------------------
+  // A-Klick: Zielauflösung (Cursor → Fokus → Snap)
+  // ------------------------------------------------------------
+  const visibleButton = (name, extra) => ({
+    name,
+    tag: 'BUTTON',
+    width: 40,
+    height: 24,
+    disabled: false,
+    ...extra
+  });
+  const div = (name, extra) => ({ name, tag: 'DIV', width: 40, height: 24, ...extra });
+
+  check('Klick: Element unter dem Cursor gewinnt',
+    pickClickableTarget({
+      point: visibleButton('point'),
+      focused: visibleButton('focused'),
+      snap: visibleButton('snap')
+    }).name === 'point');
+
+  check('Klick: nicht klickbares Element fällt auf Fokus zurück',
+    pickClickableTarget({
+      point: div('point'),
+      focused: visibleButton('focused'),
+      snap: visibleButton('snap')
+    }).name === 'focused');
+
+  check('Klick: fokussiertes Element als Fallback',
+    pickClickableTarget({
+      point: null,
+      focused: visibleButton('focused'),
+      snap: visibleButton('snap')
+    }).name === 'focused');
+
+  check('Klick: Snap-Ziel als letzter Fallback',
+    pickClickableTarget({
+      point: div('point'),
+      focused: div('focused'),
+      snap: visibleButton('snap')
+    }).name === 'snap');
+
+  check('Klick: kein Ziel → null',
+    pickClickableTarget({ point: div('point'), focused: div('focused'), snap: div('snap') }) === null);
+  check('Klick: fehlende Angaben → null',
+    pickClickableTarget(null) === null && pickClickableTarget({}) === null);
+
+  check('Klick: deaktivierter Knopf ist kein Ziel',
+    isClickableTarget(visibleButton('disabled', { disabled: true })) === false);
+  check('Klick: deaktiviertes Cursor-Ziel fällt auf Fokus zurück',
+    pickClickableTarget({
+      point: visibleButton('point', { disabled: true }),
+      focused: visibleButton('focused'),
+      snap: null
+    }).name === 'focused');
+  check('Klick: deaktiviertes Fokus-Ziel fällt auf Snap zurück',
+    pickClickableTarget({
+      point: div('point'),
+      focused: visibleButton('focused', { disabled: true }),
+      snap: visibleButton('snap')
+    }).name === 'snap');
+
+  check('Klick: unsichtbares Element (0×0) ist kein Ziel',
+    isClickableTarget(visibleButton('empty', { width: 0, height: 0 })) === false &&
+    isClickableTarget(visibleButton('hidden', { visible: false })) === false);
+
+  check('Klick: Anker ohne href ist nicht klickbar',
+    isClickableTarget({ tag: 'A', href: false, width: 20, height: 20 }) === false);
+  check('Klick: Anker mit href ist klickbar',
+    isClickableTarget({ tag: 'A', href: true, width: 20, height: 20 }) === true);
+  check('Klick: tabindex="-1" ist nicht klickbar',
+    isClickableTarget({ tag: 'DIV', tabIndex: -1, width: 20, height: 20 }) === false);
+  check('Klick: tabindex="0" ist klickbar',
+    isClickableTarget({ tag: 'DIV', tabIndex: 0, width: 20, height: 20 }) === true);
+  check('Klick: role="button" ist klickbar',
+    isClickableTarget({ tag: 'DIV', role: 'button', width: 20, height: 20 }) === true);
+  check('Klick: label ist klickbar',
+    isClickableTarget({ tag: 'LABEL', width: 20, height: 20 }) === true);
+  check('Klick: reines DIV ohne Rolle/tabindex ist nicht klickbar',
+    isClickableTarget({ tag: 'DIV', width: 20, height: 20 }) === false);
 
   fs.rmSync(temp, { recursive: true, force: true });
   if (process.exitCode) {

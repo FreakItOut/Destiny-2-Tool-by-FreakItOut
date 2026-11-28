@@ -1138,6 +1138,7 @@ export function initSettings({
   function close() {
     cancelRecording();
     cancelComboRecording();
+    hideControllerTest();
     isOpen = false;
     document.body.classList.remove('settings-open');
     modalClose(modal);
@@ -1248,9 +1249,10 @@ export function initSettings({
   function finishComboRecording() {
     if (!recordingCombo) return;
     const ids = controller.getCaptured();
-    controller.stopCapture();
     recordingCombo = false;
     clearTimeout(comboFinishTimer);
+    comboFinishTimer = 0;
+    controller.stopCapture();
     qs('#gamepadRecordBtn').textContent = 'Aufnehmen';
     qs('#gamepadRecordBtn').disabled = false;
 
@@ -1264,14 +1266,21 @@ export function initSettings({
     toast(`Controller-Kombo: ${comboLabels(ids)}`, 'success');
   }
 
+  // Beendet die Aufnahme auch dann, wenn recordingCombo schon false ist
+  // (z. B. nach dem Sicherheits-Timeout im Controller): capturing darf
+  // nie hängen bleiben, sonst schluckt der Controller jede Taste.
   function cancelComboRecording() {
-    if (!recordingCombo) return;
+    const wasRecording = recordingCombo;
     recordingCombo = false;
     clearTimeout(comboFinishTimer);
-    if (controller) controller.stopCapture();
-    qs('#gamepadRecordBtn').textContent = 'Aufnehmen';
-    qs('#gamepadRecordBtn').disabled = false;
-    updateComboDisplay();
+    comboFinishTimer = 0;
+    if (controller) controller.stopCapture('cancel');
+    const recordBtn = qs('#gamepadRecordBtn');
+    if (recordBtn) {
+      recordBtn.textContent = 'Aufnehmen';
+      recordBtn.disabled = false;
+    }
+    if (wasRecording) updateComboDisplay();
   }
 
   // ------------------------------------------------------------
@@ -3714,6 +3723,13 @@ export function initSettings({
     api.getGamepadState().then(updateControllerTest).catch(() => {});
   }
 
+  // Test-Fenster ausblenden und die Combo-Aufnahme freigeben. Sonst
+  // bleibt capturing true und A/Klicks werden nirgends mehr ausgeführt.
+  function hideControllerTest() {
+    if (testModal) testModal.classList.add('hidden');
+    if (controller) controller.stopCapture('test-closed');
+  }
+
   // Letzte ausgelöste Controller-Aktion im Test-Fenster anzeigen.
   function updatePadAction(label) {
     const el = qs('#testLastAction');
@@ -3725,14 +3741,12 @@ export function initSettings({
   const testOpenBtnDiag = qs('#controllerTestOpenBtnDiag');
   if (testOpenBtnDiag) testOpenBtnDiag.addEventListener('click', openControllerTest);
   if (testCloseBtn) {
-    testCloseBtn.addEventListener('click', () => {
-      if (testModal) testModal.classList.add('hidden');
-    });
+    testCloseBtn.addEventListener('click', hideControllerTest);
   }
   // Esc schließt das Test-Modal
   if (testModal) {
     testModal.addEventListener('click', (event) => {
-      if (event.target === testModal) testModal.classList.add('hidden');
+      if (event.target === testModal) hideControllerTest();
     });
   }
 
@@ -3761,6 +3775,20 @@ export function initSettings({
     updatePadAction,
     updateGameStatus,
     onCaptureChanged,
+    onCaptureEnded(reason) {
+      // Der Controller hat die Aufnahme beendet (Timeout/Stop): Knopf
+      // und Anzeige zurücksetzen, ohne eine Kombo zu speichern.
+      const wasRecording = recordingCombo;
+      recordingCombo = false;
+      clearTimeout(comboFinishTimer);
+      comboFinishTimer = 0;
+      const recordBtn = qs('#gamepadRecordBtn');
+      if (recordBtn) {
+        recordBtn.textContent = 'Aufnehmen';
+        recordBtn.disabled = false;
+      }
+      if (wasRecording) updateComboDisplay();
+    },
     updateAbout,
     updateStats: () => renderStats(),
     updateTestLive,
